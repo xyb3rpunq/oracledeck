@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-3">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 3</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#empat-alternatif-arsitektur">Empat alternatif arsitektur</a></li><li><a href="#dua-jenis-transaksi-pada-sistem-terdistribusi">Dua jenis transaksi pada sistem terdistribusi</a></li><li><a href="#alasan-membangun-sistem-terdistribusi">Alasan membangun sistem terdistribusi</a></li><li><a href="#karakteristik-menurut-fungsionalitas">Karakteristik menurut fungsionalitas</a></li><li><a href="#tiga-lapis-arsitektur-d-dbs">Tiga lapis arsitektur D-DBS</a></li><li><a href="#model-datalogical-ansi-sparc">Model datalogical ANSI/SPARC</a></li><li><a href="#arsitektur-3-tier-dan-n-tier">Arsitektur 3-tier dan N-tier</a></li></ol>
+    <ol><li><a href="#empat-alternatif-arsitektur">Empat alternatif arsitektur</a></li><li><a href="#dua-jenis-transaksi-pada-sistem-terdistribusi">Dua jenis transaksi pada sistem terdistribusi</a></li><li><a href="#alasan-membangun-sistem-terdistribusi">Alasan membangun sistem terdistribusi</a></li><li><a href="#karakteristik-menurut-fungsionalitas">Karakteristik menurut fungsionalitas</a></li><li><a href="#tiga-lapis-arsitektur-d-dbs">Tiga lapis arsitektur D-DBS</a></li><li><a href="#model-datalogical-ansi-sparc">Model datalogical ANSI/SPARC</a></li><li><a href="#arsitektur-3-tier-dan-n-tier">Arsitektur 3-tier dan N-tier</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 03</p>
@@ -46,10 +57,10 @@
     <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami model arsitektur dan fungsi-fungsi pada BDT dan dapat menerapkannya dalam merancang BDT.</p></div>
 
 <h2 id="empat-alternatif-arsitektur">Empat alternatif arsitektur</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Arsitektur</th><th>Penempatan</th><th>Cocok untuk</th><th>Kelemahan utama</th></tr></thead><tbody><tr><td>Stand-alone</td><td>DBMS, basis data, dan aplikasi di satu komputer</td><td>Latihan, apotek kecil, wartel, hotel kecil</td><td>Hanya satu pengguna</td></tr><tr><td>Terpusat</td><td>DBMS dan basis data di satu server, banyak terminal</td><td>Startup, situs internet, instansi kecil</td><td>Server mati → seluruh aktivitas berhenti</td></tr><tr><td>Client-server</td><td>Aplikasi di klien, mesin basis data di server</td><td>Bisnis kecil hingga menengah</td><td>Skalabilitas terbatas, koneksi terus dijaga, sulit diamankan</td></tr><tr><td>Terdistribusi</td><td>Data tersebar di banyak situs, logis satu kesatuan</td><td>Organisasi bercabang, lintas kota</td><td>Kompleksitas dan biaya pengelolaan</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Arsitektur</th><th>Penempatan</th><th>Cocok untuk</th><th>Kelemahan utama</th></tr></thead><tbody><tr><td><abbr class="istilah" tabindex="0" data-g="g-stand-alone" data-istilah="Stand-alone" data-arti="Arsitektur dengan DBMS, basis data, dan aplikasi pada satu komputer yang dipakai satu pengguna." data-detail="Tidak ada komunikasi jaringan maupun pembagian data. Cocok untuk aplikasi satu pengguna, tidak untuk organisasi dengan banyak lokasi." data-contoh="Microsoft Access dengan berkas basis data di satu laptop.">Stand-alone</abbr></td><td>DBMS, basis data, dan aplikasi di satu komputer</td><td>Latihan, apotek kecil, wartel, hotel kecil</td><td>Hanya satu pengguna</td></tr><tr><td>Terpusat</td><td>DBMS dan basis data di satu server, banyak terminal</td><td>Startup, <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> internet, instansi kecil</td><td>Server mati → seluruh aktivitas berhenti</td></tr><tr><td><abbr class="istilah" tabindex="0" data-g="g-client-server" data-istilah="Client-server" data-arti="Arsitektur dua lapis: aplikasi di sisi klien, mesin basis data di sisi server. Mengurangi beban pemrosesan terpusat, tetapi skalabilitasnya terbatas." data-detail="Server menjalankan pemrosesan kueri dan transaksi; klien menangani antarmuka. Pada DDBS, server bisa lebih dari satu dan klien dapat terhubung ke beberapa server." data-contoh="SQL Developer di laptop (klien) terhubung ke Oracle XE (server).">Client-server</abbr></td><td>Aplikasi di klien, mesin basis data di server</td><td>Bisnis kecil hingga menengah</td><td>Skalabilitas terbatas, koneksi terus dijaga, sulit diamankan</td></tr><tr><td>Terdistribusi</td><td>Data tersebar di banyak situs, logis satu kesatuan</td><td>Organisasi bercabang, lintas kota</td><td>Kompleksitas dan biaya pengelolaan</td></tr></tbody></table></div>
 
 <h2 id="dua-jenis-transaksi-pada-sistem-terdistribusi">Dua jenis transaksi pada sistem terdistribusi</h2>
-<ul><li><b>Transaksi lokal</b> — hanya mengakses data pada situs tempat transaksi dijalankan</li><li><b>Transaksi global</b> — mengakses data pada beberapa situs berbeda</li></ul>
+<ul><li><b><abbr class="istilah" tabindex="0" data-g="g-transaksi-lokal" data-istilah="Transaksi lokal" data-arti="Transaksi yang hanya mengakses data pada situs tempat ia dijalankan." data-detail="Cukup ditangani manajer transaksi situs itu dengan commit satu fase; tidak ada koordinasi lintas situs." data-contoh="DELETE FROM daftar@bandung lalu COMMIT dari situs Bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">Transaksi lokal</abbr></b> — hanya mengakses data pada situs tempat transaksi dijalankan</li><li><b><abbr class="istilah" tabindex="0" data-g="g-transaksi-global" data-istilah="Transaksi global" data-arti="Transaksi yang mengakses data pada lebih dari satu situs." data-detail="Membutuhkan manajer transaksi global, agent per situs, dan protokol komitmen atomik." data-contoh="Satu COMMIT atas perubahan di daftar@jakarta dan daftar@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">Transaksi global</abbr></b> — mengakses data pada beberapa situs berbeda</li></ul>
 
 <h2 id="alasan-membangun-sistem-terdistribusi">Alasan membangun sistem terdistribusi</h2>
 <ul><li><b>Data bersama</b> — pengguna di satu situs memakai data yang ada di situs lain, seperti antar cabang bank</li><li><b>Ketersediaan</b> — jika satu situs gagal, situs lain melanjutkan operasi sampai selesai</li><li><b>Otonomi</b> — tiap situs mengontrol data lokalnya; administrator global bertanggung jawab atas keseluruhan sistem</li></ul>
@@ -58,17 +69,36 @@
 <div class="tabel-bungkus"><table><thead><tr><th>Karakteristik</th><th>Isi</th></tr></thead><tbody><tr><td>Multiple processes</td><td>Setiap proses memiliki thread mandiri, eksplisit maupun implisit</td></tr><tr><td>Interprocess communication</td><td>Proses berkomunikasi lewat pesan; waktu tempuh pesan bergantung media</td></tr><tr><td>Disjoint address spaces</td><td>Ruang alamat tiap proses terpisah, fisik maupun virtual</td></tr><tr><td>Collective goal</td><td>Proses harus berinteraksi untuk tujuan bersama — tanpa interaksi bukan sistem terdistribusi</td></tr></tbody></table></div>
 
 <h2 id="tiga-lapis-arsitektur-d-dbs">Tiga lapis arsitektur D-DBS</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Lapis</th><th>Isi</th><th>Tugas</th></tr></thead><tbody><tr><td>1. D-DBS Global Clients</td><td>Pengguna dan klien global</td><td>Mengirim kueri ke lapisan server DDBMS</td></tr><tr><td>2. D-DBMS Server</td><td>Proses D-DBMS + direktori global (GD/D-DB)</td><td>Menyediakan mekanisme deskripsi, manipulasi, dan kontrol</td></tr><tr><td>3. Distributed Database</td><td>Node berisi LDBMS dan basis data lokal (L-DB)</td><td>Menyimpan data terdistribusi</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Lapis</th><th>Isi</th><th>Tugas</th></tr></thead><tbody><tr><td>1. D-DBS Global Clients</td><td>Pengguna dan klien global</td><td>Mengirim kueri ke lapisan server <abbr class="istilah" tabindex="0" data-g="g-ddbms" data-istilah="DDBMS" data-en="distributed DBMS" data-arti="Perangkat lunak yang mengelola basis data terdistribusi dan membuat pendistribusian data terlihat transparan bagi pengguna." data-detail="Tugasnya: memetakan kueri global ke fragmen, mengoptimasi kueri terdistribusi, mengoordinasikan transaksi lintas situs, dan menyediakan transparansi." data-contoh="Oracle dengan database link dan partisi adalah DDBMS homogen.">DDBMS</abbr></td></tr><tr><td>2. D-DBMS Server</td><td>Proses D-DBMS + direktori global (GD/D-DB)</td><td>Menyediakan mekanisme deskripsi, manipulasi, dan kontrol</td></tr><tr><td>3. Distributed Database</td><td>Node berisi LDBMS dan basis data lokal (L-DB)</td><td>Menyimpan data terdistribusi</td></tr></tbody></table></div>
 
 <h2 id="model-datalogical-ansi-sparc">Model datalogical ANSI/SPARC</h2>
-<ul><li><b>GES</b> (Global External Schema) — rangkaian skema eksternal yang dilihat aplikasi</li><li><b>GCS</b> (Global Conceptual Schema) — skema konseptual global, penghubung gambaran pengguna dengan gambaran terdistribusi</li><li><b>GIS</b> (Global Internal Schema) — informasi yang dibutuhkan untuk mengakses data terdistribusi dan LDBMS</li><li><b>LCS / LIS</b> — skema konseptual dan internal basis data lokal di tiap situs</li></ul>
-<div class="catatan info"><p>GCS adalah <i>nexus</i> rancangan: seluruh transparansi distribusi bertumpu padanya. Fragmentasi dan alokasi didefinisikan sebagai pemetaan dari GCS ke LCS.</p></div>
+<ul><li><b>GES</b> (Global External Schema) — rangkaian skema eksternal yang dilihat aplikasi</li><li><b><abbr class="istilah" tabindex="0" data-g="g-gcs" data-istilah="GCS" data-en="global conceptual schema" data-arti="Skema konseptual global — penghubung antara gambaran pengguna dan gambaran terdistribusi sistem. Fondasi seluruh transparansi distribusi." data-detail="Global Conceptual Schema mendefinisikan relasi global tanpa menyebut lokasi. Di bawahnya ada skema fragmentasi dan skema alokasi." data-contoh="Relasi PASIEN pada GCS, walau fisiknya tiga fragmen.">GCS</abbr></b> (Global Conceptual Schema) — skema konseptual global, penghubung gambaran pengguna dengan gambaran terdistribusi</li><li><b>GIS</b> (Global Internal Schema) — informasi yang dibutuhkan untuk mengakses data terdistribusi dan LDBMS</li><li><b>LCS / LIS</b> — skema konseptual dan internal basis data lokal di tiap situs</li></ul>
+<div class="catatan info"><p>GCS adalah <i>nexus</i> rancangan: seluruh <abbr class="istilah" tabindex="0" data-g="g-transparansi" data-istilah="Transparansi" data-en="transparency" data-arti="Penyembunyian rincian implementasi dari pengguna, sehingga basis data terdistribusi terasa seperti basis data tunggal." data-detail="Jenisnya: transparansi distribusi (fragmentasi, lokasi, replikasi), transaksi, kinerja, dan DBMS. Makin tinggi transparansi, makin sederhana aplikasi tetapi makin banyak kerja DDBMS." data-contoh="Menulis SELECT * FROM pasien tanpa peduli di situs mana datanya." data-lab="transparansi" data-lab-judul="Tangga Transparansi">transparansi</abbr> distribusi bertumpu padanya. <abbr class="istilah" tabindex="0" data-g="g-fragmentasi" data-istilah="Fragmentasi" data-en="fragmentation" data-arti="Pemecahan relasi menjadi bagian-bagian lebih kecil yang dapat ditempatkan di situs berbeda." data-detail="Tujuannya menaruh data dekat penggunanya, mengurangi data yang dikirim, dan memungkinkan pemrosesan paralel. Wajib memenuhi kelengkapan, rekonstruksi, dan kedisjoinan." data-contoh="Tabel pasien dipecah per kota menjadi pasien@jakarta, pasien@bandung, pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">Fragmentasi</abbr> dan <abbr class="istilah" tabindex="0" data-g="g-alokasi" data-istilah="Alokasi" data-en="allocation" data-arti="Keputusan menempatkan fragmen pada situs tertentu, termasuk berapa salinan yang dibuat. Masukannya empat kelompok informasi: basis data, aplikasi, situs, dan jaringan." data-detail="Alokasi optimal menyeimbangkan biaya simpan, biaya akses baca, biaya pembaruan (yang naik tiap salinan), dan ketersediaan. Alokasi non-redundan menaruh tiap fragmen di satu situs; redundan menaruh salinannya di beberapa situs." data-contoh="Fragmen pasien kota Bandung ditaruh di situs Bandung karena 80% aksesnya berasal dari sana." data-lab="alokasi" data-lab-judul="Alokasi &amp; Replikasi">alokasi</abbr> didefinisikan sebagai pemetaan dari GCS ke LCS.</p></div>
 
 <h2 id="arsitektur-3-tier-dan-n-tier">Arsitektur 3-tier dan N-tier</h2>
-<p>N-tier adalah bentuk umum dengan tiga komputer atau lebih. Keuntungannya: tiap tingkat dapat berjalan pada prosesor dan sistem operasi yang sesuai, dan dapat diperbarui secara independen dari tingkat lain.</p>
+<p><abbr class="istilah" tabindex="0" data-g="g-n-tier" data-istilah="N-tier" data-arti="Arsitektur dengan tiga lapis atau lebih, masing-masing dapat berjalan di platform berbeda dan diperbarui secara independen." data-detail="Memisahkan presentasi, logika bisnis, dan data memudahkan skala per lapis. Pada DDBS, lapisan data sendiri dapat tersebar di banyak situs." data-contoh="Peramban → server aplikasi → server basis data per region.">N-tier</abbr> adalah bentuk umum dengan tiga komputer atau lebih. Keuntungannya: tiap tingkat dapat berjalan pada prosesor dan sistem operasi yang sesuai, dan dapat diperbarui secara independen dari tingkat lain.</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Tier</th><th>Komponen</th><th>Isi</th></tr></thead><tbody><tr><td>1</td><td>Client application</td><td>Berjalan di komputer pengguna; tidak bisa mencapai RDBMS tanpa melewati tier 2</td></tr><tr><td>2</td><td>Application server</td><td>Berisi package, objek, method, fungsi, dan aktivitas kueri</td></tr><tr><td>3</td><td>RDBMS application</td><td>Kumpulan basis data dan data resource manager</td></tr></tbody></table></div>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Skema eksternal = view</h3>
+<p>Lapisan eksternal <abbr class="istilah" tabindex="0" data-g="g-ansi-sparc" data-istilah="ANSI/SPARC" data-arti="Kerangka tiga skema — eksternal, konseptual, internal — yang diadaptasi untuk basis data terdistribusi menjadi GES, GCS, dan GIS." data-detail="Pemisahan tiga skema melahirkan dua independensi: logis (skema konseptual berubah tanpa mengubah skema eksternal) dan fisik (penyimpanan berubah tanpa mengubah skema konseptual). Pada DDBS ditambah skema fragmentasi dan alokasi." data-contoh="View v_keuangan adalah skema eksternal; tabel pasien_dokter adalah skema konseptual; berkas data dan indeks adalah skema internal.">ANSI/SPARC</abbr>: pengguna bagian keuangan hanya melihat ringkasan biaya. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="CREATE VIEW v_keuangan AS
+  SELECT d.spesialis, SUM(pd.biaya) AS pendapatan
+    FROM dokter d JOIN pasien_dokter pd ON d.id_dokter = pd.id_dokter
+   GROUP BY d.spesialis;
+SELECT * FROM v_keuangan ORDER BY pendapatan DESC;" data-db="rumahsakit"><code><span class="sql-k">CREATE</span> <span class="sql-k">VIEW</span> v_keuangan <span class="sql-k">AS</span>
+  <span class="sql-k">SELECT</span> d.spesialis, <span class="sql-f">SUM</span>(pd.biaya) <span class="sql-k">AS</span> pendapatan
+    <span class="sql-k">FROM</span> dokter d <span class="sql-k">JOIN</span> pasien_dokter pd <span class="sql-k">ON</span> d.id_dokter = pd.id_dokter
+   <span class="sql-k">GROUP BY</span> d.spesialis;
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> v_keuangan <span class="sql-k">ORDER BY</span> pendapatan DESC;</code></pre>
+<h3>Skema konseptual di kamus data</h3>
+<p>Katalog sistem menyimpan definisi tabel, kolom, dan kendala — lapisan konseptual. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="SELECT table_name, column_name, data_type, nullable
+  FROM user_tab_columns
+ WHERE table_name = 'PASIEN_DOKTER';" data-db="rumahsakit"><code><span class="sql-k">SELECT</span> table_name, column_name, data_type, nullable
+  <span class="sql-k">FROM</span> user_tab_columns
+ <span class="sql-k">WHERE</span> table_name = <span class="sql-s">'PASIEN_DOKTER'</span>;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -84,12 +114,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

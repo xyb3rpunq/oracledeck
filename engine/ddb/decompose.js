@@ -107,23 +107,75 @@ function dedupeLiterals(lits) {
  * @param {Object<string,string[]>} skema peta namaRelasi -> daftar atribut
  */
 export function analyze(ast, skema) {
-  const masalah = [];
-  const q = ast.type === 'union' ? ast.left : ast;
-  const alias = new Map();
   const skemaLower = Object.fromEntries(Object.entries(skema).map(([k, v]) => [k.toLowerCase(), v]));
+  const cte = new Set();
+  const cabang = [];
+  let badan = ast;
+  if (ast.type === 'with') {
+    ast.ctes.forEach((c) => cte.add(c.name.toLowerCase()));
+    ast.ctes.forEach((c) => cabangSelect(c.query).forEach((q) => cabang.push({ label: `CTE ${c.name}`, q })));
+    badan = ast.body;
+  }
+  const utama = cabangSelect(badan);
+  if (utama.length === 0) throw new SqlError(`Dekomposisi kueri hanya berlaku untuk SELECT, bukan ${String(ast.type).toUpperCase()}.`);
+  utama.forEach((q, i) => cabang.push({ label: utama.length > 1 ? `cabang ${i + 1}` : null, q, utama: i === 0 }));
 
-  for (const ref of q.from) {
-    if (ref.sub) { alias.set(ref.alias.toLowerCase(), null); continue; }
-    const t = skemaLower[String(ref.table).toLowerCase()];
+  const masalah = [];
+  let graf = null;
+  const beriLabel = cabang.length > 1;
+  for (const c of cabang) {
+    const hasil = analisisCabang(c.q, skemaLower, cte);
+    hasil.masalah.forEach((m) => masalah.push(beriLabel && c.label ? { ...m, pesan: `${c.label}: ${m.pesan}` } : m));
+    if (c.utama) graf = hasil.graf;
+  }
+
+  // operasi himpunan hanya sah bila setiap cabang menghasilkan jumlah kolom yang sama
+  const jumlahKolom = (q) => (q.items.some((it) => it.expr.k === 'star') ? null : q.items.length);
+  const jumlah = utama.map(jumlahKolom);
+  if (utama.length > 1 && jumlah.every((n) => n !== null) && new Set(jumlah).size > 1) {
+    masalah.push({ jenis: 'salah tipe', pesan: `cabang operasi himpunan punya jumlah kolom berbeda (${jumlah.join(' vs ')}) — UNION/INTERSECT/MINUS menuntut skema yang kompatibel` });
+  }
+
+  return {
+    diterima: masalah.filter((m) => m.jenis === 'salah tipe' || m.jenis === 'salah semantik' || m.jenis === 'selalu salah').length === 0,
+    masalah,
+    graf,
+  };
+}
+
+/**
+ * Semua blok SELECT dari sebuah simpul kueri, kiri ke kanan.
+ * WITH dibuka ke badannya; UNION/INTERSECT/MINUS diurai ke kedua cabangnya.
+ */
+export function cabangSelect(node) {
+  if (!node) return [];
+  if (node.type === 'select') return [node];
+  if (node.type === 'with') return cabangSelect(node.body);
+  if (node.type === 'union' || node.type === 'setop') return [...cabangSelect(node.left), ...cabangSelect(node.right)];
+  return [];
+}
+
+/** SELECT yang mewakili kueri: cabang paling kiri dari badan kueri. */
+export function selectUtama(ast) {
+  const [q] = cabangSelect(ast);
+  if (!q) throw new SqlError(`Dekomposisi kueri hanya berlaku untuk SELECT, bukan ${String(ast?.type || '?').toUpperCase()}.`);
+  return q;
+}
+
+function analisisCabang(q, skemaLower, cte) {
+  const masalah = [];
+  const alias = new Map();
+
+  const daftar = (ref) => {
+    if (ref.sub) { alias.set(ref.alias.toLowerCase(), null); return; }
+    const nama = String(ref.table).toLowerCase();
+    if (cte.has(nama)) { alias.set(String(ref.alias).toLowerCase(), null); return; }
+    const t = skemaLower[nama];
     if (!t) masalah.push({ jenis: 'salah tipe', pesan: `relasi "${ref.table}" tidak ada dalam skema global` });
     alias.set(String(ref.alias).toLowerCase(), t || null);
-  }
-  for (const j of q.joins) {
-    if (j.ref.sub) { alias.set(j.ref.alias.toLowerCase(), null); continue; }
-    const t = skemaLower[String(j.ref.table).toLowerCase()];
-    if (!t) masalah.push({ jenis: 'salah tipe', pesan: `relasi "${j.ref.table}" tidak ada dalam skema global` });
-    alias.set(String(j.ref.alias).toLowerCase(), t || null);
-  }
+  };
+  q.from.forEach(daftar);
+  q.joins.forEach((j) => daftar(j.ref));
 
   const cekKolom = (e) => {
     if (!e || typeof e !== 'object') return;
@@ -144,9 +196,10 @@ export function analyze(ast, skema) {
       }
       return;
     }
-    for (const key of ['l', 'r', 'e', 'lo', 'hi', 'pat', 'arg']) if (e[key]) cekKolom(e[key]);
+    for (const key of ['l', 'r', 'e', 'lo', 'hi', 'pat', 'arg', 'subjek', 'lain']) if (e[key]) cekKolom(e[key]);
     if (e.args) e.args.forEach(cekKolom);
     if (e.list) e.list.forEach(cekKolom);
+    if (e.cabang) e.cabang.forEach((c) => { cekKolom(c.kapan); cekKolom(c.maka); });
   };
   q.items.forEach((it) => cekKolom(it.expr));
   if (q.where) cekKolom(q.where);
@@ -165,11 +218,7 @@ export function analyze(ast, skema) {
   const kontradiksi = q.where ? cariKontradiksi(q.where) : [];
   kontradiksi.forEach((k) => masalah.push({ jenis: 'selalu salah', pesan: k }));
 
-  return {
-    diterima: masalah.filter((m) => m.jenis === 'salah tipe' || m.jenis === 'salah semantik' || m.jenis === 'selalu salah').length === 0,
-    masalah,
-    graf,
-  };
+  return { masalah, graf };
 }
 
 /** Graf kueri: simpul = relasi (alias), sisi = predikat join antar dua relasi. */
@@ -317,7 +366,22 @@ function isNegationOf(a, b) {
  * Daun = relasi pada FROM; akar = proyeksi atribut hasil (Modul 7).
  */
 export function toOperatorTree(ast) {
-  const q = ast.type === 'union' ? ast.left : ast;
+  if (ast.type === 'with') {
+    return {
+      op: 'with',
+      detail: ast.ctes.map((c) => c.name).join(', '),
+      children: [...ast.ctes.map((c) => ({ op: 'cte', name: c.name, children: [toOperatorTree(c.query)] })), toOperatorTree(ast.body)],
+    };
+  }
+  if (ast.type === 'union' || ast.type === 'setop') {
+    const opHimpunan = ast.type === 'union' ? (ast.all ? 'union all' : 'union') : ast.op.toLowerCase();
+    let himpunan = { op: opHimpunan, children: [toOperatorTree(ast.left), toOperatorTree(ast.right)] };
+    if (ast.orderBy && ast.orderBy.length) himpunan = { op: 'sort', detail: ast.orderBy.map((o) => `${exprToString(o.expr)} ${o.dir}`).join(', '), children: [himpunan] };
+    if (ast.limit !== null && ast.limit !== undefined) himpunan = { op: 'limit', detail: batasTeks(ast), children: [himpunan] };
+    return himpunan;
+  }
+  if (ast.type !== 'select') throw new SqlError(`Pohon operator hanya dibuat untuk SELECT, bukan ${String(ast.type).toUpperCase()}.`);
+  const q = ast;
   const daun = [...q.from.map((r) => ({ op: 'relation', name: r.table || `(sub) ${r.alias}`, alias: r.alias, children: [] })),
                 ...q.joins.map((j) => ({ op: 'relation', name: j.ref.table || `(sub) ${j.ref.alias}`, alias: j.ref.alias, children: [] }))];
   if (daun.length === 0) return { op: 'relation', name: 'DUAL', children: [] };
@@ -340,9 +404,11 @@ export function toOperatorTree(ast) {
   node = { op: 'project', attrs, children: [node] };
   if (q.distinct) node = { op: 'distinct', children: [node] };
   if (q.orderBy.length) node = { op: 'sort', detail: q.orderBy.map((o) => `${exprToString(o.expr)} ${o.dir}`).join(', '), children: [node] };
-  if (ast.type === 'union') node = { op: ast.all ? 'union all' : 'union', children: [node, toOperatorTree(ast.right)] };
+  if (q.limit !== null && q.limit !== undefined) node = { op: 'limit', detail: batasTeks(q), children: [node] };
   return node;
 }
+
+const batasTeks = (q) => `${q.limit} baris${q.offset ? `, lewati ${q.offset}` : ''}`;
 
 function hasAgg(q) {
   const cek = (e) => {
@@ -399,7 +465,7 @@ function collectAliases(n) {
 /** Jalankan keempat langkah sekaligus atas string SQL. */
 export function decompose(sql, skema) {
   const ast = parse(sql);
-  const q = ast.type === 'union' ? ast.left : ast;
+  const q = selectUtama(ast);
   const where = q.where;
   const normalisasi = where ? { cnf: toCNF(where), dnf: toDNF(where) } : { cnf: null, dnf: null };
   const analisis = analyze(ast, skema);

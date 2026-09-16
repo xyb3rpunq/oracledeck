@@ -1,6 +1,6 @@
 // Lab 02 — Normalisasi 1NF sampai BCNF.
-import * as F from '../../engine/core/fd.js?v=8e172babd6';
-import * as U from './ui.js?v=8e172babd6';
+import * as F from '../../engine/core/fd.js?v=849b085103';
+import * as U from './ui.js?v=849b085103';
 
 const CONTOH = [
   {
@@ -74,6 +74,7 @@ ${U.tabel(['Bentuk', 'Syarat', 'Anomali yang dicegah'], [
 `);
 
   document.getElementById('jalan').addEventListener('click', hitung);
+  U.langsung([document.getElementById('attrs'), document.getElementById('fds')], hitung);
   document.getElementById('atomik').addEventListener('change', (e) => { state.atomik = e.target.checked; hitung(); });
   U.$$('.contoh').forEach((b) => b.addEventListener('click', () => {
     const c = CONTOH[Number(b.dataset.i)];

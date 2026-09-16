@@ -1,6 +1,6 @@
 // Lab 10 — Kendali Konkurensi: keterserialan, 2PL, timestamp ordering.
-import * as C from '../../engine/ddb/concurrency.js?v=8e172babd6';
-import * as U from './ui.js?v=8e172babd6';
+import * as C from '../../engine/ddb/concurrency.js?v=849b085103';
+import * as U from './ui.js?v=849b085103';
 
 const CONTOH = [
   { nama: 'Jadwal serial', jadwal: 'r1[x] w1[x] c1 r2[x] w2[x] c2', cerita: 'Dua transaksi berjalan bergantian tanpa tumpang tindih. Selalu serializable, selalu strict.' },
@@ -47,6 +47,7 @@ ${CONTOH.map((c, i) => `<button type="button" class="hantu kecil contoh" data-i=
 `);
 
   document.getElementById('jalan').addEventListener('click', hitung);
+  U.langsung(document.getElementById('jadwal'), hitung);
   document.getElementById('jadwal').addEventListener('keydown', (e) => { if (e.key === 'Enter') hitung(); });
   document.getElementById('varian').addEventListener('change', (e) => { varian = e.target.value; hitung(); });
   U.$$('.contoh').forEach((b) => b.addEventListener('click', () => {

@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-13">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 13</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#mengapa-3pc-ada">Mengapa 3PC ada</a></li><li><a href="#aturan-terminasi-3pc">Aturan terminasi 3PC</a></li><li><a href="#partisi-jaringan">Partisi jaringan</a></li><li><a href="#kuorum">Kuorum</a></li><li><a href="#rto-dan-rpo">RTO dan RPO</a></li></ol>
+    <ol><li><a href="#mengapa-3pc-ada">Mengapa 3PC ada</a></li><li><a href="#aturan-terminasi-3pc">Aturan terminasi 3PC</a></li><li><a href="#partisi-jaringan">Partisi jaringan</a></li><li><a href="#kuorum">Kuorum</a></li><li><a href="#rto-dan-rpo">RTO dan RPO</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 13</p>
@@ -46,7 +57,7 @@
     <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami teknik pemulihan kegagalan pemrosesan data terdistribusi.</p></div>
 
 <h2 id="mengapa-3pc-ada">Mengapa 3PC ada</h2>
-<p>Kelemahan 2PC bukan kelalaian implementasi, melainkan sifat protokolnya: keadaan READY bertetangga langsung dengan COMMIT maupun ABORT, sehingga peserta di keadaan itu tidak punya dasar untuk memilih. 3PC menyisipkan satu keadaan antara — PRE-COMMIT — yang hanya bertetangga dengan COMMIT.</p>
+<p>Kelemahan 2PC bukan kelalaian implementasi, melainkan sifat protokolnya: keadaan <abbr class="istilah" tabindex="0" data-g="g-ready" data-istilah="READY" data-arti="Keadaan peserta 2PC setelah menulis catatan ready dan mengirim suara. Sejak saat itu ia menyerahkan hak memutuskan kepada koordinator." data-detail="Setelah READY, peserta kehilangan hak memutuskan sendiri. Bila koordinator jatuh, ia harus menunggu — inilah sumber sifat memblokir 2PC." data-contoh="Baris di dba_2pc_pending dengan STATE = prepared." data-lab="duafase" data-lab-judul="Simulator 2PC &amp; 3PC">READY</abbr> bertetangga langsung dengan COMMIT maupun ABORT, sehingga peserta di keadaan itu tidak punya dasar untuk memilih. 3PC menyisipkan satu keadaan antara — <abbr class="istilah" tabindex="0" data-g="g-pre-commit" data-istilah="PRE-COMMIT" data-arti="Keadaan tambahan pada 3PC yang hanya bertetangga dengan COMMIT. Kehadirannya membuat peserta selalu bisa memutuskan sendiri saat koordinator jatuh." data-detail="Karena tidak ada keadaan yang bertetangga dengan COMMIT dan ABORT sekaligus, peserta 3PC selalu bisa menentukan keputusan tanpa koordinator — asal tidak terjadi partisi jaringan." data-contoh="Peserta yang sudah PRE-COMMIT dapat commit sendiri saat koordinator jatuh." data-lab="duafase" data-lab-judul="Simulator 2PC &amp; 3PC">PRE-COMMIT</abbr> — yang hanya bertetangga dengan COMMIT.</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Fase</th><th>Koordinator</th><th>Peserta</th></tr></thead><tbody><tr><td>1 — Voting</td><td>Kirim PREPARE</td><td>Balas VOTE-COMMIT / VOTE-ABORT, masuk READY</td></tr><tr><td>2 — Pre-commit</td><td>Kirim PRE-COMMIT bila semua setuju</td><td>Masuk PRE-COMMIT, balas ACK — kini tahu keputusan global pasti COMMIT</td></tr><tr><td>3 — Commit</td><td>Kirim GLOBAL-COMMIT</td><td>Commit dan balas ACK</td></tr></tbody></table></div>
 
 <h2 id="aturan-terminasi-3pc">Aturan terminasi 3PC</h2>
@@ -54,17 +65,34 @@
 <div class="catatan baik"><p>3PC menambah satu putaran pesan sehingga lebih lambat pada jalur normal. Imbalannya: tidak ada keadaan yang bertetangga dengan COMMIT dan ABORT sekaligus, sehingga peserta selalu bisa memutuskan sendiri.</p></div>
 
 <h2 id="partisi-jaringan">Partisi jaringan</h2>
-<p>Jaringan terbelah menjadi dua kelompok yang saling tak terlihat. Tidak ada protokol yang dapat menjamin konsistensi <i>sekaligus</i> ketersediaan di kedua sisi — inilah isi teorema CAP.</p>
+<p>Jaringan terbelah menjadi dua kelompok yang saling tak terlihat. Tidak ada protokol yang dapat menjamin konsistensi <i>sekaligus</i> ketersediaan di kedua sisi — inilah isi teorema <abbr class="istilah" tabindex="0" data-g="g-cap" data-istilah="CAP" data-arti="Teorema yang menyatakan sistem terdistribusi hanya dapat menjamin dua dari tiga sifat: Consistency, Availability, dan Partition tolerance." data-detail="Konsistensi (semua node melihat data yang sama), ketersediaan (setiap permintaan dijawab), toleransi partisi (tetap berjalan saat jaringan terbelah). Saat partisi terjadi, pilihannya tinggal C atau A." data-contoh="Replika sinkron yang menolak tulisan saat salah satu situs terputus memilih CP." data-lab="ketersediaan" data-lab-judul="Ketersediaan &amp; CAP">CAP</abbr>.</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Strategi</th><th>Yang dikorbankan</th><th>Contoh sistem</th></tr></thead><tbody><tr><td>CP — hanya sisi mayoritas melayani tulis</td><td>Ketersediaan di sisi minoritas</td><td>Oracle RAC dengan voting disk, etcd, ZooKeeper</td></tr><tr><td>AP — kedua sisi tetap melayani</td><td>Konsistensi (diselesaikan belakangan)</td><td>Cassandra, DynamoDB, Oracle GoldenGate asinkron</td></tr><tr><td>CA — asumsi partisi tidak terjadi</td><td>Toleransi partisi, yang tidak boleh dikorbankan</td><td>Basis data satu mesin</td></tr></tbody></table></div>
-<p>PACELC melengkapi CAP: <b>kalau ada Partisi</b> pilih A atau C; <b>Else</b> (jaringan sehat) pilih L (latensi rendah) atau C (konsistensi). Pertukaran tetap ada bahkan ketika tidak ada kegagalan sama sekali.</p>
+<p><abbr class="istilah" tabindex="0" data-g="g-pacelc" data-istilah="PACELC" data-arti="Perluasan CAP: bila ada Partisi pilih A atau C; Else (jaringan sehat) pilih L (latensi) atau C (konsistensi)." data-detail="Menjelaskan bahwa walau tanpa partisi, sistem tetap memilih antara latensi rendah dan konsistensi kuat." data-contoh="Replikasi asinkron adalah pilihan EL: cepat tetapi replika bisa tertinggal." data-lab="ketersediaan" data-lab-judul="Ketersediaan &amp; CAP">PACELC</abbr> melengkapi CAP: <b>kalau ada Partisi</b> pilih A atau C; <b>Else</b> (jaringan sehat) pilih L (latensi rendah) atau C (konsistensi). Pertukaran tetap ada bahkan ketika tidak ada kegagalan sama sekali.</p>
 
 <h2 id="kuorum">Kuorum</h2>
-<p>Dengan N salinan, kuorum baca R dan kuorum tulis W, konsistensi kuat dijamin bila <b>R + W &gt; N</b> — himpunan baca dan himpunan tulis pasti beririsan sehingga pembaca selalu melihat tulisan terakhir. Bila W &gt; N/2, urutan tulis juga terjamin.</p>
+<p>Dengan N salinan, <abbr class="istilah" tabindex="0" data-g="g-kuorum" data-istilah="Kuorum" data-en="quorum" data-arti="Jumlah minimum salinan yang harus setuju agar operasi sah. Konsistensi kuat dijamin bila kuorum baca + kuorum tulis lebih besar dari jumlah salinan." data-detail="Dengan N salinan, kuorum baca R dan tulis W konsisten bila R + W &gt; N dan 2W &gt; N. Makin besar W, makin mahal tulisan tetapi makin murah baca yang konsisten." data-contoh="N=3, W=2, R=2: satu situs boleh mati tanpa menghentikan baca maupun tulis." data-lab="ketersediaan" data-lab-judul="Ketersediaan &amp; CAP">kuorum</abbr> baca R dan kuorum tulis W, konsistensi kuat dijamin bila <b>R + W &gt; N</b> — himpunan baca dan himpunan tulis pasti beririsan sehingga pembaca selalu melihat tulisan terakhir. Bila W &gt; N/2, urutan tulis juga terjamin.</p>
 
 <h2 id="rto-dan-rpo">RTO dan RPO</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Strategi replikasi</th><th>RPO (data yang mungkin hilang)</th><th>Harga</th></tr></thead><tbody><tr><td>Sinkron</td><td>0 — tidak ada transaksi hilang</td><td>Setiap commit menunggu situs jauh; latensi naik</td></tr><tr><td>Asinkron</td><td>Sebesar jeda replikasi (detik sampai menit)</td><td>Commit lokal tetap cepat</td></tr><tr><td>Backup berkala</td><td>Sebesar interval backup (jam)</td><td>Paling murah, paling banyak kehilangan</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Strategi replikasi</th><th>RPO (data yang mungkin hilang)</th><th>Harga</th></tr></thead><tbody><tr><td>Sinkron</td><td>0 — tidak ada transaksi hilang</td><td>Setiap commit menunggu <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> jauh; latensi naik</td></tr><tr><td>Asinkron</td><td>Sebesar jeda <abbr class="istilah" tabindex="0" data-g="g-replikasi" data-istilah="Replikasi" data-en="replication" data-arti="Menyimpan lebih dari satu salinan fragmen di situs berbeda. Menaikkan ketersediaan baca, menaikkan biaya tulis." data-detail="Replikasi sinkron menjaga semua salinan sama tetapi memperlambat tulisan; asinkron cepat tetapi salinan bisa tertinggal. Pilihan ini terkait langsung dengan CAP dan PACELC." data-contoh="Tabel dokter direplikasi ke tiga situs karena sering dibaca dan jarang diubah." data-lab="alokasi" data-lab-judul="Alokasi &amp; Replikasi">replikasi</abbr> (detik sampai menit)</td><td>Commit lokal tetap cepat</td></tr><tr><td>Backup berkala</td><td>Sebesar interval backup (jam)</td><td>Paling murah, paling banyak kehilangan</td></tr></tbody></table></div>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Pemulihan ke titik konsisten</h3>
+<p>ROLLBACK mengembalikan basis data ke COMMIT terakhir — dasar pemulihan transaksi. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="DELETE FROM pasien_dokter WHERE biaya &lt; 300000;
+SELECT COUNT(*) AS setelah_hapus FROM pasien_dokter;
+ROLLBACK;
+SELECT COUNT(*) AS setelah_pulih FROM pasien_dokter;" data-db="rumahsakit"><code><span class="sql-k">DELETE</span> <span class="sql-k">FROM</span> pasien_dokter <span class="sql-k">WHERE</span> biaya &lt; <span class="sql-n">300000</span>;
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> setelah_hapus <span class="sql-k">FROM</span> pasien_dokter;
+<span class="sql-k">ROLLBACK</span>;
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> setelah_pulih <span class="sql-k">FROM</span> pasien_dokter;</code></pre>
+<h3>RPO: data yang belum COMMIT hilang</h3>
+<p>Perubahan yang belum di-COMMIT tidak ikut dipulihkan; \reset meniru crash sebelum COMMIT. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="INSERT INTO administrator VALUES (5, 'Baru', 'Pagi', 'Jakarta');
+\reset
+SELECT COUNT(*) AS admin FROM administrator;" data-db="rumahsakit"><code><span class="sql-k">INSERT</span> <span class="sql-k">INTO</span> administrator <span class="sql-k">VALUES</span> (<span class="sql-n">5</span>, <span class="sql-s">'Baru'</span>, <span class="sql-s">'Pagi'</span>, <span class="sql-s">'Jakarta'</span>);
+\reset
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> admin <span class="sql-k">FROM</span> administrator;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -81,12 +109,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

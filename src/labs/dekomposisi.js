@@ -74,6 +74,7 @@ ${CONTOH.map((c) => `<button type="button" class="hantu kecil contoh" data-sql="
 ${U.tabel(['Aturan', 'Jenis'], D.ATURAN_IDEMPOTEN.map((a) => [`<code>${U.esc(a.nama)}</code>`, a.jenis]))}
 `);
   document.getElementById('jalan').addEventListener('click', jalankan);
+  U.langsung(document.getElementById('sql'), jalankan);
   U.$$('.contoh').forEach((b) => b.addEventListener('click', () => {
     document.getElementById('sql').value = b.dataset.sql;
     jalankan();

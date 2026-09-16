@@ -2,6 +2,8 @@
 // Sumber: dokumen "Kerjakan soal ini" (12 soal Praktikum 3), lembar Praktek-4-QUERY,
 // lembar Praktek-5-JOIN, dan daftar DML pada Praktikum 2.
 // Kunci jawaban tidak ditampilkan sebelum diminta — penilai membandingkan HASIL kueri.
+// Soal DML (punya `periksa`) dinilai dari KEADAAN TABEL setelah perintah dijalankan
+// pada salinan data, dengan aturan CASCADE seperti yang diminta lembar Praktikum 2.
 
 export const BANK_SOAL = [
   // ---------------------------------------------------------------- Praktikum 3
@@ -43,6 +45,14 @@ export const BANK_SOAL = [
   { id: 'p2-06', praktikum: 2, judul: 'LIKE', soal: 'Tampilkan dokter yang namanya diawali "dr. A".', kunci: "SELECT * FROM dokter WHERE nama_dokter LIKE 'dr. A%'", petunjuk: 'Pola diawali: teks lalu %.' },
   { id: 'p2-07', praktikum: 2, judul: 'ORDER BY', soal: 'Tampilkan nama pasien dan kota, diurutkan menurut kota lalu nama.', kunci: 'SELECT nama_pasien, kota FROM pasien ORDER BY kota, nama_pasien', petunjuk: 'Beberapa kunci urut dipisahkan koma. Urutan dinilai.' },
   { id: 'p2-08', praktikum: 2, judul: 'GROUP BY', soal: 'Tampilkan setiap spesialis dokter beserta jumlah pemeriksaan yang ditanganinya.', kunci: 'SELECT d.spesialis, COUNT(*) FROM dokter d JOIN pasien_dokter pd ON d.id_dokter = pd.id_dokter GROUP BY d.spesialis', petunjuk: 'Join dulu, lalu kelompokkan.' },
+
+  // Praktikum 2 poin a, k, l — perintah yang MENGUBAH data
+  { id: 'p2-09', praktikum: 2, jenis: 'dml', judul: 'INSERT pasien baru', soal: 'Daftarkan pasien baru: id 13, nama "Tegar Pratama", alamat "Jl. Kelapa 4", jenis kelamin L, penyakit Tifus, no HP 081234567013, kota Jakarta.', kunci: "INSERT INTO pasien (id_pasien, nama_pasien, alamat_pasien, jenis_kelamin, penyakit, no_hp, kota) VALUES (13, 'Tegar Pratama', 'Jl. Kelapa 4', 'L', 'Tifus', '081234567013', 'Jakarta')", periksa: 'SELECT * FROM pasien', integritas: 'cascade', petunjuk: 'Sebutkan kolomnya satu per satu agar tidak bergantung pada urutan kolom tabel. no_hp bertipe teks — pakai tanda kutip.' },
+  { id: 'p2-10', praktikum: 2, jenis: 'dml', judul: 'UPDATE satu baris', soal: 'Pasien Rina Marlina pindah domisili ke Jakarta. Perbarui kotanya.', kunci: "UPDATE pasien SET kota = 'Jakarta' WHERE nama_pasien = 'Rina Marlina'", periksa: 'SELECT id_pasien, kota FROM pasien', integritas: 'cascade', petunjuk: 'UPDATE tanpa WHERE mengubah SEMUA baris — selalu tulis WHERE.' },
+  { id: 'p2-11', praktikum: 2, jenis: 'dml', judul: 'UPDATE dengan subquery', soal: 'Naikkan biaya semua pemeriksaan yang ditangani dokter spesialis Jantung sebesar 10%.', kunci: "UPDATE pasien_dokter SET biaya = biaya * 1.1 WHERE id_dokter IN (SELECT id_dokter FROM dokter WHERE spesialis = 'Jantung')", periksa: 'SELECT id, biaya FROM pasien_dokter', integritas: 'cascade', petunjuk: 'Spesialis ada di tabel dokter, biaya di pasien_dokter — hubungkan lewat IN (SELECT ...).' },
+  { id: 'p2-12', praktikum: 2, jenis: 'dml', judul: 'DELETE bersyarat', soal: 'Hapus semua catatan pemeriksaan kontrol, yaitu yang resepnya diawali kata "Kontrol".', kunci: "DELETE FROM pasien_dokter WHERE resep LIKE 'Kontrol%'", periksa: 'SELECT id FROM pasien_dokter', integritas: 'cascade', petunjuk: 'DELETE memakai WHERE yang sama seperti SELECT — coba SELECT dulu untuk melihat baris yang akan terhapus.' },
+  { id: 'p2-13', praktikum: 2, jenis: 'dml', judul: 'DELETE dengan ON DELETE CASCADE', soal: 'Pasien Hendra Gunawan (id 9) meminta datanya dihapus. Hapus dari tabel pasien. Relasinya diatur CASCADE seperti lembar Praktikum 2 — perhatikan tabel mana saja yang ikut berubah.', kunci: 'DELETE FROM pasien WHERE id_pasien = 9', periksa: "SELECT 'pasien' AS tabel, id_pasien AS kunci FROM pasien UNION ALL SELECT 'pasien_dokter', id FROM pasien_dokter UNION ALL SELECT 'daftar', id_daftar FROM daftar", integritas: 'cascade', petunjuk: 'Satu DELETE pada induk sudah cukup: CASCADE menghapus baris anak di pasien_dokter dan daftar.' },
+  { id: 'p2-14', praktikum: 2, jenis: 'dml', judul: 'UPDATE dengan ON UPDATE CASCADE', soal: 'Nomor induk dr. Farah Nadia diganti dari 6 menjadi 16. Ubah id_dokter-nya; biarkan CASCADE memperbarui tabel yang merujuknya.', kunci: 'UPDATE dokter SET id_dokter = 16 WHERE id_dokter = 6', periksa: "SELECT 'dokter' AS tabel, id_dokter AS kunci FROM dokter UNION ALL SELECT 'pasien_dokter', id_dokter FROM pasien_dokter UNION ALL SELECT 'dokter_admin', id_dokter FROM dokter_admin", integritas: 'cascade', petunjuk: 'Oracle tidak punya ON UPDATE CASCADE; perilaku ini khas MySQL/PostgreSQL seperti pada lembar praktikum.' },
 ];
 
 export const JUDUL_PRAKTIKUM = {

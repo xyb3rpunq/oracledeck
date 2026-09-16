@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
 <body>
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,105 +33,113 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+
 
 <p class="kicker">Laboratorium</p>
 <h1>16 lab yang benar-benar menghitung</h1>
-<p class="lede">Semua perhitungan berjalan di peramban Anda memakai mesin yang sama dengan yang diuji 528 kali di Node. Tidak ada jawaban yang disiapkan sebelumnya.</p>
+<p class="lede">Semua perhitungan berjalan di peramban Anda memakai mesin yang sama dengan yang diuji 677 kali di Node. Tidak ada jawaban yang disiapkan sebelumnya.</p>
 <div class="grid dua" style="margin-top:22px">
-  <a class="tile" href="erd.html">
+  <a class="tile" href="erd.html" data-kunci-halaman="lab-erd">
     <div class="no">LAB 01 · topik 3, 4</div>
-    <h3>Perancang ERD</h3>
+    <h2>Perancang ERD</h2>
     <p>Kasus Tono Rental: ERD → skema relasional → DDL Oracle, lengkap dengan jejak transformasinya.</p>
   </a>
-  <a class="tile" href="normalisasi.html">
+  <a class="tile" href="normalisasi.html" data-kunci-halaman="lab-normalisasi">
     <div class="no">LAB 02 · topik 4, 14</div>
-    <h3>Normalisasi 1NF–BCNF</h3>
+    <h2>Normalisasi 1NF–BCNF</h2>
     <p>Penutupan atribut, candidate key, pelanggaran per tingkat, sintesis 3NF, dan uji lossless-join.</p>
   </a>
-  <a class="tile" href="sql.html">
-    <div class="no">LAB 03 · topik 14</div>
-    <h3>Mesin SQL</h3>
-    <p>Jalankan SQL sungguhan atas data praktikum, lengkap dengan rencana eksekusinya.</p>
+  <a class="tile" href="sql.html" data-kunci-halaman="lab-sql">
+    <div class="no">LAB 03 · topik 6, 12, 14</div>
+    <h2>Terminal SQL Live</h2>
+    <p>Terminal SQL gaya SQL*Plus: kueri, DML, DDL, transaksi, kamus data, dan 3 situs lewat database link — pratinjau hasil muncul saat mengetik.</p>
   </a>
-  <a class="tile" href="fragmentasi.html">
+  <a class="tile" href="fragmentasi.html" data-kunci-halaman="lab-fragmentasi">
     <div class="no">LAB 04 · topik 4, 5</div>
-    <h3>Perancang Fragmentasi</h3>
+    <h2>Perancang Fragmentasi</h2>
     <p>Horizontal, vertikal, turunan, campuran — dengan audit kelengkapan, rekonstruksi, dan kedisjoinan.</p>
   </a>
-  <a class="tile" href="alokasi.html">
+  <a class="tile" href="alokasi.html" data-kunci-halaman="lab-alokasi">
     <div class="no">LAB 05 · topik 2, 5</div>
-    <h3>Alokasi & Replikasi</h3>
+    <h2>Alokasi & Replikasi</h2>
     <p>Model biaya empat kelompok informasi, pencarian alokasi optimal, dan hitungan ketersediaan.</p>
   </a>
-  <a class="tile" href="dekomposisi.html">
+  <a class="tile" href="dekomposisi.html" data-kunci-halaman="lab-dekomposisi">
     <div class="no">LAB 06 · topik 14</div>
-    <h3>Dekomposisi Kueri</h3>
+    <h2>Dekomposisi Kueri</h2>
     <p>Normalisasi CNF/DNF, analisis graf kueri, eliminasi redundansi, dan pohon operator.</p>
   </a>
-  <a class="tile" href="lokalisasi.html">
+  <a class="tile" href="lokalisasi.html" data-kunci-halaman="lab-lokalisasi">
     <div class="no">LAB 07 · topik 14</div>
-    <h3>Lokalisasi Data</h3>
+    <h2>Lokalisasi Data</h2>
     <p>Program lokalisasi dan reduksi fragmen, diverifikasi terhadap hasil kueri global.</p>
   </a>
-  <a class="tile" href="transparansi.html">
+  <a class="tile" href="transparansi.html" data-kunci-halaman="lab-transparansi">
     <div class="no">LAB 08 · topik 6, 7</div>
-    <h3>Tangga Transparansi</h3>
+    <h2>Tangga Transparansi</h2>
     <p>Satu kueri ditulis ulang pada lima tingkat transparansi, dengan ukuran kebocoran detailnya.</p>
   </a>
-  <a class="tile" href="join.html">
+  <a class="tile" href="join.html" data-kunci-halaman="lab-join">
     <div class="no">LAB 09 · topik 14</div>
-    <h3>Join Terdistribusi</h3>
+    <h2>Join Terdistribusi</h2>
     <p>Kirim utuh, semijoin, dan bloom join dijalankan sungguhan lalu dibandingkan biayanya.</p>
   </a>
-  <a class="tile" href="konkurensi.html">
+  <a class="tile" href="konkurensi.html" data-kunci-halaman="lab-konkurensi">
     <div class="no">LAB 10 · topik 9, 10</div>
-    <h3>Kendali Konkurensi</h3>
+    <h2>Kendali Konkurensi</h2>
     <p>Graf presedensi, 2PL, timestamp ordering, dan sifat pemulihan sebuah jadwal.</p>
   </a>
-  <a class="tile" href="deadlock.html">
+  <a class="tile" href="deadlock.html" data-kunci-halaman="lab-deadlock">
     <div class="no">LAB 11 · topik 11</div>
-    <h3>Manajemen Deadlock</h3>
+    <h2>Manajemen Deadlock</h2>
     <p>Deteksi terpusat, path pushing, edge chasing, deadlock semu, dan pencegahan cap waktu.</p>
   </a>
-  <a class="tile" href="duafase.html">
+  <a class="tile" href="duafase.html" data-kunci-halaman="lab-duafase">
     <div class="no">LAB 12 · topik 12, 13</div>
-    <h3>Simulator 2PC & 3PC</h3>
+    <h2>Simulator 2PC & 3PC</h2>
     <p>Injeksi kegagalan koordinator, peserta, dan partisi jaringan — lalu lihat siapa yang terblokir.</p>
   </a>
-  <a class="tile" href="ketersediaan.html">
+  <a class="tile" href="ketersediaan.html" data-kunci-halaman="lab-ketersediaan">
     <div class="no">LAB 13 · topik 1, 8, 13</div>
-    <h3>Ketersediaan & CAP</h3>
+    <h2>Ketersediaan & CAP</h2>
     <p>MTBF/MTTR, ketersediaan replika, kuorum R+W>N, CAP dan PACELC, RTO dan RPO.</p>
   </a>
-  <a class="tile" href="oracle.html">
+  <a class="tile" href="oracle.html" data-kunci-halaman="lab-oracle">
     <div class="no">LAB 14 · topik 5, 6, 12</div>
-    <h3>Generator DDL Oracle</h3>
+    <h2>Generator DDL Oracle</h2>
     <p>Rancangan terdistribusi diterjemahkan menjadi partisi, database link, dan materialized view.</p>
   </a>
-  <a class="tile" href="soal.html">
+  <a class="tile" href="soal.html" data-kunci-halaman="lab-soal">
     <div class="no">LAB 15 · topik 14</div>
-    <h3>Bank Soal Praktikum</h3>
-    <p>32 soal Praktikum 2–5, termasuk ke-12 soal Praktikum 3, dinilai otomatis dengan membandingkan hasil kueri.</p>
+    <h2>Bank Soal Praktikum</h2>
+    <p>38 soal Praktikum 2–5, termasuk ke-12 soal Praktikum 3 dan soal INSERT/UPDATE/DELETE ber-CASCADE, dinilai otomatis dari hasil dan keadaan tabel.</p>
   </a>
-  <a class="tile" href="kependudukan.html">
+  <a class="tile" href="kependudukan.html" data-kunci-halaman="lab-kependudukan">
     <div class="no">LAB 16 · topik 1, 7, 12</div>
-    <h3>Studi Kasus Kependudukan</h3>
+    <h2>Studi Kasus Kependudukan</h2>
     <p>Skripsi Oracle XE + MySQL lewat ODBC: NIK ganda yang lolos UNIQUE lokal, dan mengapa gateway tidak bisa 2PC.</p>
   </a>
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

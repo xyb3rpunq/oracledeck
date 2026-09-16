@@ -185,16 +185,21 @@ Proyek yang mengaudit orang lain harus siap diaudit.
 
 | Aspek | Cara verifikasi | Hasil |
 |---|---|---|
-| Mesin relasional, algoritma terdistribusi, penilai soal, pemeriksa situs | 528 uji otomatis di Node | Lulus semua — `node tests/run.js` |
-| Semantik SQL | 39 kueri acuan dijalankan di mesin ini **dan** di SQLite 3.50.4 lewat Python, hasil dibandingkan baris demi baris | Identik semuanya — `python tools/verify_sqlite.py` |
+| Mesin relasional, SQL & DML, terminal, algoritma terdistribusi, penilai soal, pembantu build, pemeriksa situs | 677 uji otomatis di Node | Lulus semua — `node tests/run.js` |
+| Semantik SQL dan DML | 53 kueri (termasuk CASE, EXISTS berkorelasi, WITH, INTERSECT/EXCEPT, ORDER BY + LIMIT pada UNION) dan 7 skrip INSERT/UPDATE/DELETE dijalankan di mesin ini **dan** di SQLite 3.50.4, hasil dibandingkan baris demi baris | 60/60 identik — `python tools/verify_sqlite.py` |
+| Contoh dan kueri per topik di situs | 40 contoh Terminal SQL dan 31 kueri "Coba di terminal" dijalankan pada preset masing-masing; galat yang disengaja wajib muncul dengan kode ORA yang dijanjikan | Lulus semua |
+| Tombol ▶ Jalankan | Dipasang hanya bila SQL berjalan tanpa galat pada salah satu preset — diperiksa saat build (materi) dan saat peramban senggang (keluaran lab) | 11 blok DDL khusus Oracle di Lab Generator DDL dengan benar **tidak** diberi tombol |
+| Ekspor terminal | Skrip `\ekspor` dari empat preset dijalankan ulang pada skema kosong; jumlah baris setiap tabel dibandingkan | Identik |
+| Anggaran kinerja | Median pratinjau seluruh contoh < 16 ms, maksimum < 250 ms, pelengkap otomatis < 8 ms per panggilan (uji Node; CI) | Lulus |
 | Aturan kebenaran fragmentasi | Operator relasional dijalankan atas data sungguhan, bukan diperiksa dari definisi | Lulus |
 | Reduksi lokalisasi | Hasil dari fragmen dibandingkan dengan hasil kueri atas relasi global untuk setiap predikat uji | Setara semuanya |
 | Strategi join terdistribusi | Keempat strategi dijalankan, hasilnya dibandingkan sebagai himpunan | Identik semuanya |
 | 2PC dan 3PC | Mesin keadaan dijalankan dengan injeksi kegagalan | Sifat blokir/tidak-blokir terbukti sesuai teori |
 | Bentuk DDL Oracle | 40+ uji atas pembangkitnya | Lulus |
-| Keluaran situs | `tools/cek_situs.js`: 590 tautan, 79 impor modul, sitemap, judul unik, kebocoran surel/telepon | Bersih |
-| Seluruh 16 lab di peramban | Dimuat satu per satu, lalu setiap tombol, pilihan, dropdown, dan slider diklik (±450 aksi) sambil menangkap galat runtime | Nol galat runtime |
-| Tata letak ponsel | 22 halaman diukur pada lebar 375 px | Tidak ada yang melebar |
+| Keluaran situs | `tools/cek_situs.js`: 907 tautan, 91 impor modul, 37 URL sitemap, judul unik, CSP, skrip inline, satu `<h1>`, landmark, urutan judul, label, kebocoran surel/telepon | Bersih |
+| Build deterministik | Dua kali build berturut-turut dibandingkan berkas demi berkas | Identik |
+| Seluruh 16 lab + beranda, materi, kualitas, glosarium di peramban | Dimuat satu per satu sambil menangkap galat konsol; terminal diketik sungguhan (Tab-lengkapi, Enter, pratinjau), laci terminal dari materi menjalankan 2PC, bank soal DML dinilai saat mengetik, pencarian Ctrl+K, catatan istilah, ganti tema | Nol galat konsol |
+| Tata letak ponsel | Terminal dan materi diukur pada lebar 375 px | Tidak ada yang melebar |
 
 
 ### 3.1a Bug yang ditemukan saat merender sungguhan — dan sudah diperbaiki
@@ -212,6 +217,20 @@ dibuka dan diklik di peramban. Masing-masing kini punya uji regresi.
 | 2PC dengan koordinator jatuh di "fase 4" | Tampil "selesai" tanpa penjelasan, padahal fase itu hanya ada di 3PC | Dijelaskan eksplisit pada analisis 2PC |
 | Parser jadwal konkurensi | Token asing seperti `hello` diabaikan diam-diam, analisis memakai jadwal yang terbaca sebagian | Setiap token wajib sah, token asing ditolak |
 
+### 3.1b Temuan putaran upgrade 2.0.0 — dan sudah diperbaiki
+
+| Temuan | Gejala | Perbaikan |
+|---|---|---|
+| Dekomposisi pada rantai UNION tiga cabang | Galat karena cabang kiri dianggap SELECT padahal masih UNION | `cabangSelect` mengurai seluruh pohon WITH/UNION/INTERSECT/MINUS; setiap cabang dianalisis |
+| Penilai soal membaca ORDER BY di cabang kanan UNION | Setelah parser mengangkat ORDER BY ke simpul himpunan, urutan tidak lagi dinilai | `punyaOrderBy` membaca simpul himpunan dan badan WITH |
+| Pesan GROUP BY menyesatkan | `SELECT nim FROM mhs GROUP BY alamat_mhs` berkata "kolom nim tidak ada" | ORA-00979 / ORA-00937 dengan contoh yang benar |
+| `soal.js` mengimpor `../../engine` | Benar di `src/`, tetapi di `docs/content/` menunjuk ke luar situs (404 di GitHub Pages) | Soal memakai penanda `integritas: 'cascade'`; penilai yang memetakan ke kunci |
+| Tombol Enter di terminal saat diuji otomatis | Alat uji mengirim `Return` tanpa `key`; diverifikasi ulang dengan `Enter` sungguhan | Tidak ada bug; dicatat agar uji berikutnya memakai tombol yang benar |
+| Pratinjau berbasis `requestAnimationFrame` | Hasil pratinjau tertinggal satu ketikan bila panel peramban tidak menggambar frame | Penjadwal digabung per putaran event loop (`setTimeout 0`) |
+| Catatan istilah pendek di dalam frasa panjang | "fragmentasi" ditandai di dalam "fragmentasi horizontal" kemunculan kedua | Frasa istilah yang lebih panjang mengunci seluruh kemunculannya |
+| Urutan judul | Halaman audit, daftar materi, dan daftar lab meloncat dari `h1` ke `h3` | Markdown `##` → `h2`; judul kartu daftar → `h2` |
+| Karakter kontrol mentah | Penulisan berkas mengubah `\u0001` menjadi byte kontrol di pewarna SQL terminal | Dikembalikan ke escape; skrip pemindai memastikan tidak ada byte kontrol di sumber |
+
 ### 3.2 Yang TIDAK diverifikasi — batas yang jujur
 
 1. **Skrip Oracle belum pernah dijalankan pada instans Oracle sungguhan.** Tidak ada Oracle di
@@ -228,8 +247,16 @@ dibuka dan diklik di peramban. Masing-masing kini punya uji regresi.
    datang tidak berurutan, tidak ada kegagalan sebagian pesan. Sifat yang ditunjukkan
    (blokir vs tidak blokir) benar; ketepatan waktunya bukan tujuan.
 
-4. **Mesin SQL hanya menutup subset SELECT.** Tidak ada DDL, DML, window function, CTE, maupun
-   `EXISTS`. Batasnya disebutkan terbuka di Lab Mesin SQL.
+4. **Terminal SQL bukan Oracle.** SELECT lanjutan, DML, DDL, transaksi, dan kamus data sudah
+   didukung, tetapi belum ada window function, `MERGE`, `ALTER TABLE`, PL/SQL, sequence, dan
+   trigger. Rencana eksekusi mengikuti evaluasi logis, bukan pengoptimal biaya Oracle. Kode
+   ORA-xxxxx dipilih sesuai makna galat Oracle; teks pesannya ditulis ulang. Transaksi
+   ragu-ragu disederhanakan: pembaca melihat data sebelum transaksi, sedangkan DML ke situs yang
+   terkunci ditolak ORA-01591.
+
+4a. **Kontras warna dan pembaca layar belum diuji.** Pemeriksa situs hanya memeriksa struktur
+   HTML statis (judul, landmark, label, alt). Isi yang digambar skrip lab dan kontras setiap
+   kombinasi tema belum diaudit dengan alat khusus maupun pembaca layar sungguhan.
 
 5. **Situs hanya berbahasa Indonesia.** Materinya berbahasa Indonesia dan pembacanya peserta
    kuliah berbahasa Indonesia. Versi dwibahasa yang setengah jadi lebih buruk daripada satu
@@ -240,8 +267,11 @@ dibuka dan diklik di peramban. Masing-masing kini punya uji regresi.
 
 ### 3.3 Utang teknis yang diketahui
 
-- `engine/core/sql.js` berisi parser, perencana, dan eksekutor dalam satu berkas (~700 baris).
-  Masih terbaca, tetapi sudah di ambang batas dan sebaiknya dipecah bila ditambah fitur.
+- `engine/core/sql.js` kini ~1.300 baris (tokenizer, parser SELECT/DML/DDL, eksekutor) dan
+  `engine/core/terminal.js` ~1.100 baris. Keduanya masih terbaca dan teruji, tetapi sudah waktunya
+  dipecah: parser DDL ke `ddl.js`, kamus data dan preset ke modul sendiri.
+- Preset terdistribusi membangkitkan fragmen setiap kali sesi dibuat. Untuk data praktikum
+  (puluhan baris) tidak terasa; untuk data ribuan baris perlu salinan malas (copy-on-write).
 - `candidateKeys` pada `engine/core/fd.js` menelusuri seluruh subset atribut, sehingga dibatasi
   20 atribut. Untuk keperluan kuliah ini cukup; untuk skema nyata perlu algoritma yang lebih baik.
 - `optimalAllocation` melakukan enumerasi penuh dan baru beralih ke greedy setelah ruang
@@ -254,9 +284,20 @@ dibuka dan diklik di peramban. Masing-masing kini punya uji regresi.
 
 Diurutkan menurut dampak dibagi usaha.
 
+### Sudah dieksekusi pada putaran 2.0.0
+
+- Terminal SQL Live dengan DML, DDL, transaksi, kamus data, dan tiga situs lewat database link —
+  menutup kesenjangan "materi dibaca, tidak dijalankan" pada topik 6, 9, 12, dan 14.
+- Soal UPDATE/DELETE Praktikum 2 (poin k dan l) dengan aturan CASCADE sesuai lembar praktikum.
+- Tombol ▶ Jalankan yang hanya muncul pada SQL yang terbukti berjalan, kueri coba per topik,
+  catatan istilah lengkap, pencarian, kemajuan belajar, tema, PWA luring.
+- Lab berbasis teks menghitung ulang saat mengetik; penilaian bank soal langsung.
+- CSP, pemeriksaan aksesibilitas statis, SECURITY.md, CHANGELOG.md, Semantic Versioning, dan
+  halaman Standar Kualitas yang memetakan ISO/IEC 25010:2023 ke bukti yang bisa diperiksa.
+
 ### Segera (untuk nilai mata kuliah)
 
-1. **Jalankan skrip `oracle/` di Oracle XE lewat Docker** dan simpan tangkapan layarnya.
+1. **Jalankan skrip `oracle/` dan hasil `\ekspor` terminal di Oracle Free lewat Docker** dan simpan tangkapan layarnya.
    Satu perintah: `docker run -d -p 1521:1521 -e ORACLE_PASSWORD=oracle gvenzl/oracle-free:23-slim`.
    Ini mengubah satu-satunya bagian yang belum terverifikasi menjadi terverifikasi, dan
    menghasilkan bukti yang jauh lebih kuat daripada laporan mana pun di folder mata kuliah.

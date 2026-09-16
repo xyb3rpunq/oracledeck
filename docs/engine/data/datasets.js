@@ -1,7 +1,7 @@
 // datasets.js — data contoh yang dipakai seluruh lab.
 // Semua dataset diambil persis dari materi kuliah CTI313 / praktikum SBDT.
 
-import { Relation } from '../core/relation.js?v=8e172babd6';
+import { Relation } from '../core/relation.js?v=849b085103';
 
 // ---------------------------------------------------------------------------
 // 1) DreamHome (Connolly & Begg) — dipakai Modul 6 & Modul 7 untuk contoh
@@ -135,6 +135,33 @@ export function rumahsakit() {
   };
 }
 
+/**
+ * Tipe kolom Oracle rumahsakit — satu sumber untuk skrip oracle/ (tools/gen_oracle.js)
+ * dan preset terminal SQL, agar DESC di terminal sama dengan DDL yang diunduh.
+ */
+export const RS_TIPE = {
+  id_pasien: 'NUMBER(8)', id_dokter: 'NUMBER(4)', id_admin: 'NUMBER(4)',
+  id: 'NUMBER(8)', id_data: 'NUMBER(8)', id_daftar: 'NUMBER(8)',
+  nama_pasien: 'VARCHAR2(60)', nama_dokter: 'VARCHAR2(60)', nama_admin: 'VARCHAR2(60)',
+  alamat_pasien: 'VARCHAR2(150)', alamat_dokter: 'VARCHAR2(150)',
+  jenis_kelamin: 'CHAR(1)', penyakit: 'VARCHAR2(100)',
+  no_hp: 'VARCHAR2(20)', kota: 'VARCHAR2(40)',
+  tanggal_lahir: 'DATE', waktu_periksa: 'DATE', tanggal_daftar: 'DATE',
+  spesialis: 'VARCHAR2(40)', waktu_kerja: 'VARCHAR2(60)', waktu_jaga: 'VARCHAR2(30)',
+  resep: 'VARCHAR2(150)', biaya: 'NUMBER(12,2)',
+};
+
+/** Tipe kolom Oracle untuk dataset akademik, DreamHome, dan kependudukan (preset terminal). */
+export const TIPE_LAIN = {
+  nim: 'VARCHAR2(10)', nama_mhs: 'VARCHAR2(60)', alamat_mhs: 'VARCHAR2(60)',
+  kode_kul: 'VARCHAR2(10)', nama_kul: 'VARCHAR2(60)', sks: 'NUMBER(1)', sem: 'NUMBER(2)', nilai: 'NUMBER(3)',
+  staffno: 'VARCHAR2(5)', fname: 'VARCHAR2(30)', lname: 'VARCHAR2(30)', position: 'VARCHAR2(20)', sex: 'CHAR(1)',
+  dob: 'DATE', salary: 'NUMBER(9,2)', branchno: 'VARCHAR2(4)', street: 'VARCHAR2(40)', city: 'VARCHAR2(30)',
+  postcode: 'VARCHAR2(10)', propertyno: 'VARCHAR2(5)', type: 'VARCHAR2(10)', rooms: 'NUMBER(2)', rent: 'NUMBER(7,2)',
+  nik: 'VARCHAR2(16)', nama: 'VARCHAR2(60)', jk: 'CHAR(1)', tgl_lahir: 'DATE', desa: 'VARCHAR2(30)', status: 'VARCHAR2(10)',
+  tgl_wafat: 'DATE', desa_lapor: 'VARCHAR2(30)', dari: 'VARCHAR2(20)', ke: 'VARCHAR2(20)', tgl_pindah: 'DATE',
+};
+
 /** Kunci & relasi referensial rumahsakit — dipakai lab ERD dan generator DDL. */
 export const RS_KEYS = {
   pasien: { pk: ['id_pasien'], fk: [] },
@@ -162,6 +189,17 @@ export const RS_KEYS = {
     ],
   },
 };
+
+/**
+ * Kunci rumahsakit sesuai lembar Praktikum 2: setiap relasi diatur CASCADE pada
+ * ON DELETE dan ON UPDATE ("pilih CASCADE pada on delete dan on update").
+ * Catatan Oracle: ON UPDATE CASCADE tidak ada di Oracle; di sana perubahan kunci
+ * induk harus lewat trigger atau dihindari dengan surrogate key.
+ */
+export const RS_KEYS_CASCADE = Object.fromEntries(Object.entries(RS_KEYS).map(([t, def]) => [t, {
+  pk: [...def.pk],
+  fk: def.fk.map((fk) => ({ ...fk, onDelete: 'CASCADE', onUpdate: 'CASCADE' })),
+}]));
 
 // ---------------------------------------------------------------------------
 // 3) akademik — mhs / mata_kuliah / nilai (Praktikum 3, 4, 5).

@@ -155,7 +155,7 @@ uji('bankSoalDb menyediakan alias matakuliah sesuai soal Praktikum 3', () => {
 
 uji('setiap kunci bank soal dapat dijalankan dan lulus terhadap dirinya sendiri', () => {
   for (const s of BANK_SOAL) {
-    const r = G.gradeQuery(s.kunci, s.kunci, db());
+    const r = G.gradeSoal(s, s.kunci, db());
     benar(r.benar, `${s.id}: ${r.alasan.join('; ')}`);
   }
 });

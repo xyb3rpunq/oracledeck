@@ -1,0 +1,19 @@
+{
+  "name": "ORACLEDECK — Laboratorium Sistem Basis Data Terdistribusi",
+  "short_name": "ORACLEDECK",
+  "description": "Empat belas topik CTI313, enam belas laboratorium interaktif, dan bank soal praktikum yang dinilai otomatis. Mesin relasionalnya ditulis dari nol, hasilnya diverifikasi silang terhadap SQLite, dan rancangannya diterjemahkan menjadi DDL Oracle sungguhan.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0e13",
+  "theme_color": "#0b0e13",
+  "icons": [
+    {
+      "src": "ikon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

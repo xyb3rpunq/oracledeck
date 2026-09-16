@@ -8,8 +8,8 @@ const db = () => ({ ...akademik(), ...rumahsakit(), ...dreamhome() });
 
 uji('tokenize memisahkan kata kunci, identifier, angka, dan string', () => {
   const t = tokenize("SELECT a FROM t WHERE b = 'x' AND c >= 10");
-  sama(t[0], { type: 'kw', value: 'SELECT' });
-  sama(t[1], { type: 'ident', value: 'a' });
+  sama(t[0], { type: 'kw', value: 'SELECT', pos: 0, end: 6 });
+  sama(t[1], { type: 'ident', value: 'a', pos: 7, end: 8 });
   benar(t.some((x) => x.type === 'str' && x.value === 'x'));
   benar(t.some((x) => x.type === 'num' && x.value === 10));
   benar(t.some((x) => x.type === 'op' && x.value === '>='));

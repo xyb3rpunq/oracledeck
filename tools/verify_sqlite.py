@@ -138,6 +138,27 @@ def main() -> int:
             gagal.append((id_kueri, sql, pesan))
             print(f"  {MERAH}x {id_kueri:<18} {pesan}{RESET}")
 
+    skrip = data.get("skrip", {})
+    if skrip:
+        print(f"\nVerifikasi silang {len(skrip)} skrip DML (INSERT/UPDATE/DELETE)\n")
+    for id_skrip, isi in skrip.items():
+        con_s = bangun_db(data["tabel"])
+        try:
+            for perintah in isi["perintah"]:
+                con_s.execute(perintah)
+            dapat = con_s.execute(isi["penutup"]).fetchall()
+        except sqlite3.Error as e:
+            lewat.append((id_skrip, str(e)))
+            print(f"  {KUNING}~{RESET} {id_skrip:<18} dilewati (SQLite: {e})")
+            continue
+        ok, pesan = bandingkan(id_skrip, isi["penutup"], isi["rows"], dapat)
+        if ok:
+            lulus += 1
+            print(f"  {HIJAU}+{RESET} {id_skrip:<18} {len(dapat)} baris akhir cocok")
+        else:
+            gagal.append((id_skrip, " ; ".join(isi["perintah"]), pesan))
+            print(f"  {MERAH}x {id_skrip:<18} {pesan}{RESET}")
+
     print("\n" + "=" * 64)
     if gagal:
         print(f"\n{MERAH}{len(gagal)} kueri BERBEDA hasilnya{RESET}\n")
@@ -145,8 +166,8 @@ def main() -> int:
             print(f"  [{id_kueri}]\n    {' '.join(sql.split())}\n    {pesan}\n")
     if lewat:
         print(f"{len(lewat)} kueri dilewati karena SQLite tidak mendukung sintaksnya.")
-    print(f"{lulus}/{lulus + len(gagal)} kueri menghasilkan isi yang identik di kedua mesin.")
-    return 1 if gagal else 0
+    print(f"{lulus}/{lulus + len(gagal)} kueri dan skrip menghasilkan isi yang identik di kedua mesin.")
+    return 1 if (gagal or lewat) else 0
 
 
 if __name__ == "__main__":

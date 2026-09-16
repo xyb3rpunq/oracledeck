@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-7">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 7</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#empat-tingkat-independensi">Empat tingkat independensi</a></li><li><a href="#dua-jenis-kebebasan-data">Dua jenis kebebasan data</a></li><li><a href="#siapa-yang-menyediakan-transparansi">Siapa yang menyediakan transparansi</a></li></ol>
+    <ol><li><a href="#empat-tingkat-independensi">Empat tingkat independensi</a></li><li><a href="#dua-jenis-kebebasan-data">Dua jenis kebebasan data</a></li><li><a href="#siapa-yang-menyediakan-transparansi">Siapa yang menyediakan transparansi</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 07</p>
@@ -46,16 +57,31 @@
     <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami konsep independensi dan kebutuhan penerapannya dalam basis data terdistribusi.</p></div>
 
 <h2 id="empat-tingkat-independensi">Empat tingkat independensi</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Tingkat</th><th>Arti</th><th>Diuji dengan pertanyaan</th></tr></thead><tbody><tr><td>Perangkat keras</td><td>Sistem berjalan tanpa peduli arsitektur mesin dan panjang kata</td><td>Bisakah satu situs diganti server merek lain tanpa mengubah aplikasi?</td></tr><tr><td>Sistem operasi</td><td>Sistem berjalan di atas OS yang berbeda-beda</td><td>Bisakah satu situs pakai Linux dan lainnya Windows?</td></tr><tr><td>Jaringan</td><td>Perintah yang sama berlaku lokal maupun lintas mesin</td><td>Apakah <code>cp</code> dan <code>rcp</code> masih dibedakan pengguna?</td></tr><tr><td>Basis data</td><td>Produk DBMS di tiap situs boleh berbeda</td><td>Bisakah satu situs pakai Oracle dan lainnya PostgreSQL?</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Tingkat</th><th>Arti</th><th>Diuji dengan pertanyaan</th></tr></thead><tbody><tr><td>Perangkat keras</td><td>Sistem berjalan tanpa peduli arsitektur mesin dan panjang kata</td><td>Bisakah satu <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> diganti server merek lain tanpa mengubah aplikasi?</td></tr><tr><td>Sistem operasi</td><td>Sistem berjalan di atas OS yang berbeda-beda</td><td>Bisakah satu situs pakai Linux dan lainnya Windows?</td></tr><tr><td>Jaringan</td><td>Perintah yang sama berlaku lokal maupun lintas mesin</td><td>Apakah <code>cp</code> dan <code>rcp</code> masih dibedakan pengguna?</td></tr><tr><td>Basis data</td><td>Produk DBMS di tiap situs boleh berbeda</td><td>Bisakah satu situs pakai Oracle dan lainnya PostgreSQL?</td></tr></tbody></table></div>
 
 <h2 id="dua-jenis-kebebasan-data">Dua jenis kebebasan data</h2>
 <ul><li><b>Kebebasan data logis</b> — kekebalan aplikasi terhadap perubahan struktur logis. Menambah atribut baru pada relasi tidak boleh memengaruhi aplikasi yang hanya memakai sebagian atribut.</li><li><b>Kebebasan data fisik</b> — penyembunyian rincian struktur penyimpanan. Saat aplikasi ditulis, organisasi fisik data tidak perlu diperhatikan.</li></ul>
 
 <h2 id="siapa-yang-menyediakan-transparansi">Siapa yang menyediakan transparansi</h2>
 <div class="tabel-bungkus"><table><thead><tr><th>Lapis</th><th>Penyedia</th><th>Kenyataannya</th></tr></thead><tbody><tr><td>1</td><td>Bahasa pemrograman</td><td>Compiler atau interpreter menerjemahkan permintaan layanan ke operasi; tidak ada layanan transparan untuk compiler itu sendiri</td></tr><tr><td>2</td><td>Sistem operasi</td><td>Akses transparan ke sumber daya diperluas ke distribusi — sayangnya tidak semua OS punya manajemen jaringan ini</td></tr><tr><td>3</td><td>DBMS</td><td>DBMS menanggung hampir semua penerjemahan dari OS ke antarmuka pengguna tingkat tinggi</td></tr></tbody></table></div>
-<div class="catatan peringatan"><p>Karena lapis 1 dan 2 jarang menyediakan transparansi yang memadai, beban itu jatuh hampir seluruhnya ke DBMS. Itulah sebabnya fitur seperti database link dan sinonim ada di Oracle, bukan di sistem operasi.</p></div>
+<div class="catatan peringatan"><p>Karena lapis 1 dan 2 jarang menyediakan <abbr class="istilah" tabindex="0" data-g="g-transparansi" data-istilah="Transparansi" data-en="transparency" data-arti="Penyembunyian rincian implementasi dari pengguna, sehingga basis data terdistribusi terasa seperti basis data tunggal." data-detail="Jenisnya: transparansi distribusi (fragmentasi, lokasi, replikasi), transaksi, kinerja, dan DBMS. Makin tinggi transparansi, makin sederhana aplikasi tetapi makin banyak kerja DDBMS." data-contoh="Menulis SELECT * FROM pasien tanpa peduli di situs mana datanya." data-lab="transparansi" data-lab-judul="Tangga Transparansi">transparansi</abbr> yang memadai, beban itu jatuh hampir seluruhnya ke DBMS. Itulah sebabnya fitur seperti <abbr class="istilah" tabindex="0" data-g="g-database-link" data-istilah="Database link" data-arti="Objek Oracle yang mendefinisikan jalur koneksi satu arah ke basis data lain. Tanpa link tidak ada kueri terdistribusi yang bisa dijalankan." data-detail="Berisi nama koneksi, pengguna remote, dan TNS alias. Kueri memakai sintaks objek@link; Oracle mengurus pengiriman SQL, pengambilan hasil, dan two-phase commit lintas link." data-contoh="SELECT * FROM pasien@bandung; — coba langsung di Terminal SQL preset terdistribusi." data-lab="sql" data-lab-judul="Terminal SQL Live">database link</abbr> dan <abbr class="istilah" tabindex="0" data-g="g-sinonim" data-istilah="Sinonim" data-en="synonym" data-arti="Alias objek basis data pada Oracle. Sarana utama mewujudkan transparansi lokasi: pindah situs cukup mengubah sinonimnya." data-detail="Aplikasi memakai nama sinonim; saat fragmen dipindah situs, cukup sinonimnya yang diubah untuk menunjuk database link baru." data-contoh="CREATE SYNONYM pasien_bdg FOR pasien@bandung;" data-lab="oracle" data-lab-judul="Generator DDL Oracle">sinonim</abbr> ada di Oracle, bukan di sistem operasi.</p></div>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Independensi data logis</h3>
+<p>Tabel dasar berubah (tabel baru ditambah), aplikasi yang memakai view lama tidak perlu diubah. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="CREATE VIEW v_pasien_ringkas AS SELECT id_pasien, nama_pasien, kota FROM pasien;
+CREATE TABLE catatan_alergi (id_pasien NUMBER(8) REFERENCES pasien, alergi VARCHAR2(60));
+SELECT * FROM v_pasien_ringkas FETCH FIRST 3 ROWS ONLY;" data-db="rumahsakit"><code><span class="sql-k">CREATE</span> <span class="sql-k">VIEW</span> v_pasien_ringkas <span class="sql-k">AS</span> <span class="sql-k">SELECT</span> id_pasien, nama_pasien, kota <span class="sql-k">FROM</span> pasien;
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> catatan_alergi (id_pasien <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>) <span class="sql-k">REFERENCES</span> pasien, alergi <span class="sql-k">VARCHAR2</span>(<span class="sql-n">60</span>));
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> v_pasien_ringkas FETCH FIRST <span class="sql-n">3</span> ROWS ONLY;</code></pre>
+<h3>Independensi fisik: indeks tidak mengubah hasil</h3>
+<p>Menambah struktur penyimpanan hanya mengubah jalur akses. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="SELECT COUNT(*) FROM pasien_dokter WHERE id_dokter = 3;
+CREATE INDEX ix_pd_dokter ON pasien_dokter (id_dokter);
+SELECT COUNT(*) FROM pasien_dokter WHERE id_dokter = 3;" data-db="rumahsakit"><code><span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">FROM</span> pasien_dokter <span class="sql-k">WHERE</span> id_dokter = <span class="sql-n">3</span>;
+<span class="sql-k">CREATE</span> <span class="sql-k">INDEX</span> ix_pd_dokter <span class="sql-k">ON</span> pasien_dokter (id_dokter);
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">FROM</span> pasien_dokter <span class="sql-k">WHERE</span> id_dokter = <span class="sql-n">3</span>;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -72,12 +98,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-2">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 2</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#jaringan-menurut-jangkauan">Jaringan menurut jangkauan</a></li><li><a href="#klasifikasi-lain">Klasifikasi lain</a></li><li><a href="#sistem-informasi-global">Sistem informasi global</a></li><li><a href="#komputasi-awan">Komputasi awan</a></li></ol>
+    <ol><li><a href="#jaringan-menurut-jangkauan">Jaringan menurut jangkauan</a></li><li><a href="#klasifikasi-lain">Klasifikasi lain</a></li><li><a href="#sistem-informasi-global">Sistem informasi global</a></li><li><a href="#komputasi-awan">Komputasi awan</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 02</p>
@@ -50,16 +61,31 @@
 <div class="catatan info"><p>Pilihan jaringan menentukan fungsi biaya pengoptimal kueri. Pada WAN dengan bandwidth kecil, optimasi boleh mengabaikan I/O dan CPU. Pada LAN, tidak boleh.</p></div>
 
 <h2 id="klasifikasi-lain">Klasifikasi lain</h2>
-<ul><li><b>Berdasarkan kelas transmisi</b> — jaringan point-to-point dan jaringan broadcast</li><li><b>Berdasarkan fungsi</b> — client-server dan peer-to-peer</li><li><b>Berdasarkan topologi</b> — bus, star, ring, mesh, tree</li><li><b>Berdasarkan distribusi sumber data</b> — terpusat dan terdistribusi</li><li><b>Berdasarkan media transmisi</b> — berkabel dan nirkabel</li></ul>
+<ul><li><b>Berdasarkan kelas transmisi</b> — jaringan point-to-point dan jaringan broadcast</li><li><b>Berdasarkan fungsi</b> — <abbr class="istilah" tabindex="0" data-g="g-client-server" data-istilah="Client-server" data-arti="Arsitektur dua lapis: aplikasi di sisi klien, mesin basis data di sisi server. Mengurangi beban pemrosesan terpusat, tetapi skalabilitasnya terbatas." data-detail="Server menjalankan pemrosesan kueri dan transaksi; klien menangani antarmuka. Pada DDBS, server bisa lebih dari satu dan klien dapat terhubung ke beberapa server." data-contoh="SQL Developer di laptop (klien) terhubung ke Oracle XE (server).">client-server</abbr> dan peer-to-peer</li><li><b>Berdasarkan topologi</b> — bus, star, ring, mesh, tree</li><li><b>Berdasarkan distribusi sumber data</b> — terpusat dan terdistribusi</li><li><b>Berdasarkan media transmisi</b> — berkabel dan nirkabel</li></ul>
 
 <h2 id="sistem-informasi-global">Sistem informasi global</h2>
 <p>Perusahaan multinasional beroperasi di banyak negara sehingga arus datanya melintasi batas yurisdiksi. Jenis data yang mengalir lintas negara: data operasional (transaksi pembelian dan penjualan), data pribadi individu, transfer data elektronik antarnegara, serta data teknik dan ilmiah.</p>
-<div class="catatan peringatan"><p>Data pribadi yang melintasi batas negara kini tunduk pada UU PDP No. 27/2022 di Indonesia. Keputusan alokasi fragmen bukan lagi semata soal biaya — ada syarat hukum tentang di mana data warga boleh disimpan.</p></div>
+<div class="catatan peringatan"><p>Data pribadi yang melintasi batas negara kini tunduk pada UU PDP No. 27/2022 di Indonesia. Keputusan <abbr class="istilah" tabindex="0" data-g="g-alokasi" data-istilah="Alokasi" data-en="allocation" data-arti="Keputusan menempatkan fragmen pada situs tertentu, termasuk berapa salinan yang dibuat. Masukannya empat kelompok informasi: basis data, aplikasi, situs, dan jaringan." data-detail="Alokasi optimal menyeimbangkan biaya simpan, biaya akses baca, biaya pembaruan (yang naik tiap salinan), dan ketersediaan. Alokasi non-redundan menaruh tiap fragmen di satu situs; redundan menaruh salinannya di beberapa situs." data-contoh="Fragmen pasien kota Bandung ditaruh di situs Bandung karena 80% aksesnya berasal dari sana." data-lab="alokasi" data-lab-judul="Alokasi &amp; Replikasi">alokasi</abbr> fragmen bukan lagi semata soal biaya — ada syarat hukum tentang di mana data warga boleh disimpan.</p></div>
 
 <h2 id="komputasi-awan">Komputasi awan</h2>
 <div class="tabel-bungkus"><table><thead><tr><th>Keuntungan</th><th>Penjelasan</th></tr></thead><tbody><tr><td>Skalabilitas</td><td>Kapasitas dapat ditambah tanpa membeli perangkat baru</td></tr><tr><td>Aksesibilitas</td><td>Data dapat diakses kapan pun dan di mana pun</td></tr><tr><td>Keamanan</td><td>Keamanan dijamin penyedia layanan, dengan konsekuensi ketergantungan</td></tr><tr><td>Kreasi</td><td>Pengguna dapat mengembangkan proyek tanpa investasi infrastruktur</td></tr><tr><td>Kecemasan berkurang</td><td>Data tetap aman saat bencana menimpa lokasi fisik pengguna</td></tr></tbody></table></div>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Biaya jaringan terlihat di rencana</h3>
+<p>Setiap operator REMOTE berarti data menyeberang WAN — sumber latensi yang dibahas pada topik jaringan. <span class="lencana netral">terdistribusi</span></p>
+<pre data-sql="EXPLAIN PLAN FOR
+SELECT p.nama_pasien, pd.resep
+  FROM pasien@surabaya p
+  JOIN pasien_dokter@surabaya pd ON p.id_pasien = pd.id_pasien;" data-db="terdistribusi"><code><span class="sql-k">EXPLAIN</span> <span class="sql-k">PLAN</span> <span class="sql-k">FOR</span>
+<span class="sql-k">SELECT</span> p.nama_pasien, pd.resep
+  <span class="sql-k">FROM</span> pasien@surabaya p
+  <span class="sql-k">JOIN</span> pasien_dokter@surabaya pd <span class="sql-k">ON</span> p.id_pasien = pd.id_pasien;</code></pre>
+<h3>Berapa baris yang harus dikirim?</h3>
+<p>Bandingkan ringkasan akses: baris lokal gratis, baris remote dibayar dengan bandwidth. <span class="lencana netral">terdistribusi</span></p>
+<pre data-sql="\c jakarta
+SELECT * FROM dokter;" data-db="terdistribusi"><code>\c jakarta
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> dokter;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -75,12 +101,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

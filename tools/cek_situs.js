@@ -6,6 +6,10 @@
 //   5. tidak ada teks "undefined" / "NaN" / "[object Object]" pada HTML statis
 //   6. setiap URL di sitemap.xml ada berkasnya
 //   7. tidak ada alamat surel atau nomor telepon internasional yang bocor
+//   8. aksesibilitas statis (acuan WCAG 2.2): satu <h1>, landmark <main>, judul tanpa loncatan
+//      tingkat, <img> ber-alt, tombol dan kolom isian punya nama yang terbaca
+//   9. keamanan: meta Content-Security-Policy ada dan tidak mengizinkan skrip inline/eval
+//  10. blok SQL bertombol Jalankan menyebut preset terminal yang dikenal
 //
 // Jalankan: node tools/cek_situs.js   (keluar dengan kode 1 bila ada masalah)
 
@@ -30,6 +34,35 @@ function semuaBerkas(dir) {
     else out.push(p);
   }
   return out;
+}
+
+const PRESET_TERMINAL = new Set(['rumahsakit', 'akademik', 'terdistribusi', 'dreamhome', 'kependudukan', 'kosong']);
+
+/** Pemeriksaan aksesibilitas atas HTML statis. Mengembalikan daftar masalah. */
+export function periksaAksesibilitas(isi) {
+  const masalah = [];
+  const tanpaSkrip = isi.replace(/<script[\s\S]*?<\/script>/g, '');
+  const h1 = (tanpaSkrip.match(/<h1[\s>]/g) || []).length;
+  if (h1 !== 1) masalah.push(`harus ada tepat satu <h1>, ditemukan ${h1}`);
+  if (!/<main[\s>]/.test(tanpaSkrip)) masalah.push('landmark <main> tidak ada');
+  let sebelum = 0;
+  for (const m of tanpaSkrip.matchAll(/<h([1-6])[\s>]/g)) {
+    const t = Number(m[1]);
+    if (sebelum && t > sebelum + 1) { masalah.push(`judul meloncat dari h${sebelum} ke h${t}`); break; }
+    sebelum = t;
+  }
+  for (const m of tanpaSkrip.matchAll(/<img\b[^>]*>/g)) if (!/\balt="/.test(m[0])) masalah.push('<img> tanpa atribut alt');
+  for (const m of tanpaSkrip.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)) {
+    const teks = m[2].replace(/<[^>]+>/g, '').trim();
+    if (!teks && !/aria-label="[^"]+"/.test(m[1])) masalah.push('<button> tanpa teks maupun aria-label');
+  }
+  for (const m of tanpaSkrip.matchAll(/<(input|textarea|select)\b([^>]*)>/g)) {
+    if (/type="(hidden|submit|button)"/.test(m[2])) continue;
+    const id = (m[2].match(/\bid="([^"]+)"/) || [])[1];
+    const berlabel = /aria-label(ledby)?="[^"]+"/.test(m[2]) || (id && new RegExp(`<label[^>]*for="${id}"`).test(tanpaSkrip));
+    if (!berlabel) masalah.push(`<${m[1]}> tanpa label`);
+  }
+  return masalah;
 }
 
 export function periksa(docs = DOCS) {
@@ -76,6 +109,15 @@ export function periksa(docs = DOCS) {
       const target = bersihkan(u);
       if (!target) continue;
       if (!ada(h, target)) masalah.push(`${rel(h)}: tautan rusak → ${u}`);
+    }
+
+    masalah.push(...periksaAksesibilitas(isi).map((m) => `${rel(h)}: ${m}`));
+    const csp = (isi.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/) || [])[1];
+    if (!csp) masalah.push(`${rel(h)}: meta Content-Security-Policy tidak ada`);
+    else if (/unsafe-eval|script-src[^;]*unsafe-inline/.test(csp)) masalah.push(`${rel(h)}: CSP mengizinkan skrip inline atau eval`);
+    if (/<script(?![^>]*\bsrc=)[^>]*>\s*\S/.test(isi)) masalah.push(`${rel(h)}: ada skrip inline — akan diblokir CSP`);
+    for (const m of isi.matchAll(/data-db="([^"]*)"/g)) {
+      if (!PRESET_TERMINAL.has(m[1])) masalah.push(`${rel(h)}: data-db="${m[1]}" bukan preset terminal`);
     }
 
     if (rel(h).startsWith('lab/') && !rel(h).endsWith('index.html')) {

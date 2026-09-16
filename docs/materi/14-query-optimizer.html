@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-14">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 14</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#empat-lapisan-pemrosesan-kueri">Empat lapisan pemrosesan kueri</a></li><li><a href="#empat-langkah-dekomposisi-kueri">Empat langkah dekomposisi kueri</a></li><li><a href="#lokalisasi-data-dan-reduksi">Lokalisasi data dan reduksi</a></li><li><a href="#strategi-join-terdistribusi">Strategi join terdistribusi</a></li><li><a href="#optimasi-global">Optimasi global</a></li></ol>
+    <ol><li><a href="#empat-lapisan-pemrosesan-kueri">Empat lapisan pemrosesan kueri</a></li><li><a href="#empat-langkah-dekomposisi-kueri">Empat langkah dekomposisi kueri</a></li><li><a href="#lokalisasi-data-dan-reduksi">Lokalisasi data dan reduksi</a></li><li><a href="#strategi-join-terdistribusi">Strategi join terdistribusi</a></li><li><a href="#optimasi-global">Optimasi global</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 14</p>
@@ -46,33 +57,59 @@
     <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami optimasi pada data terdistribusi dan mengenali DDBMS beserta fungsionalitasnya.</p></div>
 
 <h2 id="empat-lapisan-pemrosesan-kueri">Empat lapisan pemrosesan kueri</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Lapisan</th><th>Masukan</th><th>Keluaran</th><th>Peduli distribusi?</th></tr></thead><tbody><tr><td>1. Dekomposisi kueri</td><td>Kueri kalkulus relasional (SQL)</td><td>Kueri aljabar atas relasi global</td><td>Tidak — sama untuk sistem terpusat</td></tr><tr><td>2. Lokalisasi data</td><td>Kueri aljabar atas relasi global</td><td>Kueri aljabar atas fragmen fisik</td><td>Ya — memakai skema fragmen</td></tr><tr><td>3. Optimasi global</td><td>Kueri atas fragmen</td><td>Rencana eksekusi beserta urutan dan situsnya</td><td>Ya — memakai statistik dan biaya jaringan</td></tr><tr><td>4. Optimasi lokal</td><td>Bagian kueri untuk satu situs</td><td>Rencana akses fisik di situs itu</td><td>Tidak — tugas DBMS lokal</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Lapisan</th><th>Masukan</th><th>Keluaran</th><th>Peduli distribusi?</th></tr></thead><tbody><tr><td>1. <abbr class="istilah" tabindex="0" data-g="g-dekomposisi-kueri" data-istilah="Dekomposisi kueri" data-en="query decomposition" data-arti="Fase pertama pemrosesan kueri: mengubah kueri kalkulus relasional menjadi kueri aljabar relasional lewat normalisasi, analisis, eliminasi redundansi, dan penulisan ulang." data-detail="Empat langkah: normalisasi (CNF/DNF), analisis (tipe dan semantik), eliminasi redundansi, dan penulisan ulang menjadi pohon aljabar relasional." data-contoh="SELECT … WHERE kota='A' AND kota='B' ditolak karena selalu salah." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">Dekomposisi kueri</abbr></td><td>Kueri <abbr class="istilah" tabindex="0" data-g="g-kalkulus-relasional" data-istilah="Kalkulus relasional" data-arti="Bahasa deklaratif yang menyatakan apa yang diinginkan tanpa menyebut caranya. SQL adalah kalkulus relasional tupel." data-detail="SQL berakar pada kalkulus relasional tuple. Pemrosesan kueri menerjemahkannya ke aljabar relasional agar bisa dioptimasi dan dieksekusi." data-contoh="{ t | t ∈ PASIEN ∧ t.kota = 'Bandung' }.">kalkulus relasional</abbr> (SQL)</td><td>Kueri aljabar atas relasi global</td><td>Tidak — sama untuk sistem terpusat</td></tr><tr><td>2. <abbr class="istilah" tabindex="0" data-g="g-lokalisasi-data" data-istilah="Lokalisasi data" data-en="data localization" data-arti="Lapisan pemrosesan kueri yang menerjemahkan kueri atas relasi global menjadi kueri atas fragmen fisik, lalu mereduksinya." data-detail="Setiap relasi global diganti program lokalisasinya (UNION fragmen horizontal, JOIN fragmen vertikal), lalu direduksi dengan membuang fragmen yang tidak mungkin berkontribusi." data-contoh="PASIEN diganti pasien@jakarta ∪ pasien@bandung ∪ pasien@surabaya." data-lab="lokalisasi" data-lab-judul="Lokalisasi Data">Lokalisasi data</abbr></td><td>Kueri aljabar atas relasi global</td><td>Kueri aljabar atas fragmen fisik</td><td>Ya — memakai skema fragmen</td></tr><tr><td>3. Optimasi global</td><td>Kueri atas fragmen</td><td>Rencana eksekusi beserta urutan dan situsnya</td><td>Ya — memakai statistik dan biaya jaringan</td></tr><tr><td>4. Optimasi lokal</td><td>Bagian kueri untuk satu <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr></td><td>Rencana akses fisik di situs itu</td><td>Tidak — tugas DBMS lokal</td></tr></tbody></table></div>
 
 <h2 id="empat-langkah-dekomposisi-kueri">Empat langkah dekomposisi kueri</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Langkah</th><th>Tujuan</th><th>Teknik</th></tr></thead><tbody><tr><td>1. Normalisasi</td><td>Mengubah kualifikasi WHERE ke bentuk normal</td><td>Bentuk normal konjungtif (CNF) atau disjungtif (DNF)</td></tr><tr><td>2. Analisis</td><td>Menolak kueri yang salah tipe atau salah semantik</td><td>Pemeriksaan tipe terhadap skema global + graf kueri</td></tr><tr><td>3. Eliminasi redundansi</td><td>Membuang predikat berlebih</td><td>Hukum idempoten: p∧p≡p, p∧(p∨q)≡p, p∧¬p≡false</td></tr><tr><td>4. Penulisan ulang</td><td>Mengubah kueri menjadi pohon operator</td><td>Daun = relasi, akar = proyeksi hasil</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Langkah</th><th>Tujuan</th><th>Teknik</th></tr></thead><tbody><tr><td>1. <abbr class="istilah" tabindex="0" data-g="g-normalisasi" data-istilah="Normalisasi" data-arti="Proses menata relasi agar bebas dari redundansi dan anomali, bertahap dari 1NF sampai BCNF." data-detail="1NF (atribut atomik), 2NF (tanpa ketergantungan parsial), 3NF (tanpa ketergantungan transitif), BCNF (setiap determinan superkey). Skema ternormalisasi adalah titik awal fragmentasi yang benar." data-contoh="Memecah pasien_dokter yang menyimpan nama dokter berulang menjadi tabel dokter terpisah." data-lab="normalisasi" data-lab-judul="Normalisasi 1NF–BCNF">Normalisasi</abbr></td><td>Mengubah kualifikasi WHERE ke bentuk normal</td><td>Bentuk normal konjungtif (<abbr class="istilah" tabindex="0" data-g="g-cnf" data-istilah="CNF" data-en="conjunctive normal form" data-arti="Bentuk normal konjungtif — konjungsi dari disjungsi, (a ∨ b) ∧ (c ∨ d). Bentuk baku langkah normalisasi dekomposisi kueri." data-detail="Bentuk baku kualifikasi kueri sebelum analisis: tiap klausa disjungsi dapat dievaluasi terpisah, memudahkan pendorongan seleksi dan deteksi kontradiksi." data-contoh="(kota = 'Jakarta' OR kota = 'Bandung') AND biaya &gt; 200000." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">CNF</abbr>) atau disjungtif (<abbr class="istilah" tabindex="0" data-g="g-dnf" data-istilah="DNF" data-en="disjunctive normal form" data-arti="Bentuk normal disjungtif — disjungsi dari konjungsi, (a ∧ b) ∨ (c ∧ d). Dipakai untuk menurunkan predikat minterm pada fragmentasi." data-detail="Setiap term konjungsi dapat dijalankan sebagai subkueri terpisah lalu digabung dengan UNION. DNF juga dipakai menurunkan predikat minterm fragmentasi." data-contoh="(kota = 'Jakarta' AND biaya &gt; 2) OR (kota = 'Bandung' AND biaya &gt; 2)." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">DNF</abbr>)</td></tr><tr><td>2. Analisis</td><td>Menolak kueri yang salah tipe atau salah semantik</td><td>Pemeriksaan tipe terhadap skema global + <abbr class="istilah" tabindex="0" data-g="g-graf-kueri" data-istilah="Graf kueri" data-en="query graph" data-arti="Graf dengan simpul relasi dan sisi predikat join. Graf yang tidak terhubung menandakan kueri salah semantik — hasilnya perkalian kartesian." data-detail="Dipakai pada analisis semantik. Relasi yang tidak terhubung predikat join menghasilkan perkalian kartesian yang hampir selalu merupakan kesalahan penulisan kueri." data-contoh="FROM pasien p, dokter d tanpa syarat join: graf tidak terhubung." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">graf kueri</abbr></td></tr><tr><td>3. <abbr class="istilah" tabindex="0" data-g="g-eliminasi-redundansi" data-istilah="Eliminasi redundansi" data-arti="Langkah ketiga dekomposisi kueri: menyederhanakan kualifikasi memakai hukum idempoten seperti p ∧ p ≡ p dan p ∧ (p ∨ q) ≡ p." data-detail="Memakai aturan idempoten seperti p ∧ p = p, p ∨ ¬p = true, dan p ∧ ¬p = false. Kueri yang kualifikasinya menjadi false dapat dijawab kosong tanpa menyentuh data." data-contoh="kota = 'A' AND kota = 'A' disederhanakan menjadi kota = 'A'." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">Eliminasi redundansi</abbr></td><td>Membuang predikat berlebih</td><td>Hukum idempoten: p∧p≡p, p∧(p∨q)≡p, p∧¬p≡false</td></tr><tr><td>4. Penulisan ulang</td><td>Mengubah kueri menjadi <abbr class="istilah" tabindex="0" data-g="g-pohon-operator" data-istilah="Pohon operator" data-en="operator tree" data-arti="Representasi grafis kueri aljabar relasional: daun berisi relasi tersimpan, simpul non-daun berisi operator, akar berisi jawaban." data-detail="Pengoptimal mendorong seleksi dan proyeksi sedekat mungkin ke daun agar data yang mengalir ke join dan melewati jaringan sekecil mungkin." data-contoh="π nama (⋈ (σ kota='Bandung' PASIEN, PASIEN_DOKTER))." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">pohon operator</abbr></td><td>Daun = relasi, akar = proyeksi hasil</td></tr></tbody></table></div>
 <div class="catatan info"><p>Kueri disebut <b>salah tipe</b> bila atribut atau relasinya tidak ada dalam skema global, atau operasi diterapkan pada tipe yang salah. Disebut <b>salah semantik</b> bila graf kuerinya tidak terhubung — hasilnya perkalian kartesian yang hampir pasti bukan yang dimaksud pengguna.</p></div>
 
 <h2 id="lokalisasi-data-dan-reduksi">Lokalisasi data dan reduksi</h2>
-<p>Lapisan lokalisasi menerjemahkan kueri aljabar atas relasi global menjadi kueri atas fragmen fisik, memakai <b>program lokalisasi</b>: UNION untuk fragmen horizontal, JOIN untuk fragmen vertikal. Kueri hasilnya lalu direduksi.</p>
-<ul><li><b>Reduksi horizontal primer</b> — σ<sub>p</sub>(F<sub>i</sub>) = ∅ bila p bertentangan dengan predikat fragmen</li><li><b>Reduksi vertikal</b> — fragmen yang tidak menyumbang atribut hasil dibuang dari join</li><li><b>Reduksi join</b> — pasangan fragmen dengan predikat bertentangan pada atribut join dibuang</li><li><b>Reduksi turunan</b> — fragmen anak hanya dipasangkan dengan fragmen induknya</li></ul>
+<p>Lapisan lokalisasi menerjemahkan kueri aljabar atas relasi global menjadi kueri atas fragmen fisik, memakai <b><abbr class="istilah" tabindex="0" data-g="g-program-lokalisasi" data-istilah="Program lokalisasi" data-arti="Ekspresi aljabar yang membentuk kembali relasi global dari fragmennya: UNION untuk horizontal, JOIN untuk vertikal." data-detail="Untuk fragmentasi horizontal berbentuk UNION, vertikal berbentuk JOIN pada kunci, campuran berbentuk kombinasi keduanya." data-contoh="STAFF = S1 ⋈ (S21 ∪ S22 ∪ S23)." data-lab="lokalisasi" data-lab-judul="Lokalisasi Data">program lokalisasi</abbr></b>: UNION untuk fragmen horizontal, JOIN untuk fragmen vertikal. Kueri hasilnya lalu direduksi.</p>
+<ul><li><b><abbr class="istilah" tabindex="0" data-g="g-reduksi" data-istilah="Reduksi" data-en="reduction" data-arti="Penyederhanaan kueri hasil lokalisasi dengan membuang fragmen yang predikatnya bertentangan dengan predikat kueri." data-detail="Fragmen horizontal dibuang bila predikatnya bertentangan dengan kualifikasi kueri; fragmen vertikal dibuang bila tidak memuat kolom yang dibutuhkan." data-contoh="WHERE kota = 'Bandung' membuang pasien@jakarta dan pasien@surabaya." data-lab="lokalisasi" data-lab-judul="Lokalisasi Data">Reduksi</abbr> horizontal primer</b> — σ<sub>p</sub>(F<sub>i</sub>) = ∅ bila p bertentangan dengan predikat fragmen</li><li><b>Reduksi vertikal</b> — fragmen yang tidak menyumbang atribut hasil dibuang dari join</li><li><b>Reduksi join</b> — pasangan fragmen dengan predikat bertentangan pada atribut join dibuang</li><li><b>Reduksi turunan</b> — fragmen anak hanya dipasangkan dengan fragmen induknya</li></ul>
 
 <h2 id="strategi-join-terdistribusi">Strategi join terdistribusi</h2>
-<p>Semijoin memakai identitas R ⋈ S = (R ⋉ S) ⋈ S. Bloom join menggantikan daftar nilai join dengan penapis Bloom yang jauh lebih ringkas, dengan imbalan positif palsu yang baru tersaring saat join akhir — hasil akhirnya tetap identik.</p>
+<p><abbr class="istilah" tabindex="0" data-g="g-semijoin" data-istilah="Semijoin" data-arti="Operator R ⋉ S yang menghasilkan baris R yang punya pasangan di S. Inti strategi join terdistribusi hemat jaringan." data-detail="Dalam join terdistribusi, hanya kolom join R yang dikirim ke situs S; S mengirim balik baris yang cocok. Menguntungkan bila selektivitas join tinggi." data-contoh="Kirim daftar id_pasien Bandung ke Surabaya, ambil hanya pemeriksaan milik pasien itu." data-lab="join" data-lab-judul="Join Terdistribusi">Semijoin</abbr> memakai identitas R ⋈ S = (R ⋉ S) ⋈ S. <abbr class="istilah" tabindex="0" data-g="g-bloom-join" data-istilah="Bloom join" data-arti="Strategi join terdistribusi yang mengirim penapis Bloom, bukan daftar nilai join. Jauh lebih ringkas daripada semijoin; positif palsunya tersaring saat join akhir." data-detail="Situs penerima menyaring barisnya dengan penapis, lalu mengirim balik hanya baris yang mungkin cocok. Salah positif disaring saat join akhir, jadi hasilnya tetap benar." data-contoh="Join pasien@jakarta dengan pasien_dokter@surabaya memakai penapis 256 bit." data-lab="join" data-lab-judul="Join Terdistribusi">Bloom join</abbr> menggantikan daftar nilai join dengan penapis Bloom yang jauh lebih ringkas, dengan imbalan positif palsu yang baru tersaring saat join akhir — hasil akhirnya tetap identik.</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Strategi</th><th>Yang dikirim</th><th>Pesan</th><th>Menang bila</th></tr></thead><tbody><tr><td>Kirim R utuh</td><td>Seluruh relasi R</td><td>1</td><td>R kecil atau hampir semua barisnya berpasangan</td></tr><tr><td>Kirim S utuh</td><td>Seluruh relasi S</td><td>1</td><td>S jauh lebih kecil daripada R</td></tr><tr><td>Semijoin</td><td>π kolom join dari S, lalu R yang tersaring</td><td>2</td><td>R besar dan selektivitasnya rendah</td></tr><tr><td>Bloom join</td><td>Penapis Bloom, lalu R yang tersaring</td><td>2</td><td>Sama seperti semijoin, dengan pesan pertama jauh lebih kecil</td></tr></tbody></table></div>
 
 <h2 id="optimasi-global">Optimasi global</h2>
 <ul><li>Urutan join — ruang pencariannya tumbuh faktorial, sehingga dipakai heuristik atau pemrograman dinamis</li><li>Pemilihan salinan — replika mana yang paling murah diakses dari situs asal kueri</li><li>Penempatan operasi — di situs mana tiap operator dijalankan</li><li>Dorong selection dan projection sedekat mungkin ke daun, sebelum data melintasi jaringan</li></ul>
-<div class="catatan baik"><p>Di Oracle, bukti bahwa reduksi benar-benar terjadi ada pada kolom PSTART/PSTOP (partition pruning) dan operasi REMOTE pada rencana eksekusi. Kolom OTHER berisi SQL yang sesungguhnya dikirim ke situs jauh.</p></div>
+<div class="catatan baik"><p>Di Oracle, bukti bahwa reduksi benar-benar terjadi ada pada kolom PSTART/PSTOP (<abbr class="istilah" tabindex="0" data-g="g-partition-pruning" data-istilah="Partition pruning" data-arti="Kemampuan Oracle membuang partisi yang tidak mungkin memuat hasil. Wujud nyata reduksi lokalisasi, terbaca pada kolom PSTART/PSTOP." data-detail="Terlihat pada rencana eksekusi lewat kolom PSTART/PSTOP. Wujud fisik dari reduksi lokalisasi pada Oracle." data-contoh="WHERE kota = 'Bandung' hanya membaca partisi P_BANDUNG." data-lab="oracle" data-lab-judul="Generator DDL Oracle">partition pruning</abbr>) dan operasi REMOTE pada rencana eksekusi. Kolom OTHER berisi SQL yang sesungguhnya dikirim ke situs jauh.</p></div>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Rencana eksekusi sebuah join</h3>
+<p>Lapisan optimasi: urutan SCAN, JOIN, FILTER, AGGREGATE, SORT. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="EXPLAIN PLAN FOR
+SELECT d.spesialis, COUNT(*) AS n
+  FROM dokter d JOIN pasien_dokter pd ON d.id_dokter = pd.id_dokter
+ WHERE pd.biaya &gt; 250000
+ GROUP BY d.spesialis
+ ORDER BY n DESC;" data-db="rumahsakit"><code><span class="sql-k">EXPLAIN</span> <span class="sql-k">PLAN</span> <span class="sql-k">FOR</span>
+<span class="sql-k">SELECT</span> d.spesialis, <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> n
+  <span class="sql-k">FROM</span> dokter d <span class="sql-k">JOIN</span> pasien_dokter pd <span class="sql-k">ON</span> d.id_dokter = pd.id_dokter
+ <span class="sql-k">WHERE</span> pd.biaya &gt; <span class="sql-n">250000</span>
+ <span class="sql-k">GROUP BY</span> d.spesialis
+ <span class="sql-k">ORDER BY</span> n DESC;</code></pre>
+<h3>Reduksi lokalisasi</h3>
+<p>Predikat kota = Bandung hanya cocok dengan satu fragmen; dua fragmen lain bisa dilewati. <span class="lencana netral">terdistribusi</span></p>
+<pre data-sql="SELECT nama_pasien FROM pasien WHERE kota = 'Bandung';
+SELECT nama_pasien FROM pasien@bandung;" data-db="terdistribusi"><code><span class="sql-k">SELECT</span> nama_pasien <span class="sql-k">FROM</span> pasien <span class="sql-k">WHERE</span> kota = <span class="sql-s">'Bandung'</span>;
+<span class="sql-k">SELECT</span> nama_pasien <span class="sql-k">FROM</span> pasien@bandung;</code></pre>
+<h3>Semijoin: kirim kunci, bukan tabel</h3>
+<p>Hanya id pasien yang dikirim ke <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> lain untuk menyaring baris yang berpasangan. <span class="lencana netral">terdistribusi</span></p>
+<pre data-sql="SELECT pd.id, pd.resep
+  FROM pasien_dokter@bandung pd
+ WHERE pd.id_pasien IN (SELECT id_pasien FROM pasien@bandung);" data-db="terdistribusi"><code><span class="sql-k">SELECT</span> pd.id, pd.resep
+  <span class="sql-k">FROM</span> pasien_dokter@bandung pd
+ <span class="sql-k">WHERE</span> pd.id_pasien <span class="sql-k">IN</span> (<span class="sql-k">SELECT</span> id_pasien <span class="sql-k">FROM</span> pasien@bandung);</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
   <a class="tile" href="../lab/dekomposisi.html"><div class="no">LAB 06</div><h3>Dekomposisi Kueri</h3><p>Normalisasi CNF/DNF, analisis graf kueri, eliminasi redundansi, dan pohon operator.</p></a>
   <a class="tile" href="../lab/lokalisasi.html"><div class="no">LAB 07</div><h3>Lokalisasi Data</h3><p>Program lokalisasi dan reduksi fragmen, diverifikasi terhadap hasil kueri global.</p></a>
   <a class="tile" href="../lab/join.html"><div class="no">LAB 09</div><h3>Join Terdistribusi</h3><p>Kirim utuh, semijoin, dan bloom join dijalankan sungguhan lalu dibandingkan biayanya.</p></a>
-  <a class="tile" href="../lab/sql.html"><div class="no">LAB 03</div><h3>Mesin SQL</h3><p>Jalankan SQL sungguhan atas data praktikum, lengkap dengan rencana eksekusinya.</p></a>
-  <a class="tile" href="../lab/soal.html"><div class="no">LAB 15</div><h3>Bank Soal Praktikum</h3><p>32 soal Praktikum 2–5, termasuk ke-12 soal Praktikum 3, dinilai otomatis dengan membandingkan hasil kueri.</p></a>
+  <a class="tile" href="../lab/sql.html"><div class="no">LAB 03</div><h3>Terminal SQL Live</h3><p>Terminal SQL gaya SQL*Plus: kueri, DML, DDL, transaksi, kamus data, dan 3 situs lewat database link — pratinjau hasil muncul saat mengetik.</p></a>
+  <a class="tile" href="../lab/soal.html"><div class="no">LAB 15</div><h3>Bank Soal Praktikum</h3><p>38 soal Praktikum 2–5, termasuk ke-12 soal Praktikum 3 dan soal INSERT/UPDATE/DELETE ber-CASCADE, dinilai otomatis dari hasil dan keadaan tabel.</p></a>
 </div>
 
     <p class="kecil" style="margin-top:28px">Sumber: Modul Pertemuan 7 — Dekomposisi Kueri dan Lokalisasi Data; Modul 1 (RPS pekan 14)</p>
@@ -84,12 +121,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

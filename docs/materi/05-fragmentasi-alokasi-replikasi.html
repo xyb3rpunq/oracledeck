@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-5">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 5</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#mengapa-relasi-dipecah">Mengapa relasi dipecah</a></li><li><a href="#empat-jenis-fragmentasi">Empat jenis fragmentasi</a></li><li><a href="#tiga-aturan-kebenaran-fragmentasi">Tiga aturan kebenaran fragmentasi</a></li><li><a href="#contoh-dari-modul-6-dan-7">Contoh dari Modul 6 dan 7</a></li><li><a href="#alokasi-dan-replikasi">Alokasi dan replikasi</a></li></ol>
+    <ol><li><a href="#mengapa-relasi-dipecah">Mengapa relasi dipecah</a></li><li><a href="#empat-jenis-fragmentasi">Empat jenis fragmentasi</a></li><li><a href="#tiga-aturan-kebenaran-fragmentasi">Tiga aturan kebenaran fragmentasi</a></li><li><a href="#contoh-dari-modul-6-dan-7">Contoh dari Modul 6 dan 7</a></li><li><a href="#alokasi-dan-replikasi">Alokasi dan replikasi</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 05</p>
@@ -49,14 +60,14 @@
 <p>Pada DBMS terdistribusi, relasi disimpan di beberapa tempat. Mengakses relasi yang disimpan di sisi jauh menimbulkan biaya pengiriman pesan. Untuk menguranginya, relasi dipartisi atau difragmentasi, lalu fragmen dikirim ke tempat fragmen itu paling sering diakses.</p>
 
 <h2 id="empat-jenis-fragmentasi">Empat jenis fragmentasi</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Jenis</th><th>Operator</th><th>Isi fragmen</th><th>Rekonstruksi</th></tr></thead><tbody><tr><td>Horizontal primer</td><td>σ (selection)</td><td>Subset baris dari relasi asal</td><td>UNION seluruh fragmen</td></tr><tr><td>Vertikal</td><td>π (projection)</td><td>Subset kolom, selalu memuat kunci</td><td>NATURAL JOIN atas kunci</td></tr><tr><td>Horizontal turunan</td><td>⋉ (semijoin)</td><td>Baris anak yang induknya ada di fragmen induk</td><td>UNION seluruh fragmen</td></tr><tr><td>Campuran (hybrid)</td><td>σ∘π</td><td>Vertikal lalu horizontal, atau sebaliknya</td><td>Kebalikan urutan pembentukannya</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Jenis</th><th>Operator</th><th>Isi fragmen</th><th>Rekonstruksi</th></tr></thead><tbody><tr><td>Horizontal primer</td><td>σ (selection)</td><td>Subset baris dari relasi asal</td><td>UNION seluruh fragmen</td></tr><tr><td>Vertikal</td><td>π (projection)</td><td>Subset kolom, selalu memuat kunci</td><td>NATURAL JOIN atas kunci</td></tr><tr><td>Horizontal turunan</td><td>⋉ (<abbr class="istilah" tabindex="0" data-g="g-semijoin" data-istilah="Semijoin" data-arti="Operator R ⋉ S yang menghasilkan baris R yang punya pasangan di S. Inti strategi join terdistribusi hemat jaringan." data-detail="Dalam join terdistribusi, hanya kolom join R yang dikirim ke situs S; S mengirim balik baris yang cocok. Menguntungkan bila selektivitas join tinggi." data-contoh="Kirim daftar id_pasien Bandung ke Surabaya, ambil hanya pemeriksaan milik pasien itu." data-lab="join" data-lab-judul="Join Terdistribusi">semijoin</abbr>)</td><td>Baris anak yang induknya ada di fragmen induk</td><td>UNION seluruh fragmen</td></tr><tr><td>Campuran (hybrid)</td><td>σ∘π</td><td>Vertikal lalu horizontal, atau sebaliknya</td><td>Kebalikan urutan pembentukannya</td></tr></tbody></table></div>
 
 <h2 id="tiga-aturan-kebenaran-fragmentasi">Tiga aturan kebenaran fragmentasi</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Aturan</th><th>Horizontal</th><th>Vertikal</th></tr></thead><tbody><tr><td><b>Kelengkapan</b></td><td>Setiap tupel relasi asal ada di minimal satu fragmen</td><td>Setiap atribut relasi asal ada di minimal satu fragmen</td></tr><tr><td><b>Rekonstruksi</b></td><td>R = F₁ ∪ F₂ ∪ … ∪ Fₙ</td><td>R = F₁ ⋈ F₂ ⋈ … ⋈ Fₙ atas kunci</td></tr><tr><td><b>Kedisjoinan</b></td><td>Fragmen tidak tumpang tindih (disjoint)</td><td>Hanya atribut kunci yang boleh berulang</td></tr></tbody></table></div>
-<div class="catatan bahaya"><p>Untuk menjamin fragmentasi vertikal bersifat <b>lossless-join</b>, sistem wajib menyediakan id tupel yang unik pada setiap fragmen. Tanpa kunci di setiap fragmen, hasil join kembali bukan relasi aslinya.</p></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Aturan</th><th>Horizontal</th><th>Vertikal</th></tr></thead><tbody><tr><td><b><abbr class="istilah" tabindex="0" data-g="g-kelengkapan" data-istilah="Kelengkapan" data-en="completeness" data-arti="Aturan kebenaran fragmentasi: setiap item data pada relasi asal harus ada di minimal satu fragmen." data-detail="Dijamin bila predikat minterm menutup seluruh domain; partisi DEFAULT pada Oracle adalah jaring pengaman untuk nilai yang tidak terduga." data-contoh="Pasien kota Depok hilang bila fragmen hanya untuk Jakarta, Bandung, dan Surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">Kelengkapan</abbr></b></td><td>Setiap tupel relasi asal ada di minimal satu fragmen</td><td>Setiap atribut relasi asal ada di minimal satu fragmen</td></tr><tr><td><b><abbr class="istilah" tabindex="0" data-g="g-rekonstruksi" data-istilah="Rekonstruksi" data-en="reconstruction" data-arti="Aturan kebenaran fragmentasi: harus ada operator relasional yang mengembalikan relasi asal dari fragmen-fragmennya." data-detail="Operatornya UNION untuk horizontal dan JOIN untuk vertikal. Tanpa rekonstruksi, relasi global tidak bisa dijawab dari fragmen." data-contoh="PASIEN = pasien@jakarta ∪ pasien@bandung ∪ pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">Rekonstruksi</abbr></b></td><td>R = F₁ ∪ F₂ ∪ … ∪ Fₙ</td><td>R = F₁ ⋈ F₂ ⋈ … ⋈ Fₙ atas kunci</td></tr><tr><td><b><abbr class="istilah" tabindex="0" data-g="g-kedisjoinan" data-istilah="Kedisjoinan" data-en="disjointness" data-arti="Aturan kebenaran fragmentasi: fragmen horizontal tidak boleh tumpang tindih, dan pada fragmen vertikal hanya atribut kunci yang boleh berulang." data-detail="Untuk fragmen vertikal aturan ini dilonggarkan: kunci primer boleh (dan harus) muncul di setiap fragmen." data-contoh="SELECT id FROM pasien@jakarta INTERSECT SELECT id FROM pasien@bandung harus kosong." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">Kedisjoinan</abbr></b></td><td>Fragmen tidak tumpang tindih (disjoint)</td><td>Hanya atribut kunci yang boleh berulang</td></tr></tbody></table></div>
+<div class="catatan bahaya"><p>Untuk menjamin <abbr class="istilah" tabindex="0" data-g="g-fragmentasi-vertikal" data-istilah="Fragmentasi vertikal" data-arti="Pemecahan relasi berdasarkan kolom memakai operator projection. Setiap fragmen wajib memuat kunci agar rekonstruksinya lossless." data-detail="Pengelompokan kolom dipandu matriks afinitas atribut. Kunci primer diulang di setiap fragmen agar rekonstruksi dengan JOIN tetap lossless." data-contoh="pasien_v1(id_pasien, nama, kota) dan pasien_v2(id_pasien, penyakit, no_hp)." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">fragmentasi vertikal</abbr> bersifat <b><abbr class="istilah" tabindex="0" data-g="g-lossless-join" data-istilah="Lossless-join" data-arti="Sifat dekomposisi yang menjamin relasi asal dapat dibentuk kembali secara utuh lewat join, tanpa baris palsu maupun baris hilang." data-detail="Dekomposisi R menjadi R1 dan R2 lossless bila R1 ∩ R2 → R1 atau R1 ∩ R2 → R2. Uji umum memakai algoritma chase." data-contoh="Memecah pasien menjadi (id, nama) dan (id, kota) lossless karena id adalah kunci." data-lab="normalisasi" data-lab-judul="Normalisasi 1NF–BCNF">lossless-join</abbr></b>, sistem wajib menyediakan id tupel yang unik pada setiap fragmen. Tanpa kunci di setiap fragmen, hasil join kembali bukan relasi aslinya.</p></div>
 
 <h2 id="contoh-dari-modul-6-dan-7">Contoh dari Modul 6 dan 7</h2>
-<p>STAFF dipecah vertikal menjadi S1 dan S2, lalu S2 dipecah horizontal per cabang menjadi S21, S22, dan S23. Inilah fragmentasi campuran. Lab Fragmentasi menjalankan skema persis ini atas data sungguhan dan memeriksa ketiga aturan kebenarannya.</p>
+<p>STAFF dipecah vertikal menjadi S1 dan S2, lalu S2 dipecah horizontal per cabang menjadi S21, S22, dan S23. Inilah <abbr class="istilah" tabindex="0" data-g="g-fragmentasi-campuran" data-istilah="Fragmentasi campuran" data-en="hybrid fragmentation" data-arti="Fragmentasi vertikal yang dilanjutkan horizontal, atau sebaliknya. Contoh S1/S21/S22/S23 pada Modul 6." data-detail="Rekonstruksinya memakai kombinasi UNION dan JOIN sesuai urutan pemecahan. Audit kebenarannya dilakukan per tingkat hierarki." data-contoh="STAFF dipecah vertikal (S1 gaji, S2 profil), lalu S2 dipecah horizontal per cabang." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">fragmentasi campuran</abbr>. Lab <abbr class="istilah" tabindex="0" data-g="g-fragmentasi" data-istilah="Fragmentasi" data-en="fragmentation" data-arti="Pemecahan relasi menjadi bagian-bagian lebih kecil yang dapat ditempatkan di situs berbeda." data-detail="Tujuannya menaruh data dekat penggunanya, mengurangi data yang dikirim, dan memungkinkan pemrosesan paralel. Wajib memenuhi kelengkapan, rekonstruksi, dan kedisjoinan." data-contoh="Tabel pasien dipecah per kota menjadi pasien@jakarta, pasien@bandung, pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">Fragmentasi</abbr> menjalankan skema persis ini atas data sungguhan dan memeriksa ketiga aturan kebenarannya.</p>
 <pre><code>S1  = π staffno, position, sex, DOB, salary (STAFF)        ditempatkan di site 3
 S2  = π staffno, fname, lname, branchno, sex, DOB, salary (STAFF)
 
@@ -65,10 +76,38 @@ S22 = σ Bno = B5 (S2)     ditempatkan di site 5
 S23 = σ Bno = B7 (S2)     ditempatkan di site 7</code></pre>
 
 <h2 id="alokasi-dan-replikasi">Alokasi dan replikasi</h2>
-<p>Setelah relasi dipecah, tiap fragmen harus ditempatkan. Keputusannya menyangkut tiga hal sekaligus: di situs mana, berapa salinan, dan siapa yang menanggung biaya pembaruan.</p>
-<div class="tabel-bungkus"><table><thead><tr><th>Strategi</th><th>Biaya baca</th><th>Biaya tulis</th><th>Ketersediaan</th><th>Cocok untuk</th></tr></thead><tbody><tr><td>Terpusat (satu situs)</td><td>Mahal untuk situs jauh</td><td>Murah — satu salinan</td><td>Rendah</td><td>Sistem kecil, satu lokasi dominan</td></tr><tr><td>Terfragmentasi tanpa replika</td><td>Murah bila akses lokal</td><td>Murah</td><td>Sedang</td><td>Data yang jelas terpisah per wilayah</td></tr><tr><td>Replikasi penuh</td><td>Sangat murah</td><td>Sangat mahal — semua salinan disentuh</td><td>Tinggi</td><td>Tabel referensi yang jarang berubah</td></tr><tr><td>Replikasi selektif</td><td>Murah untuk fragmen panas</td><td>Sedang</td><td>Tinggi untuk yang direplikasi</td><td>Pilihan praktis pada hampir semua kasus</td></tr></tbody></table></div>
+<p>Setelah relasi dipecah, tiap fragmen harus ditempatkan. Keputusannya menyangkut tiga hal sekaligus: di <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> mana, berapa salinan, dan siapa yang menanggung biaya pembaruan.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Strategi</th><th>Biaya baca</th><th>Biaya tulis</th><th>Ketersediaan</th><th>Cocok untuk</th></tr></thead><tbody><tr><td>Terpusat (satu situs)</td><td>Mahal untuk situs jauh</td><td>Murah — satu salinan</td><td>Rendah</td><td>Sistem kecil, satu lokasi dominan</td></tr><tr><td>Terfragmentasi tanpa replika</td><td>Murah bila akses lokal</td><td>Murah</td><td>Sedang</td><td>Data yang jelas terpisah per wilayah</td></tr><tr><td><abbr class="istilah" tabindex="0" data-g="g-replikasi" data-istilah="Replikasi" data-en="replication" data-arti="Menyimpan lebih dari satu salinan fragmen di situs berbeda. Menaikkan ketersediaan baca, menaikkan biaya tulis." data-detail="Replikasi sinkron menjaga semua salinan sama tetapi memperlambat tulisan; asinkron cepat tetapi salinan bisa tertinggal. Pilihan ini terkait langsung dengan CAP dan PACELC." data-contoh="Tabel dokter direplikasi ke tiga situs karena sering dibaca dan jarang diubah." data-lab="alokasi" data-lab-judul="Alokasi &amp; Replikasi">Replikasi</abbr> penuh</td><td>Sangat murah</td><td>Sangat mahal — semua salinan disentuh</td><td>Tinggi</td><td>Tabel referensi yang jarang berubah</td></tr><tr><td>Replikasi selektif</td><td>Murah untuk fragmen panas</td><td>Sedang</td><td>Tinggi untuk yang direplikasi</td><td>Pilihan praktis pada hampir semua kasus</td></tr></tbody></table></div>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Kelengkapan: gabungan fragmen = relasi global</h3>
+<p>Aturan <abbr class="istilah" tabindex="0" data-g="g-kelengkapan" data-istilah="Kelengkapan" data-en="completeness" data-arti="Aturan kebenaran fragmentasi: setiap item data pada relasi asal harus ada di minimal satu fragmen." data-detail="Dijamin bila predikat minterm menutup seluruh domain; partisi DEFAULT pada Oracle adalah jaring pengaman untuk nilai yang tidak terduga." data-contoh="Pasien kota Depok hilang bila fragmen hanya untuk Jakarta, Bandung, dan Surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">kelengkapan</abbr> dan <abbr class="istilah" tabindex="0" data-g="g-rekonstruksi" data-istilah="Rekonstruksi" data-en="reconstruction" data-arti="Aturan kebenaran fragmentasi: harus ada operator relasional yang mengembalikan relasi asal dari fragmen-fragmennya." data-detail="Operatornya UNION untuk horizontal dan JOIN untuk vertikal. Tanpa rekonstruksi, relasi global tidak bisa dijawab dari fragmen." data-contoh="PASIEN = pasien@jakarta ∪ pasien@bandung ∪ pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">rekonstruksi</abbr>: UNION ALL ketiga fragmen harus sama dengan pasien. <span class="lencana netral">terdistribusi</span></p>
+<pre data-sql="SELECT COUNT(*) AS global FROM pasien;
+SELECT COUNT(*) AS jumlah_fragmen FROM (
+  SELECT id_pasien FROM pasien@jakarta
+  UNION ALL SELECT id_pasien FROM pasien@bandung
+  UNION ALL SELECT id_pasien FROM pasien@surabaya
+) f;" data-db="terdistribusi"><code><span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> <span class="sql-k">global</span> <span class="sql-k">FROM</span> pasien;
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> jumlah_fragmen <span class="sql-k">FROM</span> (
+  <span class="sql-k">SELECT</span> id_pasien <span class="sql-k">FROM</span> pasien@jakarta
+  <span class="sql-k">UNION</span> <span class="sql-k">ALL</span> <span class="sql-k">SELECT</span> id_pasien <span class="sql-k">FROM</span> pasien@bandung
+  <span class="sql-k">UNION</span> <span class="sql-k">ALL</span> <span class="sql-k">SELECT</span> id_pasien <span class="sql-k">FROM</span> pasien@surabaya
+) f;</code></pre>
+<h3>Kedisjoinan: tidak ada pasien di dua fragmen</h3>
+<p>Irisan antarfragmen horizontal harus kosong. <span class="lencana netral">terdistribusi</span></p>
+<pre data-sql="SELECT id_pasien FROM pasien@jakarta
+INTERSECT
+SELECT id_pasien FROM pasien@bandung;" data-db="terdistribusi"><code><span class="sql-k">SELECT</span> id_pasien <span class="sql-k">FROM</span> pasien@jakarta
+INTERSECT
+<span class="sql-k">SELECT</span> id_pasien <span class="sql-k">FROM</span> pasien@bandung;</code></pre>
+<h3>Fragmentasi vertikal lewat CREATE TABLE AS</h3>
+<p>Kunci primer disalin ke setiap fragmen vertikal agar join rekonstruksinya lossless. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="CREATE TABLE pasien_v1 AS SELECT id_pasien, nama_pasien, kota FROM pasien;
+CREATE TABLE pasien_v2 AS SELECT id_pasien, penyakit, no_hp FROM pasien;
+SELECT COUNT(*) AS hasil_join FROM pasien_v1 a JOIN pasien_v2 b ON a.id_pasien = b.id_pasien;" data-db="rumahsakit"><code><span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> pasien_v1 <span class="sql-k">AS</span> <span class="sql-k">SELECT</span> id_pasien, nama_pasien, kota <span class="sql-k">FROM</span> pasien;
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> pasien_v2 <span class="sql-k">AS</span> <span class="sql-k">SELECT</span> id_pasien, penyakit, no_hp <span class="sql-k">FROM</span> pasien;
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> hasil_join <span class="sql-k">FROM</span> pasien_v1 a <span class="sql-k">JOIN</span> pasien_v2 b <span class="sql-k">ON</span> a.id_pasien = b.id_pasien;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -85,12 +124,14 @@ S23 = σ Bno = B7 (S2)     ditempatkan di site 7</code></pre>
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

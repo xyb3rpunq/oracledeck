@@ -7,7 +7,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { rumahsakit, RS_KEYS, DEFAULT_SITES, dreamhome } from '../engine/data/datasets.js';
+import { rumahsakit, RS_KEYS, RS_TIPE, DEFAULT_SITES, dreamhome } from '../engine/data/datasets.js';
 import * as O from '../engine/oracle/emit.js';
 import * as Fg from '../engine/ddb/fragment.js';
 import * as T from '../engine/ddb/transparency.js';
@@ -22,17 +22,8 @@ const berkas = [];
 
 // Lebar kolom ditetapkan untuk pemakaian sungguhan, bukan diterka dari 12 baris
 // data contoh. Tipe terkaan hanya cocok untuk pratinjau di situs.
-const TIPE = {
-  id_pasien: 'NUMBER(8)', id_dokter: 'NUMBER(4)', id_admin: 'NUMBER(4)',
-  id: 'NUMBER(8)', id_data: 'NUMBER(8)', id_daftar: 'NUMBER(8)',
-  nama_pasien: 'VARCHAR2(60)', nama_dokter: 'VARCHAR2(60)', nama_admin: 'VARCHAR2(60)',
-  alamat_pasien: 'VARCHAR2(150)', alamat_dokter: 'VARCHAR2(150)',
-  jenis_kelamin: 'CHAR(1)', penyakit: 'VARCHAR2(100)',
-  no_hp: 'VARCHAR2(20)', kota: 'VARCHAR2(40)',
-  tanggal_lahir: 'DATE', waktu_periksa: 'DATE', tanggal_daftar: 'DATE',
-  spesialis: 'VARCHAR2(40)', waktu_kerja: 'VARCHAR2(60)', waktu_jaga: 'VARCHAR2(30)',
-  resep: 'VARCHAR2(150)', biaya: 'NUMBER(12,2)',
-};
+// tipe kolom diambil dari engine/data/datasets.js agar sama dengan preset terminal SQL
+const TIPE = RS_TIPE;
 
 function tulis(nama, isi) {
   writeFileSync(join(OUT, nama), `${isi.trimEnd()}\n`, 'utf8');

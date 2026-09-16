@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-8">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 8</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#aturan-dasar">Aturan dasar</a></li><li><a href="#mengapa-aturan-ke-2-sering-dilanggar">Mengapa aturan ke-2 sering dilanggar</a></li></ol>
+    <ol><li><a href="#aturan-dasar">Aturan dasar</a></li><li><a href="#mengapa-aturan-ke-2-sering-dilanggar">Mengapa aturan ke-2 sering dilanggar</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 08</p>
@@ -47,13 +58,24 @@
 
 <h2 id="aturan-dasar">Aturan dasar</h2>
 <p>Satu aturan mendasari semuanya: <b>bagi pengguna, sistem terdistribusi harus terlihat persis seperti sistem yang tidak terdistribusi.</b> Dua belas aturan berikut adalah penjabarannya.</p>
-<div class="tabel-bungkus"><table><thead><tr><th>#</th><th>Prinsip</th><th>Arti praktis</th></tr></thead><tbody><tr><td>1</td><td>Otonomi lokal</td><td>Situs mengelola datanya sendiri; tidak ada operasi lokal yang bergantung situs lain</td></tr><tr><td>2</td><td>Tidak bergantung situs pusat</td><td>Tidak ada satu situs yang, bila mati, mematikan seluruh sistem</td></tr><tr><td>3</td><td>Operasi berkelanjutan</td><td>Menambah situs atau mengubah skema tidak memerlukan penghentian sistem</td></tr><tr><td>4</td><td>Independensi lokasi</td><td>Pengguna tidak perlu tahu di mana data disimpan</td></tr><tr><td>5</td><td>Independensi fragmentasi</td><td>Pengguna tidak perlu tahu data dipecah</td></tr><tr><td>6</td><td>Independensi replikasi</td><td>Pengguna tidak perlu tahu ada berapa salinan</td></tr><tr><td>7</td><td>Pemrosesan kueri terdistribusi</td><td>Satu kueri boleh menyentuh banyak situs dan tetap dioptimasi</td></tr><tr><td>8</td><td>Manajemen transaksi terdistribusi</td><td>Atomicity dan durability tetap berlaku lintas situs</td></tr><tr><td>9</td><td>Independensi perangkat keras</td><td>Bebas arsitektur mesin</td></tr><tr><td>10</td><td>Independensi sistem operasi</td><td>Bebas OS</td></tr><tr><td>11</td><td>Independensi jaringan</td><td>Bebas topologi dan protokol jaringan</td></tr><tr><td>12</td><td>Independensi DBMS</td><td>Bebas produk DBMS — inilah yang paling jarang tercapai</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>#</th><th>Prinsip</th><th>Arti praktis</th></tr></thead><tbody><tr><td>1</td><td><abbr class="istilah" tabindex="0" data-g="g-otonomi-lokal" data-istilah="Otonomi lokal" data-arti="Prinsip bahwa setiap situs mengelola datanya sendiri dan operasinya tidak bergantung pada situs lain." data-detail="Situs tetap bisa berjalan saat situs lain mati, menegakkan kendalanya sendiri, dan tidak butuh izin pusat untuk operasi lokal. Aturan pertama dari dua belas aturan Date." data-contoh="CHECK kota = 'Bandung' pada pasien@bandung ditegakkan situs Bandung sendiri." data-lab="sql" data-lab-judul="Terminal SQL Live">Otonomi lokal</abbr></td><td><abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">Situs</abbr> mengelola datanya sendiri; tidak ada operasi lokal yang bergantung situs lain</td></tr><tr><td>2</td><td>Tidak bergantung situs pusat</td><td>Tidak ada satu situs yang, bila mati, mematikan seluruh sistem</td></tr><tr><td>3</td><td>Operasi berkelanjutan</td><td>Menambah situs atau mengubah skema tidak memerlukan penghentian sistem</td></tr><tr><td>4</td><td>Independensi lokasi</td><td>Pengguna tidak perlu tahu di mana data disimpan</td></tr><tr><td>5</td><td>Independensi <abbr class="istilah" tabindex="0" data-g="g-fragmentasi" data-istilah="Fragmentasi" data-en="fragmentation" data-arti="Pemecahan relasi menjadi bagian-bagian lebih kecil yang dapat ditempatkan di situs berbeda." data-detail="Tujuannya menaruh data dekat penggunanya, mengurangi data yang dikirim, dan memungkinkan pemrosesan paralel. Wajib memenuhi kelengkapan, rekonstruksi, dan kedisjoinan." data-contoh="Tabel pasien dipecah per kota menjadi pasien@jakarta, pasien@bandung, pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">fragmentasi</abbr></td><td>Pengguna tidak perlu tahu data dipecah</td></tr><tr><td>6</td><td>Independensi <abbr class="istilah" tabindex="0" data-g="g-replikasi" data-istilah="Replikasi" data-en="replication" data-arti="Menyimpan lebih dari satu salinan fragmen di situs berbeda. Menaikkan ketersediaan baca, menaikkan biaya tulis." data-detail="Replikasi sinkron menjaga semua salinan sama tetapi memperlambat tulisan; asinkron cepat tetapi salinan bisa tertinggal. Pilihan ini terkait langsung dengan CAP dan PACELC." data-contoh="Tabel dokter direplikasi ke tiga situs karena sering dibaca dan jarang diubah." data-lab="alokasi" data-lab-judul="Alokasi &amp; Replikasi">replikasi</abbr></td><td>Pengguna tidak perlu tahu ada berapa salinan</td></tr><tr><td>7</td><td>Pemrosesan kueri terdistribusi</td><td>Satu kueri boleh menyentuh banyak situs dan tetap dioptimasi</td></tr><tr><td>8</td><td>Manajemen transaksi terdistribusi</td><td><abbr class="istilah" tabindex="0" data-g="g-atomicity" data-istilah="Atomicity" data-arti="Sifat transaksi yang menjamin semua operasi berhasil atau tidak satu pun berlaku. Pada sistem terdistribusi ditegakkan oleh protokol komitmen atomik." data-detail="Pada sistem terdistribusi atomisitas tidak cukup dijaga log lokal; perlu protokol komitmen atomik seperti 2PC agar semua situs mengambil keputusan yang sama." data-contoh="DELETE di daftar@jakarta dan daftar@bandung lalu COMMIT: keduanya tersimpan atau keduanya batal." data-lab="sql" data-lab-judul="Terminal SQL Live">Atomicity</abbr> dan durability tetap berlaku lintas situs</td></tr><tr><td>9</td><td>Independensi perangkat keras</td><td>Bebas arsitektur mesin</td></tr><tr><td>10</td><td>Independensi sistem operasi</td><td>Bebas OS</td></tr><tr><td>11</td><td>Independensi jaringan</td><td>Bebas topologi dan protokol jaringan</td></tr><tr><td>12</td><td>Independensi DBMS</td><td>Bebas produk DBMS — inilah yang paling jarang tercapai</td></tr></tbody></table></div>
 
 <h2 id="mengapa-aturan-ke-2-sering-dilanggar">Mengapa aturan ke-2 sering dilanggar</h2>
 <p>Server nama terpusat melanggar aturan 1, 2, dan 3 sekaligus: otonomi lokal berkurang, ada titik kegagalan tunggal, dan bila situs pusat gagal situs lain tidak dapat membuat objek baru. Itulah sebabnya pendekatan awalan situs dan alias lebih disukai walau lebih rumit.</p>
-<div class="catatan bahaya"><p>Koordinator 2PC juga merupakan titik kegagalan tunggal — bukan untuk seluruh sistem, tetapi untuk setiap transaksi global yang sedang berjalan. Lab 2PC/3PC menunjukkan persis kapan hal itu berubah menjadi blokir.</p></div>
+<div class="catatan bahaya"><p>Koordinator 2PC juga merupakan titik kegagalan tunggal — bukan untuk seluruh sistem, tetapi untuk setiap <abbr class="istilah" tabindex="0" data-g="g-transaksi-global" data-istilah="Transaksi global" data-arti="Transaksi yang mengakses data pada lebih dari satu situs." data-detail="Membutuhkan manajer transaksi global, agent per situs, dan protokol komitmen atomik." data-contoh="Satu COMMIT atas perubahan di daftar@jakarta dan daftar@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">transaksi global</abbr> yang sedang berjalan. Lab 2PC/3PC menunjukkan persis kapan hal itu berubah menjadi blokir.</p></div>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Aturan otonomi lokal</h3>
+<p>Setiap <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> menegakkan kendalanya sendiri: CHECK fragmen Bandung menolak pasien kota lain. <span class="lencana netral">terdistribusi</span> <span class="lencana warn">galat disengaja: ORA-02290</span></p>
+<pre data-sql="INSERT INTO pasien@bandung (id_pasien, nama_pasien, jenis_kelamin, kota)
+VALUES (40, 'Salah tempat', 'P', 'Surabaya');" data-db="terdistribusi"><code><span class="sql-k">INSERT</span> <span class="sql-k">INTO</span> pasien@bandung (id_pasien, nama_pasien, jenis_kelamin, kota)
+<span class="sql-k">VALUES</span> (<span class="sql-n">40</span>, <span class="sql-s">'Salah tempat'</span>, <span class="sql-s">'P'</span>, <span class="sql-s">'Surabaya'</span>);</code></pre>
+<h3>Tidak bergantung pada situs pusat</h3>
+<p>Setiap fragmen tercatat di tablespace situsnya sendiri (TS_JAKARTA, TS_BANDUNG, TS_SURABAYA) — tidak ada katalog pusat yang wajib hidup. <span class="lencana netral">terdistribusi</span></p>
+<pre data-sql="\c surabaya
+SELECT table_name, num_rows, tablespace_name FROM user_tables;" data-db="terdistribusi"><code>\c surabaya
+<span class="sql-k">SELECT</span> table_name, num_rows, tablespace_name <span class="sql-k">FROM</span> user_tables;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -69,12 +91,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

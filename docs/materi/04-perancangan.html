@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-4">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 4</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#dua-pendekatan">Dua pendekatan</a></li><li><a href="#langkah-perancangan-top-down">Langkah perancangan top-down</a></li><li><a href="#informasi-yang-wajib-dikumpulkan-sebelum-alokasi">Informasi yang wajib dikumpulkan sebelum alokasi</a></li><li><a href="#kesalahan-perancangan-yang-paling-sering">Kesalahan perancangan yang paling sering</a></li></ol>
+    <ol><li><a href="#dua-pendekatan">Dua pendekatan</a></li><li><a href="#langkah-perancangan-top-down">Langkah perancangan top-down</a></li><li><a href="#informasi-yang-wajib-dikumpulkan-sebelum-alokasi">Informasi yang wajib dikumpulkan sebelum alokasi</a></li><li><a href="#kesalahan-perancangan-yang-paling-sering">Kesalahan perancangan yang paling sering</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 04</p>
@@ -46,19 +57,54 @@
     <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami pendekatan-pendekatan dalam merancang basis data terdistribusi.</p></div>
 
 <h2 id="dua-pendekatan">Dua pendekatan</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Aspek</th><th>Top-down</th><th>Bottom-up</th></tr></thead><tbody><tr><td>Titik mulai</td><td>Belum ada basis data — dirancang dari nol</td><td>Sudah ada basis data yang berjalan di tiap situs</td></tr><tr><td>Urutan</td><td>Analisis kebutuhan → skema konseptual global → fragmentasi → alokasi → skema lokal</td><td>Skema lokal → penerjemahan ke model bersama → integrasi menjadi skema global</td></tr><tr><td>Cocok untuk</td><td>Sistem homogen yang dibangun serentak</td><td>Sistem heterogen hasil penggabungan organisasi</td></tr><tr><td>Masalah utama</td><td>Menebak pola akses yang belum terjadi</td><td>Konflik nama, konflik struktur, dan konflik semantik antar skema</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Aspek</th><th>Top-down</th><th>Bottom-up</th></tr></thead><tbody><tr><td>Titik mulai</td><td>Belum ada basis data — dirancang dari nol</td><td>Sudah ada basis data yang berjalan di tiap <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr></td></tr><tr><td>Urutan</td><td>Analisis kebutuhan → skema konseptual global → <abbr class="istilah" tabindex="0" data-g="g-fragmentasi" data-istilah="Fragmentasi" data-en="fragmentation" data-arti="Pemecahan relasi menjadi bagian-bagian lebih kecil yang dapat ditempatkan di situs berbeda." data-detail="Tujuannya menaruh data dekat penggunanya, mengurangi data yang dikirim, dan memungkinkan pemrosesan paralel. Wajib memenuhi kelengkapan, rekonstruksi, dan kedisjoinan." data-contoh="Tabel pasien dipecah per kota menjadi pasien@jakarta, pasien@bandung, pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">fragmentasi</abbr> → <abbr class="istilah" tabindex="0" data-g="g-alokasi" data-istilah="Alokasi" data-en="allocation" data-arti="Keputusan menempatkan fragmen pada situs tertentu, termasuk berapa salinan yang dibuat. Masukannya empat kelompok informasi: basis data, aplikasi, situs, dan jaringan." data-detail="Alokasi optimal menyeimbangkan biaya simpan, biaya akses baca, biaya pembaruan (yang naik tiap salinan), dan ketersediaan. Alokasi non-redundan menaruh tiap fragmen di satu situs; redundan menaruh salinannya di beberapa situs." data-contoh="Fragmen pasien kota Bandung ditaruh di situs Bandung karena 80% aksesnya berasal dari sana." data-lab="alokasi" data-lab-judul="Alokasi &amp; Replikasi">alokasi</abbr> → skema lokal</td><td>Skema lokal → penerjemahan ke model bersama → integrasi menjadi skema global</td></tr><tr><td>Cocok untuk</td><td>Sistem <abbr class="istilah" tabindex="0" data-g="g-homogen" data-istilah="Homogen" data-arti="Sistem terdistribusi yang seluruh situsnya memakai produk DBMS yang sama. Lebih mudah dirancang dan dikelola." data-detail="Setiap situs memahami protokol yang sama sehingga kueri dan two-phase commit lintas situs dapat dikoordinasikan langsung oleh DBMS." data-contoh="Tiga instans Oracle yang saling terhubung database link.">homogen</abbr> yang dibangun serentak</td><td>Sistem <abbr class="istilah" tabindex="0" data-g="g-heterogen" data-istilah="Heterogen" data-arti="Sistem terdistribusi yang situs-situsnya memakai produk DBMS, bahkan model data, yang berbeda-beda." data-detail="Membutuhkan gateway atau middleware untuk menerjemahkan dialek SQL, tipe data, dan protokol transaksi. Koordinasi commit atomik jauh lebih sulit dibanding sistem homogen." data-contoh="Oracle XE di satu desa dan MySQL di desa lain pada studi kasus kependudukan." data-lab="kependudukan" data-lab-judul="Studi Kasus Kependudukan">heterogen</abbr> hasil penggabungan organisasi</td></tr><tr><td>Masalah utama</td><td>Menebak pola akses yang belum terjadi</td><td>Konflik nama, konflik struktur, dan konflik semantik antar skema</td></tr></tbody></table></div>
 
 <h2 id="langkah-perancangan-top-down">Langkah perancangan top-down</h2>
-<ol><li>Analisis kebutuhan: entitas, atribut, volume, dan frekuensi akses</li><li>Perancangan konseptual: ERD → skema relasional → normalisasi</li><li>Perancangan fragmentasi: horizontal, vertikal, turunan, atau campuran</li><li>Perancangan alokasi: fragmen mana ditempatkan di situs mana, direplikasi atau tidak</li><li>Perancangan fisik: indeks, tablespace, dan parameter penyimpanan di tiap situs</li></ol>
+<ol><li>Analisis kebutuhan: entitas, atribut, volume, dan frekuensi akses</li><li>Perancangan konseptual: <abbr class="istilah" tabindex="0" data-g="g-erd" data-istilah="ERD" data-en="entity relationship diagram" data-arti="Diagram konseptual berisi entitas, atribut, kunci, dan relasi beserta kardinalitasnya. Titik awal perancangan basis data." data-detail="Dipakai pada tahap perancangan konseptual sebelum dipetakan ke skema relasional. Kardinalitas 1:N diwujudkan sebagai kunci asing di sisi N; N:M menjadi tabel penghubung." data-contoh="CUSTOMER 1:N RENTAL N:1 MOBIL pada kasus Tono Rental." data-lab="erd" data-lab-judul="Perancang ERD">ERD</abbr> → skema relasional → <abbr class="istilah" tabindex="0" data-g="g-normalisasi" data-istilah="Normalisasi" data-arti="Proses menata relasi agar bebas dari redundansi dan anomali, bertahap dari 1NF sampai BCNF." data-detail="1NF (atribut atomik), 2NF (tanpa ketergantungan parsial), 3NF (tanpa ketergantungan transitif), BCNF (setiap determinan superkey). Skema ternormalisasi adalah titik awal fragmentasi yang benar." data-contoh="Memecah pasien_dokter yang menyimpan nama dokter berulang menjadi tabel dokter terpisah." data-lab="normalisasi" data-lab-judul="Normalisasi 1NF–BCNF">normalisasi</abbr></li><li>Perancangan fragmentasi: horizontal, vertikal, turunan, atau campuran</li><li>Perancangan alokasi: fragmen mana ditempatkan di situs mana, direplikasi atau tidak</li><li>Perancangan fisik: indeks, tablespace, dan parameter penyimpanan di tiap situs</li></ol>
 
 <h2 id="informasi-yang-wajib-dikumpulkan-sebelum-alokasi">Informasi yang wajib dikumpulkan sebelum alokasi</h2>
 <div class="tabel-bungkus"><table><thead><tr><th>Kelompok</th><th>Rincian</th></tr></thead><tbody><tr><td>Informasi basis data</td><td>Skema konseptual, jumlah situs, jumlah/ukuran/selektivitas fragmen per relasi global</td></tr><tr><td>Informasi aplikasi</td><td>Jumlah kueri, rata-rata akses baca dan akses update per fragmen, matriks kueri–fragmen, situs asal tiap kueri</td></tr><tr><td>Informasi situs</td><td>Unit cost penyimpanan dan unit cost pemrosesan di tiap situs</td></tr><tr><td>Informasi jaringan</td><td>Bandwidth dan latensi antar pasangan situs</td></tr></tbody></table></div>
-<div class="catatan info"><p>Keempat kelompok inilah masukan Lab Alokasi &amp; Replikasi. Tanpa angka-angka ini, keputusan replikasi hanya tebakan.</p></div>
+<div class="catatan info"><p>Keempat kelompok inilah masukan Lab Alokasi &amp; <abbr class="istilah" tabindex="0" data-g="g-replikasi" data-istilah="Replikasi" data-en="replication" data-arti="Menyimpan lebih dari satu salinan fragmen di situs berbeda. Menaikkan ketersediaan baca, menaikkan biaya tulis." data-detail="Replikasi sinkron menjaga semua salinan sama tetapi memperlambat tulisan; asinkron cepat tetapi salinan bisa tertinggal. Pilihan ini terkait langsung dengan CAP dan PACELC." data-contoh="Tabel dokter direplikasi ke tiga situs karena sering dibaca dan jarang diubah." data-lab="alokasi" data-lab-judul="Alokasi &amp; Replikasi">Replikasi</abbr>. Tanpa angka-angka ini, keputusan replikasi hanya tebakan.</p></div>
 
 <h2 id="kesalahan-perancangan-yang-paling-sering">Kesalahan perancangan yang paling sering</h2>
-<ul><li>Memfragmentasi tabel referensi kecil yang justru dibaca semua situs — seharusnya direplikasi</li><li>Mereplikasi tabel transaksi yang sering di-update — biaya tulis naik berlipat karena 2PC menyentuh semua salinan</li><li>Memilih atribut fragmentasi yang tidak pernah muncul di klausa WHERE — reduksi lokalisasi tidak pernah terjadi</li><li>Melupakan kunci pada fragmen vertikal — rekonstruksi menjadi lossy</li></ul>
+<ul><li>Memfragmentasi tabel referensi kecil yang justru dibaca semua situs — seharusnya direplikasi</li><li>Mereplikasi tabel transaksi yang sering di-update — biaya tulis naik berlipat karena 2PC menyentuh semua salinan</li><li>Memilih atribut fragmentasi yang tidak pernah muncul di klausa WHERE — <abbr class="istilah" tabindex="0" data-g="g-reduksi" data-istilah="Reduksi" data-en="reduction" data-arti="Penyederhanaan kueri hasil lokalisasi dengan membuang fragmen yang predikatnya bertentangan dengan predikat kueri." data-detail="Fragmen horizontal dibuang bila predikatnya bertentangan dengan kualifikasi kueri; fragmen vertikal dibuang bila tidak memuat kolom yang dibutuhkan." data-contoh="WHERE kota = 'Bandung' membuang pasien@jakarta dan pasien@surabaya." data-lab="lokalisasi" data-lab-judul="Lokalisasi Data">reduksi</abbr> lokalisasi tidak pernah terjadi</li><li>Melupakan kunci pada fragmen vertikal — <abbr class="istilah" tabindex="0" data-g="g-rekonstruksi" data-istilah="Rekonstruksi" data-en="reconstruction" data-arti="Aturan kebenaran fragmentasi: harus ada operator relasional yang mengembalikan relasi asal dari fragmen-fragmennya." data-detail="Operatornya UNION untuk horizontal dan JOIN untuk vertikal. Tanpa rekonstruksi, relasi global tidak bisa dijawab dari fragmen." data-contoh="PASIEN = pasien@jakarta ∪ pasien@bandung ∪ pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">rekonstruksi</abbr> menjadi lossy</li></ul>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Rancangan global dulu (top-down)</h3>
+<p>Pendekatan <abbr class="istilah" tabindex="0" data-g="g-top-down" data-istilah="Top-down" data-arti="Pendekatan perancangan dari skema konseptual global menuju fragmentasi, alokasi, lalu skema lokal. Lazim pada sistem homogen baru." data-detail="Urutannya: analisis kebutuhan, desain konseptual, skema global, fragmentasi, alokasi, lalu desain fisik per situs. Cocok untuk sistem yang dibangun dari nol." data-contoh="Merancang basis data rumah sakit tiga kota sebelum satu tabel pun dibuat." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">top-down</abbr>: skema global disusun lengkap dengan kunci sebelum dipecah dan dialokasikan. <span class="lencana netral">kosong</span></p>
+<pre data-sql="CREATE TABLE cabang (
+  kode VARCHAR2(4) PRIMARY KEY,
+  kota VARCHAR2(30) NOT NULL
+);
+CREATE TABLE pegawai (
+  nip NUMBER(6) PRIMARY KEY,
+  nama VARCHAR2(50) NOT NULL,
+  kode_cabang VARCHAR2(4) NOT NULL REFERENCES cabang(kode)
+);
+INSERT INTO cabang VALUES ('JKT', 'Jakarta');
+INSERT INTO pegawai VALUES (1, 'Sari', 'JKT');
+DESC pegawai;" data-db="kosong"><code><span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> cabang (
+  kode <span class="sql-k">VARCHAR2</span>(<span class="sql-n">4</span>) <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span>,
+  kota <span class="sql-k">VARCHAR2</span>(<span class="sql-n">30</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>
+);
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> pegawai (
+  nip <span class="sql-k">NUMBER</span>(<span class="sql-n">6</span>) <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span>,
+  nama <span class="sql-k">VARCHAR2</span>(<span class="sql-n">50</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  kode_cabang <span class="sql-k">VARCHAR2</span>(<span class="sql-n">4</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span> <span class="sql-k">REFERENCES</span> cabang(kode)
+);
+<span class="sql-k">INSERT</span> <span class="sql-k">INTO</span> cabang <span class="sql-k">VALUES</span> (<span class="sql-s">'JKT'</span>, <span class="sql-s">'Jakarta'</span>);
+<span class="sql-k">INSERT</span> <span class="sql-k">INTO</span> pegawai <span class="sql-k">VALUES</span> (<span class="sql-n">1</span>, <span class="sql-s">'Sari'</span>, <span class="sql-s">'JKT'</span>);
+DESC pegawai;</code></pre>
+<h3>Informasi aplikasi: kueri mana yang sering?</h3>
+<p>Frekuensi akses per kota adalah masukan predikat <abbr class="istilah" tabindex="0" data-g="g-minterm" data-istilah="Minterm" data-arti="Konjungsi predikat sederhana beserta negasinya, dipakai untuk menurunkan fragmen horizontal yang pasti disjoint dan lengkap." data-detail="Dari n predikat sederhana ada hingga 2ⁿ minterm; yang kontradiktif dibuang. Setiap minterm yang tersisa menjadi satu fragmen horizontal." data-contoh="kota='Jakarta' ∧ biaya&gt;300000 dan kota='Jakarta' ∧ ¬(biaya&gt;300000)." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">minterm</abbr> dan keputusan <abbr class="istilah" tabindex="0" data-g="g-alokasi" data-istilah="Alokasi" data-en="allocation" data-arti="Keputusan menempatkan fragmen pada situs tertentu, termasuk berapa salinan yang dibuat. Masukannya empat kelompok informasi: basis data, aplikasi, situs, dan jaringan." data-detail="Alokasi optimal menyeimbangkan biaya simpan, biaya akses baca, biaya pembaruan (yang naik tiap salinan), dan ketersediaan. Alokasi non-redundan menaruh tiap fragmen di satu situs; redundan menaruh salinannya di beberapa situs." data-contoh="Fragmen pasien kota Bandung ditaruh di situs Bandung karena 80% aksesnya berasal dari sana." data-lab="alokasi" data-lab-judul="Alokasi &amp; Replikasi">alokasi</abbr>. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="SELECT p.kota, COUNT(*) AS akses_pemeriksaan
+  FROM pasien p JOIN pasien_dokter pd ON p.id_pasien = pd.id_pasien
+ GROUP BY p.kota
+ ORDER BY akses_pemeriksaan DESC;" data-db="rumahsakit"><code><span class="sql-k">SELECT</span> p.kota, <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> akses_pemeriksaan
+  <span class="sql-k">FROM</span> pasien p <span class="sql-k">JOIN</span> pasien_dokter pd <span class="sql-k">ON</span> p.id_pasien = pd.id_pasien
+ <span class="sql-k">GROUP BY</span> p.kota
+ <span class="sql-k">ORDER BY</span> akses_pemeriksaan DESC;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -76,12 +122,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

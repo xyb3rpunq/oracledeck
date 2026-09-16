@@ -1,7 +1,7 @@
 // Lab 01 — Perancang ERD: kasus Tono Rental dan lainnya.
-import { TONO_RENTAL_CASE } from '../../engine/data/datasets.js?v=8e172babd6';
-import * as E from '../../engine/ddb/erd.js?v=8e172babd6';
-import * as U from './ui.js?v=8e172babd6';
+import { TONO_RENTAL_CASE } from '../../engine/data/datasets.js?v=849b085103';
+import * as E from '../../engine/ddb/erd.js?v=849b085103';
+import * as U from './ui.js?v=849b085103';
 
 const KASUS = {
   tono: {

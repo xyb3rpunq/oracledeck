@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { akademik, rumahsakit, dreamhome } from '../engine/data/datasets.js';
 import { query } from '../engine/core/sql.js';
+import { executeScript, salinDb } from '../engine/core/dml.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const db = { ...akademik(), ...rumahsakit(), ...dreamhome() };
@@ -78,6 +79,40 @@ export const KUERI = [
   ['fn-length', 'SELECT nama_pasien, LENGTH(nama_pasien) AS n FROM pasien ORDER BY id_pasien'],
   ['fn-arit', 'SELECT kode_kul, sks * 2 AS dua FROM mata_kuliah ORDER BY kode_kul'],
   ['fn-round', 'SELECT ROUND(AVG(sks), 2) AS r FROM mata_kuliah'],
+
+  // SQL lanjutan: CASE, EXISTS berkorelasi, subquery skalar berkorelasi, WITH, operasi himpunan
+  ['lj-case', "SELECT kode_kul, CASE WHEN sks >= 3 THEN 'berat' ELSE 'ringan' END AS bobot FROM mata_kuliah ORDER BY kode_kul"],
+  ['lj-case-sederhana', "SELECT kode_kul, CASE sem WHEN 1 THEN 'satu' WHEN 2 THEN 'dua' ELSE 'lain' END AS s FROM mata_kuliah ORDER BY kode_kul"],
+  ['lj-case-agregat', 'SELECT SUM(CASE WHEN sks = 3 THEN 1 ELSE 0 END) AS tiga, COUNT(*) AS semua FROM mata_kuliah'],
+  ['lj-exists', 'SELECT m.nama_mhs FROM mhs m WHERE EXISTS (SELECT 1 FROM nilai n WHERE n.nim = m.nim) ORDER BY m.nama_mhs'],
+  ['lj-not-exists', 'SELECT m.nama_mhs FROM mhs m WHERE NOT EXISTS (SELECT 1 FROM nilai n WHERE n.nim = m.nim) ORDER BY m.nama_mhs'],
+  ['lj-skalar-korelasi', 'SELECT m.nama_mhs, (SELECT MAX(n.nilai) FROM nilai n WHERE n.nim = m.nim) AS terbaik FROM mhs m ORDER BY m.nim'],
+  ['lj-with', 'WITH rata AS (SELECT nim, AVG(nilai) AS r FROM nilai GROUP BY nim) SELECT m.nama_mhs, rata.r FROM mhs m JOIN rata ON m.nim = rata.nim ORDER BY rata.r DESC'],
+  ['lj-with-dua', 'WITH a AS (SELECT kode_kul, sks FROM mata_kuliah WHERE sem = 1), b AS (SELECT kode_kul FROM a WHERE sks = 3) SELECT * FROM b'],
+  ['lj-intersect', 'SELECT nim FROM mhs INTERSECT SELECT nim FROM nilai'],
+  ['lj-except', 'SELECT nim FROM mhs EXCEPT SELECT nim FROM nilai'],
+  ['lj-union-order', 'SELECT nama_mhs AS nama FROM mhs UNION SELECT nama_kul FROM mata_kuliah ORDER BY nama DESC'],
+  ['lj-union-limit', 'SELECT nama_mhs AS nama FROM mhs UNION SELECT nama_kul FROM mata_kuliah ORDER BY nama LIMIT 3 OFFSET 2'],
+  ['lj-in-korelasi', "SELECT k.nama_kul FROM mata_kuliah k WHERE 80 < (SELECT MAX(n.nilai) FROM nilai n WHERE n.kode_kul = k.kode_kul) ORDER BY k.nama_kul"],
+  ['lj-rs-exists', 'SELECT d.nama_dokter FROM dokter d WHERE EXISTS (SELECT 1 FROM pasien_dokter pd WHERE pd.id_dokter = d.id_dokter AND pd.biaya > 400000) ORDER BY d.nama_dokter'],
+];
+
+/**
+ * Skrip DML acuan: perintah dijalankan berurutan pada salinan data, lalu kueri
+ * penutup dibandingkan. Tanpa batasan kunci, agar sama persis dengan SQLite.
+ */
+export const SKRIP = [
+  ['dml-insert', ["INSERT INTO mhs (nim, nama_mhs, alamat_mhs) VALUES ('11010099', 'Baru', 'Serang'), ('11010098', 'Lagi', NULL)"], 'SELECT * FROM mhs ORDER BY nim'],
+  ['dml-insert-select', ['INSERT INTO mhs (nim, nama_mhs) SELECT kode_kul, nama_kul FROM mata_kuliah WHERE sem = 2'], 'SELECT nim, nama_mhs, alamat_mhs FROM mhs ORDER BY nim'],
+  ['dml-update', ["UPDATE mata_kuliah SET sks = sks + 1, nama_kul = UPPER(nama_kul) WHERE sem = 1"], 'SELECT * FROM mata_kuliah ORDER BY kode_kul'],
+  ['dml-update-subquery', ['UPDATE nilai SET nilai = nilai + 5 WHERE nim IN (SELECT nim FROM mhs WHERE alamat_mhs = \'Depok\')'], 'SELECT * FROM nilai ORDER BY nim, kode_kul'],
+  ['dml-delete', ['DELETE FROM nilai WHERE nilai < 80'], 'SELECT * FROM nilai ORDER BY nim, kode_kul'],
+  ['dml-delete-exists', ['DELETE FROM mhs WHERE NOT EXISTS (SELECT 1 FROM nilai n WHERE n.nim = mhs.nim)'], 'SELECT * FROM mhs ORDER BY nim'],
+  ['dml-rangkaian', [
+    "INSERT INTO pasien (id_pasien, nama_pasien, jenis_kelamin, kota) VALUES (50, 'Uji', 'P', 'Bogor')",
+    "UPDATE pasien SET kota = 'Depok' WHERE id_pasien = 50",
+    "DELETE FROM pasien WHERE kota = 'Surabaya'",
+  ], 'SELECT id_pasien, nama_pasien, kota FROM pasien ORDER BY id_pasien'],
 ];
 
 function main() {
@@ -95,12 +130,21 @@ function main() {
     }
   }
 
-  const out = { tabel, hasil, galat, jumlahKueri: KUERI.length };
+  const skrip = {};
+  for (const [id, perintah, penutup] of SKRIP) {
+    const salinan = salinDb(db);
+    const r = executeScript(perintah.join(';\n'), salinan);
+    if (r.galat) { galat[id] = { sql: perintah.join('; '), pesan: r.galat }; continue; }
+    const akhir = query(penutup, salinan);
+    skrip[id] = { perintah, penutup, attrs: akhir.attrs, rows: akhir.rows };
+  }
+
+  const out = { tabel, hasil, skrip, galat, jumlahKueri: KUERI.length, jumlahSkrip: SKRIP.length };
   const dir = join(here, '.cache');
   mkdirSync(dir, { recursive: true });
   const berkas = join(dir, 'oracledeck-verify.json');
   writeFileSync(berkas, JSON.stringify(out, null, 1), 'utf8');
-  process.stdout.write(`${KUERI.length} kueri dijalankan mesin ORACLEDECK -> ${berkas}\n`);
+  process.stdout.write(`${KUERI.length} kueri dan ${SKRIP.length} skrip DML dijalankan mesin ORACLEDECK -> ${berkas}\n`);
   if (Object.keys(galat).length) {
     process.stdout.write(`GALAT pada ${Object.keys(galat).length} kueri:\n`);
     for (const [id, g] of Object.entries(galat)) process.stdout.write(`  ${id}: ${g.pesan}\n`);
@@ -108,4 +152,4 @@ function main() {
   }
 }
 
-main();
+if (process.argv[1] && process.argv[1].endsWith('export_for_verify.js')) main();

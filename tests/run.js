@@ -30,17 +30,17 @@ for (const t of dipilih) {
   try {
     await t.fn();
     lulus++;
-    process.stdout.write(`    [32m+[0m ${t.nama}\n`);
+    process.stdout.write(`    \u001b[32m+\u001b[0m ${t.nama}\n`);
   } catch (e) {
     gagal.push({ ...t, error: e });
-    process.stdout.write(`    [31mx ${t.nama}[0m\n`);
+    process.stdout.write(`    \u001b[31mx ${t.nama}\u001b[0m\n`);
   }
 }
 
 const durasi = Date.now() - mulai;
 process.stdout.write(`\n${'='.repeat(64)}\n`);
 if (gagal.length) {
-  process.stdout.write(`\n[31m${gagal.length} UJI GAGAL[0m\n\n`);
+  process.stdout.write(`\n\u001b[31m${gagal.length} UJI GAGAL\u001b[0m\n\n`);
   for (const g of gagal) {
     process.stdout.write(`  [${g.grup}] ${g.nama}\n    ${String(g.error.message).split('\n').join('\n    ')}\n`);
     if (g.error.name !== 'GagalUji' && g.error.stack) {

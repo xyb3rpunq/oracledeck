@@ -1,8 +1,8 @@
 // Lab 07 — Lokalisasi Data: program lokalisasi dan reduksi fragmen.
-import { dreamhome } from '../../engine/data/datasets.js?v=8e172babd6';
-import * as Fg from '../../engine/ddb/fragment.js?v=8e172babd6';
-import * as L from '../../engine/ddb/localize.js?v=8e172babd6';
-import * as U from './ui.js?v=8e172babd6';
+import { dreamhome } from '../../engine/data/datasets.js?v=849b085103';
+import * as Fg from '../../engine/ddb/fragment.js?v=849b085103';
+import * as L from '../../engine/ddb/localize.js?v=849b085103';
+import * as U from './ui.js?v=849b085103';
 
 const { STAFF, PROPERTY } = dreamhome();
 const a = L.atom;

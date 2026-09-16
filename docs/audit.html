@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css?v=849b085103">
+<script src="tema.js?v=849b085103"></script>
 </head>
 <body>
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,11 +33,17 @@
       <a href="oracle.html">Oracle</a>
       <a href="audit.html" class="aktif">Audit</a>
       <a href="glosarium.html">Glosarium</a>
+      <a href="kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+
 
 <p class="kicker">Audit</p>
 <h1>Audit materi dan proyek terdahulu</h1>
@@ -44,12 +55,12 @@
 <p><code>hospital_db_manager.py</code>, <code>.env.example</code>, keluaran <code>git ls-files</code> pada repositori</p>
 <p><code>Tugas 3 - Hospital</code>, serta <code>LAPORAN_DBMS_RUMAHSAKIT_LENGKAP.md</code>.</p>
 <hr>
-<h3 id="1-skema-praktikum-rumah-sakit">1. Skema praktikum rumah sakit</h3>
+<h2 id="1-skema-praktikum-rumah-sakit">1. Skema praktikum rumah sakit</h2>
 <p>Enam tabel dari Praktikum 2. Yang berikut bukan soal selera — masing-masing punya akibat</p>
 <p>yang bisa diukur.</p>
-<h4 id="1-1-temuan-tingkat-tinggi">1.1 Temuan tingkat tinggi</h4>
+<h3 id="1-1-temuan-tingkat-tinggi">1.1 Temuan tingkat tinggi</h3>
 <div class="tabel-bungkus"><table><thead><tr><th>#</th><th>Temuan</th><th>Bukti</th><th>Akibat</th><th>Tingkat</th></tr></thead><tbody><tr><td>A1</td><td><code>ON DELETE CASCADE</code> pada <code>pasien_dokter</code></td><td><code>01_database_schema.sql</code> baris FK</td><td>Menghapus satu dokter menghapus <strong>seluruh riwayat pemeriksaannya</strong>. Rekam medis elektronik wajib disimpan paling singkat 25 tahun sejak kunjungan terakhir pasien (<a href="https://peraturan.bpk.go.id/Details/245544/permenkes-no-24-tahun-2022">Permenkes 24/2022 Pasal 39</a>).</td><td>Kritis</td></tr><tr><td>A2</td><td><code>no_hp</code> bertipe numerik pada sebagian generator</td><td>Terkaan tipe dari data contoh</td><td>Nol di depan hilang: <code>081234567001</code> menjadi <code>81234567001</code>. Nomor menjadi tidak bisa dihubungi.</td><td>Kritis</td></tr><tr><td>A3</td><td><code>nohp UNIQUE</code> pada laporan Kelompok 3</td><td><code>LAPORAN ... 5.2</code></td><td>Satu keluarga sering memakai satu nomor. Pasien kedua <strong>ditolak sistem</strong>.</td><td>Tinggi</td></tr><tr><td>A4</td><td>Tidak ada kolom kunci fragmentasi</td><td>Seluruh skema</td><td>Tanpa kolom seperti <code>kota</code>, fragmentasi horizontal tidak punya dasar — padahal ini mata kuliah basis data <strong>terdistribusi</strong>.</td><td>Tinggi</td></tr><tr><td>A5</td><td><code>jenis_kelamin VARCHAR(1)</code> tanpa <code>CHECK</code></td><td>Skema + komentar laporan</td><td>Laporan menulis <code>1=Pria, 0=Wanita</code>, data contoh memakai <code>L</code>/<code>P</code>. Dua konvensi dalam satu proyek.</td><td>Sedang</td></tr><tr><td>A6</td><td><code>penyakit VARCHAR(100)</code> teks bebas</td><td>Skema</td><td>&quot;Demam Berdarah&quot;, &quot;DBD&quot;, dan &quot;demam berdarah&quot; menjadi tiga penyakit berbeda saat dikelompokkan.</td><td>Sedang</td></tr><tr><td>A7</td><td><code>INT(3)</code> dipakai sebagai pembatas nilai</td><td>Skema</td><td><code>INT(3)</code> hanya lebar tampilan, bukan batas nilai. Sudah <strong>deprecated sejak MySQL 8.0.19</strong>.</td><td>Sedang</td></tr><tr><td>A8</td><td>Tidak ada unik gabungan pada <code>pasien_dokter</code></td><td>Skema</td><td>Satu pemeriksaan bisa tercatat dua kali tanpa ada yang menghalangi.</td><td>Sedang</td></tr><tr><td>A9</td><td>Tidak ada kolom jejak audit</td><td>Seluruh skema</td><td>Tidak ada <code>dibuat_pada</code>, <code>diubah_pada</code>, maupun <code>diubah_oleh</code>. Pada data kesehatan ini masalah kepatuhan, bukan kenyamanan.</td><td>Sedang</td></tr><tr><td>A10</td><td>Data kesehatan tanpa kendali khusus</td><td>Seluruh skema</td><td>Data kesehatan tergolong <strong>data pribadi spesifik</strong> (UU PDP No. 27/2022 Pasal 4 ayat 2). Wajib ada pembatasan akses dan pencatatan akses.</td><td>Tinggi</td></tr></tbody></table></div>
-<h4 id="1-2-perbaikan-yang-diterapkan-di-oracledeck">1.2 Perbaikan yang diterapkan di ORACLEDECK</h4>
+<h3 id="1-2-perbaikan-yang-diterapkan-di-oracledeck">1.2 Perbaikan yang diterapkan di ORACLEDECK</h3>
 <pre><code>
 -- SEBELUM (Praktikum 2)
 CREATE TABLE pasien (
@@ -78,7 +89,7 @@ CREATE TABLE PASIEN (
 <p>Pemeriksaan tipe terkaan itu sendiri diuji: <code>engine/oracle/emit.js</code> menolak menjadikan</p>
 <p>kolom bernama <code>no_hp</code>, <code>nik</code>, <code>npwp</code>, <code>ktp</code>, atau <code>kode_pos</code> sebagai <code>NUMBER</code>, dan setiap</p>
 <p>nilai teks berawalan nol tetap <code>VARCHAR2</code>. Uji yang menjaganya ada di <code>tests/oracle-emit.test.js</code>.</p>
-<h4 id="1-3-yang-belum-diperbaiki-dan-alasannya">1.3 Yang belum diperbaiki dan alasannya</h4>
+<h3 id="1-3-yang-belum-diperbaiki-dan-alasannya">1.3 Yang belum diperbaiki dan alasannya</h3>
 <ul>
 <li><strong>Tabel referensi penyakit (ICD-10)</strong> belum dibuat. Ini perubahan skema yang menyimpang jauh</li>
 </ul>
@@ -89,9 +100,9 @@ CREATE TABLE PASIEN (
 </ul>
 <p>  lisensi Advanced Security pada edisi berbayar dan tidak dapat diuji tanpa instans.</p>
 <hr>
-<h3 id="1a-materi-kuliah">1A. Materi kuliah</h3>
+<h2 id="1a-materi-kuliah">1A. Materi kuliah</h2>
 <p>Materi juga diaudit, karena contoh di modul ikut dipakai sebagai acuan jawaban.</p>
-<h4 id="1a-1-contoh-fragmentasi-s1-s2-pada-modul-6-dan-7-tidak-disjoint">1A.1 Contoh fragmentasi S1/S2 pada Modul 6 dan 7 tidak disjoint</h4>
+<h3 id="1a-1-contoh-fragmentasi-s1-s2-pada-modul-6-dan-7-tidak-disjoint">1A.1 Contoh fragmentasi S1/S2 pada Modul 6 dan 7 tidak disjoint</h3>
 <p>Modul menaruh <code>sex</code>, <code>DOB</code>, dan <code>salary</code> di fragmen vertikal S1 <strong>dan</strong> di S2</p>
 <p>(yang kemudian dipecah menjadi S21, S22, S23). Diuji dengan menjalankan operator</p>
 <p>relasional atas data sungguhan di Lab Perancang Fragmentasi:</p>
@@ -103,7 +114,7 @@ CREATE TABLE PASIEN (
 <p>Satu inkonsistensi kecil lain di contoh yang sama: teks menyebut S1 ditempatkan di site 3,</p>
 <p>tetapi kueri transparansi pemetaan lokal menulis <code>FROM S1 AT SITE 5</code>. ORACLEDECK mengikuti</p>
 <p>definisi penempatannya (site 3).</p>
-<h4 id="1a-2-studi-kasus-skripsi-kependudukan-klaim-konsistensi-tanpa-transaksi-atomik">1A.2 Studi kasus skripsi kependudukan: klaim konsistensi tanpa transaksi atomik</h4>
+<h3 id="1a-2-studi-kasus-skripsi-kependudukan-klaim-konsistensi-tanpa-transaksi-atomik">1A.2 Studi kasus skripsi kependudukan: klaim konsistensi tanpa transaksi atomik</h3>
 <p>Skripsi di folder mata kuliah (*Implementasi Basis Data Terdistribusi untuk Meningkatkan</p>
 <p>Konsistensi Data Kependudukan*, UIN Sunan Kalijaga, 2016) menyambung Oracle XE kecamatan</p>
 <p>dengan MySQL desa lewat database link berbasis ODBC, dan menyimpulkan data tidak akan hilang</p>
@@ -116,18 +127,18 @@ CREATE TABLE PASIEN (
 <p>keterbatasan gateway yang sudah diperingatkan Modul 1. Simulator 2PC/3PC kini punya peserta</p>
 <p>&quot;di balik gateway&quot; untuk menunjukkan hasil campurannya, dan Lab Studi Kasus Kependudukan</p>
 <p>membedahnya lengkap dengan data karangan.</p>
-<h4 id="1a-3-dokumen-salah-folder">1A.3 Dokumen salah folder</h4>
+<h3 id="1a-3-dokumen-salah-folder">1A.3 Dokumen salah folder</h3>
 <p>Folder SBDT juga berisi dokumen mata kuliah <strong>Manajemen Proyek Perangkat Lunak</strong>: dua salinan</p>
 <p><code>20251104_UTS Manajemen Proyek Perangkat Lunak</code>, <code>UTS MPPL - 20210801207 - Daniel Hutajulu.pdf</code>,</p>
 <p><code>Pertemuan 8_MPPL (2).pptx</code>, dan jawaban soal perencanaan risiko proyek. Dokumen-dokumen itu</p>
 <p>sengaja <strong>tidak</strong> dimasukkan ke situs ini karena bukan materi basis data terdistribusi.</p>
 <hr>
-<h3 id="2-project-uas-kelompok-3">2. Project UAS Kelompok 3</h3>
+<h2 id="2-project-uas-kelompok-3">2. Project UAS Kelompok 3</h2>
 <p>Laporannya rapi dan lengkap — 1.240 baris, ERD, skrip, dan dokumentasi pengujian.</p>
 <p>Tiga hal berikut perlu dikoreksi sebelum dipakai sebagai rujukan.</p>
-<h4 id="2-1-klaim-yang-tidak-didukung-bukti">2.1 Klaim yang tidak didukung bukti</h4>
+<h3 id="2-1-klaim-yang-tidak-didukung-bukti">2.1 Klaim yang tidak didukung bukti</h3>
 <div class="tabel-bungkus"><table><thead><tr><th>Klaim di laporan</th><th>Masalahnya</th></tr></thead><tbody><tr><td>&quot;Project Status: COMPLETE &amp; <strong>PRODUCTION-READY</strong>&quot;</td><td>Koneksi yang didokumentasikan memakai <code>root</code> dengan sandi kosong (<code>phpMyAdmin → Login: SUCCESS (root / kosong)</code>). Tidak ada sistem produksi yang berjalan begitu.</td></tr><tr><td>Tabel &quot;Query Performance Testing&quot; dengan angka <code>&lt;50ms</code>, <code>&lt;100ms</code></td><td>Tabel terbesar berisi 30 baris. Pada ukuran itu, angka tersebut mengukur latensi klien, bukan kinerja kueri. Tidak ada metodologi, jumlah pengulangan, maupun keadaan cache yang disebutkan.</td></tr><tr><td>&quot;Testing &amp; Validation Results ✅&quot;</td><td>Isinya daftar centang hasil klik manual di DBeaver dan phpMyAdmin — bukan pengujian yang dapat diulang orang lain.</td></tr><tr><td>&quot;Optimal untuk database size &lt;100K records&quot;</td><td>Tidak ada tolok ukur yang mendasarinya.</td></tr><tr><td>&quot;Backup created: READY&quot;</td><td>Strategi cadangannya ekspor manual lewat phpMyAdmin. Tidak ada satu pun langkah yang <strong>menguji pemulihannya</strong>. Cadangan yang belum pernah dipulihkan belum bisa disebut cadangan.</td></tr></tbody></table></div>
-<h4 id="2-2-kesenjangan-terbesar-tidak-ada-aspek-terdistribusi">2.2 Kesenjangan terbesar: tidak ada aspek terdistribusi</h4>
+<h3 id="2-2-kesenjangan-terbesar-tidak-ada-aspek-terdistribusi">2.2 Kesenjangan terbesar: tidak ada aspek terdistribusi</h3>
 <p>Ini temuan paling penting. Project UAS untuk mata kuliah <strong>Sistem Basis Data Terdistribusi</strong></p>
 <p>menghasilkan basis data MySQL <strong>satu instans</strong>, satu mesin, tanpa:</p>
 <ul>
@@ -144,7 +155,7 @@ CREATE TABLE PASIEN (
 <p><code>PARTITION BY LIST (KOTA)</code> per situs, <code>PARTITION BY REFERENCE</code> untuk tabel anak,</p>
 <p>materialized view untuk tabel referensi, database link antar situs, dan diagnosa</p>
 <p><code>DBA_2PC_PENDING</code>. Semuanya ada di folder <code>oracle/</code>.</p>
-<h4 id="2-3-repositori-tugas-3-hospital">2.3 Repositori <code>Tugas 3 - Hospital</code></h4>
+<h3 id="2-3-repositori-tugas-3-hospital">2.3 Repositori <code>Tugas 3 - Hospital</code></h3>
 <p>Diperiksa lewat <code>git ls-files</code> (23 berkas terlacak):</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Temuan</th><th>Bukti</th><th>Tingkat</th></tr></thead><tbody><tr><td><code>exported-assets (1).zip</code> ikut di-commit</td><td>tercantum di <code>git ls-files</code></td><td>Rendah — arsip biner membuat riwayat repo membengkak dan tidak bisa di-diff</td></tr><tr><td>Sebelas berkas <code>script.py</code> … <code>script_10.py</code></td><td>tercantum di <code>git ls-files</code></td><td>Rendah — tidak ada satu pun nama yang menjelaskan isinya</td></tr><tr><td><code>.env.example</code> memakai <code>DB_USER=root</code>, <code>DB_PASSWORD=</code> kosong</td><td>isi berkas</td><td>Sedang — berkas contoh menjadi pola yang disalin orang lain apa adanya</td></tr><tr><td>Sandi baku <code>password=''</code> di konstruktor</td><td><code>hospital_db_manager.py</code> baris 18</td><td>Sedang — sama seperti di atas</td></tr><tr><td><code>venv/</code> ada di direktori kerja</td><td>daftar berkas direktori</td><td>Rendah — sudah tidak terlacak git, jadi hanya mengotori direktori lokal</td></tr></tbody></table></div>
 <p><strong>Yang ternyata sudah benar dan layak disebut:</strong> <code>hospital_db_manager.py</code> <strong>tidak</strong> rentan</p>
@@ -152,15 +163,17 @@ CREATE TABLE PASIEN (
 <p>kolom dari daftar tetap, sedangkan seluruh nilai tetap lewat placeholder <code>%s</code>. Ini poin</p>
 <p>yang sering salah di kode mahasiswa, dan di sini sudah tepat.</p>
 <hr>
-<h3 id="3-audit-proyek-ini-sendiri">3. Audit proyek ini sendiri</h3>
+<h2 id="3-audit-proyek-ini-sendiri">3. Audit proyek ini sendiri</h2>
 <p>Proyek yang mengaudit orang lain harus siap diaudit.</p>
-<h4 id="3-1-yang-benar-benar-diverifikasi">3.1 Yang benar-benar diverifikasi</h4>
-<div class="tabel-bungkus"><table><thead><tr><th>Aspek</th><th>Cara verifikasi</th><th>Hasil</th></tr></thead><tbody><tr><td>Mesin relasional, algoritma terdistribusi, penilai soal, pemeriksa situs</td><td>528 uji otomatis di Node</td><td>Lulus semua — <code>node tests/run.js</code></td></tr><tr><td>Semantik SQL</td><td>39 kueri acuan dijalankan di mesin ini <strong>dan</strong> di SQLite 3.50.4 lewat Python, hasil dibandingkan baris demi baris</td><td>Identik semuanya — <code>python tools/verify_sqlite.py</code></td></tr><tr><td>Aturan kebenaran fragmentasi</td><td>Operator relasional dijalankan atas data sungguhan, bukan diperiksa dari definisi</td><td>Lulus</td></tr><tr><td>Reduksi lokalisasi</td><td>Hasil dari fragmen dibandingkan dengan hasil kueri atas relasi global untuk setiap predikat uji</td><td>Setara semuanya</td></tr><tr><td>Strategi join terdistribusi</td><td>Keempat strategi dijalankan, hasilnya dibandingkan sebagai himpunan</td><td>Identik semuanya</td></tr><tr><td>2PC dan 3PC</td><td>Mesin keadaan dijalankan dengan injeksi kegagalan</td><td>Sifat blokir/tidak-blokir terbukti sesuai teori</td></tr><tr><td>Bentuk DDL Oracle</td><td>40+ uji atas pembangkitnya</td><td>Lulus</td></tr><tr><td>Keluaran situs</td><td><code>tools/cek_situs.js</code>: 590 tautan, 79 impor modul, sitemap, judul unik, kebocoran surel/telepon</td><td>Bersih</td></tr><tr><td>Seluruh 16 lab di peramban</td><td>Dimuat satu per satu, lalu setiap tombol, pilihan, dropdown, dan slider diklik (±450 aksi) sambil menangkap galat runtime</td><td>Nol galat runtime</td></tr><tr><td>Tata letak ponsel</td><td>22 halaman diukur pada lebar 375 px</td><td>Tidak ada yang melebar</td></tr></tbody></table></div>
-<h4 id="3-1a-bug-yang-ditemukan-saat-merender-sungguhan-dan-sudah-diperbaiki">3.1a Bug yang ditemukan saat merender sungguhan — dan sudah diperbaiki</h4>
+<h3 id="3-1-yang-benar-benar-diverifikasi">3.1 Yang benar-benar diverifikasi</h3>
+<div class="tabel-bungkus"><table><thead><tr><th>Aspek</th><th>Cara verifikasi</th><th>Hasil</th></tr></thead><tbody><tr><td>Mesin relasional, SQL &amp; DML, terminal, algoritma terdistribusi, penilai soal, pembantu build, pemeriksa situs</td><td>677 uji otomatis di Node</td><td>Lulus semua — <code>node tests/run.js</code></td></tr><tr><td>Semantik SQL dan DML</td><td>53 kueri (termasuk CASE, EXISTS berkorelasi, WITH, INTERSECT/EXCEPT, ORDER BY + LIMIT pada UNION) dan 7 skrip INSERT/UPDATE/DELETE dijalankan di mesin ini <strong>dan</strong> di SQLite 3.50.4, hasil dibandingkan baris demi baris</td><td>60/60 identik — <code>python tools/verify_sqlite.py</code></td></tr><tr><td>Contoh dan kueri per topik di situs</td><td>40 contoh Terminal SQL dan 31 kueri &quot;Coba di terminal&quot; dijalankan pada preset masing-masing; galat yang disengaja wajib muncul dengan kode ORA yang dijanjikan</td><td>Lulus semua</td></tr><tr><td>Tombol ▶ Jalankan</td><td>Dipasang hanya bila SQL berjalan tanpa galat pada salah satu preset — diperiksa saat build (materi) dan saat peramban senggang (keluaran lab)</td><td>11 blok DDL khusus Oracle di Lab Generator DDL dengan benar <strong>tidak</strong> diberi tombol</td></tr><tr><td>Ekspor terminal</td><td>Skrip <code>\ekspor</code> dari empat preset dijalankan ulang pada skema kosong; jumlah baris setiap tabel dibandingkan</td><td>Identik</td></tr><tr><td>Anggaran kinerja</td><td>Median pratinjau seluruh contoh &lt; 16 ms, maksimum &lt; 250 ms, pelengkap otomatis &lt; 8 ms per panggilan (uji Node; CI)</td><td>Lulus</td></tr><tr><td>Aturan kebenaran fragmentasi</td><td>Operator relasional dijalankan atas data sungguhan, bukan diperiksa dari definisi</td><td>Lulus</td></tr><tr><td>Reduksi lokalisasi</td><td>Hasil dari fragmen dibandingkan dengan hasil kueri atas relasi global untuk setiap predikat uji</td><td>Setara semuanya</td></tr><tr><td>Strategi join terdistribusi</td><td>Keempat strategi dijalankan, hasilnya dibandingkan sebagai himpunan</td><td>Identik semuanya</td></tr><tr><td>2PC dan 3PC</td><td>Mesin keadaan dijalankan dengan injeksi kegagalan</td><td>Sifat blokir/tidak-blokir terbukti sesuai teori</td></tr><tr><td>Bentuk DDL Oracle</td><td>40+ uji atas pembangkitnya</td><td>Lulus</td></tr><tr><td>Keluaran situs</td><td><code>tools/cek_situs.js</code>: 907 tautan, 91 impor modul, 37 URL sitemap, judul unik, CSP, skrip inline, satu <code>&lt;h1&gt;</code>, landmark, urutan judul, label, kebocoran surel/telepon</td><td>Bersih</td></tr><tr><td>Build deterministik</td><td>Dua kali build berturut-turut dibandingkan berkas demi berkas</td><td>Identik</td></tr><tr><td>Seluruh 16 lab + beranda, materi, kualitas, glosarium di peramban</td><td>Dimuat satu per satu sambil menangkap galat konsol; terminal diketik sungguhan (Tab-lengkapi, Enter, pratinjau), laci terminal dari materi menjalankan 2PC, bank soal DML dinilai saat mengetik, pencarian Ctrl+K, catatan istilah, ganti tema</td><td>Nol galat konsol</td></tr><tr><td>Tata letak ponsel</td><td>Terminal dan materi diukur pada lebar 375 px</td><td>Tidak ada yang melebar</td></tr></tbody></table></div>
+<h3 id="3-1a-bug-yang-ditemukan-saat-merender-sungguhan-dan-sudah-diperbaiki">3.1a Bug yang ditemukan saat merender sungguhan — dan sudah diperbaiki</h3>
 <p>Seluruh uji unit lulus ketika bug-bug berikut masih ada. Semuanya baru ketahuan setelah situs</p>
 <p>dibuka dan diklik di peramban. Masing-masing kini punya uji regresi.</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Bug</th><th>Gejala</th><th>Perbaikan</th></tr></thead><tbody><tr><td>Audit fragmentasi campuran dinilai datar</td><td>Contoh Modul 6 tampil &quot;Rekonstruksi GAGAL, 0 tupel&quot;, karena dihitung <code>S1 ⋈ S21 ⋈ S22 ⋈ S23</code></td><td>Penilaian bertingkat: anak horizontal disatukan dulu, baru tingkat vertikal dinilai</td></tr><tr><td>Variabel <code>mode</code> dibayangi di lab fragmentasi</td><td>Lab akan berhenti dengan ReferenceError</td><td>Diganti nama sebelum dirilis</td></tr><tr><td>Modul lama tertahan di cache peramban</td><td>Halaman baru berpasangan dengan mesin lama tanpa pesan galat</td><td>Setiap impor dan aset diberi <code>?v=&lt;sidik isi&gt;</code> saat build</td></tr><tr><td>Navigasi disembunyikan di bawah 860 px</td><td>Pengguna ponsel tidak bisa berpindah halaman</td><td>Baris navigasi yang dapat digeser</td></tr><tr><td>Anak grid CSS tidak boleh menyusut</td><td>Tabel lebar memaksa halaman ponsel melebar dua kali lipat</td><td><code>min-width: 0</code> pada anak grid</td></tr><tr><td>2PC dengan koordinator jatuh di &quot;fase 4&quot;</td><td>Tampil &quot;selesai&quot; tanpa penjelasan, padahal fase itu hanya ada di 3PC</td><td>Dijelaskan eksplisit pada analisis 2PC</td></tr><tr><td>Parser jadwal konkurensi</td><td>Token asing seperti <code>hello</code> diabaikan diam-diam, analisis memakai jadwal yang terbaca sebagian</td><td>Setiap token wajib sah, token asing ditolak</td></tr></tbody></table></div>
-<h4 id="3-2-yang-tidak-diverifikasi-batas-yang-jujur">3.2 Yang TIDAK diverifikasi — batas yang jujur</h4>
+<h3 id="3-1b-temuan-putaran-upgrade-2-0-0-dan-sudah-diperbaiki">3.1b Temuan putaran upgrade 2.0.0 — dan sudah diperbaiki</h3>
+<div class="tabel-bungkus"><table><thead><tr><th>Temuan</th><th>Gejala</th><th>Perbaikan</th></tr></thead><tbody><tr><td>Dekomposisi pada rantai UNION tiga cabang</td><td>Galat karena cabang kiri dianggap SELECT padahal masih UNION</td><td><code>cabangSelect</code> mengurai seluruh pohon WITH/UNION/INTERSECT/MINUS; setiap cabang dianalisis</td></tr><tr><td>Penilai soal membaca ORDER BY di cabang kanan UNION</td><td>Setelah parser mengangkat ORDER BY ke simpul himpunan, urutan tidak lagi dinilai</td><td><code>punyaOrderBy</code> membaca simpul himpunan dan badan WITH</td></tr><tr><td>Pesan GROUP BY menyesatkan</td><td><code>SELECT nim FROM mhs GROUP BY alamat_mhs</code> berkata &quot;kolom nim tidak ada&quot;</td><td>ORA-00979 / ORA-00937 dengan contoh yang benar</td></tr><tr><td><code>soal.js</code> mengimpor <code>../../engine</code></td><td>Benar di <code>src/</code>, tetapi di <code>docs/content/</code> menunjuk ke luar situs (404 di GitHub Pages)</td><td>Soal memakai penanda <code>integritas: 'cascade'</code>; penilai yang memetakan ke kunci</td></tr><tr><td>Tombol Enter di terminal saat diuji otomatis</td><td>Alat uji mengirim <code>Return</code> tanpa <code>key</code>; diverifikasi ulang dengan <code>Enter</code> sungguhan</td><td>Tidak ada bug; dicatat agar uji berikutnya memakai tombol yang benar</td></tr><tr><td>Pratinjau berbasis <code>requestAnimationFrame</code></td><td>Hasil pratinjau tertinggal satu ketikan bila panel peramban tidak menggambar frame</td><td>Penjadwal digabung per putaran event loop (<code>setTimeout 0</code>)</td></tr><tr><td>Catatan istilah pendek di dalam frasa panjang</td><td>&quot;fragmentasi&quot; ditandai di dalam &quot;fragmentasi horizontal&quot; kemunculan kedua</td><td>Frasa istilah yang lebih panjang mengunci seluruh kemunculannya</td></tr><tr><td>Urutan judul</td><td>Halaman audit, daftar materi, dan daftar lab meloncat dari <code>h1</code> ke <code>h3</code></td><td>Markdown <code>##</code> → <code>h2</code>; judul kartu daftar → <code>h2</code></td></tr><tr><td>Karakter kontrol mentah</td><td>Penulisan berkas mengubah <code>\u0001</code> menjadi byte kontrol di pewarna SQL terminal</td><td>Dikembalikan ke escape; skrip pemindai memastikan tidak ada byte kontrol di sumber</td></tr></tbody></table></div>
+<h3 id="3-2-yang-tidak-diverifikasi-batas-yang-jujur">3.2 Yang TIDAK diverifikasi — batas yang jujur</h3>
 <p>1. <strong>Skrip Oracle belum pernah dijalankan pada instans Oracle sungguhan.</strong> Tidak ada Oracle di</p>
 <p>   lingkungan pembuatan repositori ini. Yang diuji adalah pembangkitnya: bentuk perintah, nama</p>
 <p>   objek, dan klausa partisi. Sintaks yang hanya bisa dibuktikan oleh parser Oracle —</p>
@@ -172,18 +185,30 @@ CREATE TABLE PASIEN (
 <p>3. <strong>Simulator 2PC/3PC menyederhanakan waktu.</strong> Tidak ada jam sungguhan, tidak ada pesan yang</p>
 <p>   datang tidak berurutan, tidak ada kegagalan sebagian pesan. Sifat yang ditunjukkan</p>
 <p>   (blokir vs tidak blokir) benar; ketepatan waktunya bukan tujuan.</p>
-<p>4. <strong>Mesin SQL hanya menutup subset SELECT.</strong> Tidak ada DDL, DML, window function, CTE, maupun</p>
-<p>   <code>EXISTS</code>. Batasnya disebutkan terbuka di Lab Mesin SQL.</p>
+<p>4. <strong>Terminal SQL bukan Oracle.</strong> SELECT lanjutan, DML, DDL, transaksi, dan kamus data sudah</p>
+<p>   didukung, tetapi belum ada window function, <code>MERGE</code>, <code>ALTER TABLE</code>, PL/SQL, sequence, dan</p>
+<p>   trigger. Rencana eksekusi mengikuti evaluasi logis, bukan pengoptimal biaya Oracle. Kode</p>
+<p>   ORA-xxxxx dipilih sesuai makna galat Oracle; teks pesannya ditulis ulang. Transaksi</p>
+<p>   ragu-ragu disederhanakan: pembaca melihat data sebelum transaksi, sedangkan DML ke situs yang</p>
+<p>   terkunci ditolak ORA-01591.</p>
+<p>4a. <strong>Kontras warna dan pembaca layar belum diuji.</strong> Pemeriksa situs hanya memeriksa struktur</p>
+<p>   HTML statis (judul, landmark, label, alt). Isi yang digambar skrip lab dan kontras setiap</p>
+<p>   kombinasi tema belum diaudit dengan alat khusus maupun pembaca layar sungguhan.</p>
 <p>5. <strong>Situs hanya berbahasa Indonesia.</strong> Materinya berbahasa Indonesia dan pembacanya peserta</p>
 <p>   kuliah berbahasa Indonesia. Versi dwibahasa yang setengah jadi lebih buruk daripada satu</p>
 <p>   bahasa yang utuh — jadi tidak dipaksakan. Lihat rekomendasi bagian 4.</p>
 <p>6. <strong>Data contoh adalah data karangan.</strong> Nama pasien, dokter, dan penyakit dibuat sendiri.</p>
 <p>   Tidak ada satu pun data pribadi nyata di repositori ini.</p>
-<h4 id="3-3-utang-teknis-yang-diketahui">3.3 Utang teknis yang diketahui</h4>
+<h3 id="3-3-utang-teknis-yang-diketahui">3.3 Utang teknis yang diketahui</h3>
 <ul>
-<li><code>engine/core/sql.js</code> berisi parser, perencana, dan eksekutor dalam satu berkas (~700 baris).</li>
+<li><code>engine/core/sql.js</code> kini ~1.300 baris (tokenizer, parser SELECT/DML/DDL, eksekutor) dan</li>
 </ul>
-<p>  Masih terbaca, tetapi sudah di ambang batas dan sebaiknya dipecah bila ditambah fitur.</p>
+<p>  <code>engine/core/terminal.js</code> ~1.100 baris. Keduanya masih terbaca dan teruji, tetapi sudah waktunya</p>
+<p>  dipecah: parser DDL ke <code>ddl.js</code>, kamus data dan preset ke modul sendiri.</p>
+<ul>
+<li>Preset terdistribusi membangkitkan fragmen setiap kali sesi dibuat. Untuk data praktikum</li>
+</ul>
+<p>  (puluhan baris) tidak terasa; untuk data ribuan baris perlu salinan malas (copy-on-write).</p>
 <ul>
 <li><code>candidateKeys</code> pada <code>engine/core/fd.js</code> menelusuri seluruh subset atribut, sehingga dibatasi</li>
 </ul>
@@ -194,10 +219,25 @@ CREATE TABLE PASIEN (
 <p>  pencariannya melampaui 200.000 kombinasi. Batas itu ditetapkan berdasarkan kenyamanan,</p>
 <p>  bukan pengukuran.</p>
 <hr>
-<h3 id="4-rekomendasi">4. Rekomendasi</h3>
+<h2 id="4-rekomendasi">4. Rekomendasi</h2>
 <p>Diurutkan menurut dampak dibagi usaha.</p>
-<h4 id="segera-untuk-nilai-mata-kuliah">Segera (untuk nilai mata kuliah)</h4>
-<p>1. <strong>Jalankan skrip <code>oracle/</code> di Oracle XE lewat Docker</strong> dan simpan tangkapan layarnya.</p>
+<h3 id="sudah-dieksekusi-pada-putaran-2-0-0">Sudah dieksekusi pada putaran 2.0.0</h3>
+<ul>
+<li>Terminal SQL Live dengan DML, DDL, transaksi, kamus data, dan tiga situs lewat database link —</li>
+</ul>
+<p>  menutup kesenjangan &quot;materi dibaca, tidak dijalankan&quot; pada topik 6, 9, 12, dan 14.</p>
+<ul>
+<li>Soal UPDATE/DELETE Praktikum 2 (poin k dan l) dengan aturan CASCADE sesuai lembar praktikum.</li>
+<li>Tombol ▶ Jalankan yang hanya muncul pada SQL yang terbukti berjalan, kueri coba per topik,</li>
+</ul>
+<p>  catatan istilah lengkap, pencarian, kemajuan belajar, tema, PWA luring.</p>
+<ul>
+<li>Lab berbasis teks menghitung ulang saat mengetik; penilaian bank soal langsung.</li>
+<li>CSP, pemeriksaan aksesibilitas statis, SECURITY.md, CHANGELOG.md, Semantic Versioning, dan</li>
+</ul>
+<p>  halaman Standar Kualitas yang memetakan ISO/IEC 25010:2023 ke bukti yang bisa diperiksa.</p>
+<h3 id="segera-untuk-nilai-mata-kuliah">Segera (untuk nilai mata kuliah)</h3>
+<p>1. <strong>Jalankan skrip <code>oracle/</code> dan hasil <code>\ekspor</code> terminal di Oracle Free lewat Docker</strong> dan simpan tangkapan layarnya.</p>
 <p>   Satu perintah: <code>docker run -d -p 1521:1521 -e ORACLE_PASSWORD=oracle gvenzl/oracle-free:23-slim</code>.</p>
 <p>   Ini mengubah satu-satunya bagian yang belum terverifikasi menjadi terverifikasi, dan</p>
 <p>   menghasilkan bukti yang jauh lebih kuat daripada laporan mana pun di folder mata kuliah.</p>
@@ -207,7 +247,7 @@ CREATE TABLE PASIEN (
 <p>3. <strong>Ganti tabel &quot;Query Performance Testing&quot;</strong> dengan pengukuran yang bisa diulang: jalankan</p>
 <p>   tiap kueri 100 kali, laporkan median dan persentil ke-95, sebutkan apakah cache dikosongkan.</p>
 <p>   Pada 30 baris, jawaban jujurnya adalah &quot;terlalu kecil untuk diukur&quot; — dan itu jawaban yang sah.</p>
-<h4 id="menengah">Menengah</h4>
+<h3 id="menengah">Menengah</h3>
 <p>4. <strong>Tambahkan tabel referensi penyakit</strong> dengan kode ICD-10. Teks bebas membuat setiap</p>
 <p>   pengelompokan tidak bisa dipercaya, dan pengelompokan itulah isi hampir semua laporan medis.</p>
 <p>5. <strong>Ganti <code>ON DELETE CASCADE</code> pada tabel rekam medis menjadi <code>ON DELETE RESTRICT</code></strong> ditambah</p>
@@ -215,7 +255,7 @@ CREATE TABLE PASIEN (
 <p>6. <strong>Tambahkan kolom jejak audit</strong> (<code>dibuat_pada</code>, <code>diubah_pada</code>, <code>diubah_oleh</code>) pada seluruh</p>
 <p>   tabel yang memuat data kesehatan, dan catat setiap pembacaan data pasien. UU PDP No. 27/2022</p>
 <p>   menuntut pengendali data dapat menunjukkan siapa mengakses apa.</p>
-<h4 id="jangka-panjang">Jangka panjang</h4>
+<h3 id="jangka-panjang">Jangka panjang</h3>
 <p>7. <strong>Uji ketahanan sungguhan.</strong> Jalankan dua kontainer Oracle, buat database link di antaranya,</p>
 <p>   mulai transaksi terdistribusi, lalu matikan salah satu kontainer tepat setelah fase PREPARE.</p>
 <p>   Amati <code>DBA_2PC_PENDING</code>. Itulah satu-satunya cara membuktikan sendiri bahwa 2PC memblokir —</p>
@@ -228,12 +268,14 @@ CREATE TABLE PASIEN (
 <p>   Menautkan 2PC klasik ke konsensus modern akan membuat materi ini terasa hidup, bukan sejarah.</p>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="site.js?v=849b085103"></script>
 
 </body>
 </html>

@@ -980,7 +980,7 @@ EXEC DBMS_TRANSACTION.PURGE_LOST_DB_ENTRY('1.15.1234');`,
 export const LAB = [
   { slug: 'erd', no: 1, judul: 'Perancang ERD', ringkas: 'Kasus Tono Rental: ERD → skema relasional → DDL Oracle, lengkap dengan jejak transformasinya.', topik: [3, 4] },
   { slug: 'normalisasi', no: 2, judul: 'Normalisasi 1NF–BCNF', ringkas: 'Penutupan atribut, candidate key, pelanggaran per tingkat, sintesis 3NF, dan uji lossless-join.', topik: [4, 14] },
-  { slug: 'sql', no: 3, judul: 'Mesin SQL', ringkas: 'Jalankan SQL sungguhan atas data praktikum, lengkap dengan rencana eksekusinya.', topik: [14] },
+  { slug: 'sql', no: 3, judul: 'Terminal SQL Live', ringkas: 'Terminal SQL gaya SQL*Plus: kueri, DML, DDL, transaksi, kamus data, dan 3 situs lewat database link — pratinjau hasil muncul saat mengetik.', topik: [6, 12, 14] },
   { slug: 'fragmentasi', no: 4, judul: 'Perancang Fragmentasi', ringkas: 'Horizontal, vertikal, turunan, campuran — dengan audit kelengkapan, rekonstruksi, dan kedisjoinan.', topik: [4, 5] },
   { slug: 'alokasi', no: 5, judul: 'Alokasi & Replikasi', ringkas: 'Model biaya empat kelompok informasi, pencarian alokasi optimal, dan hitungan ketersediaan.', topik: [2, 5] },
   { slug: 'dekomposisi', no: 6, judul: 'Dekomposisi Kueri', ringkas: 'Normalisasi CNF/DNF, analisis graf kueri, eliminasi redundansi, dan pohon operator.', topik: [14] },
@@ -992,7 +992,7 @@ export const LAB = [
   { slug: 'duafase', no: 12, judul: 'Simulator 2PC & 3PC', ringkas: 'Injeksi kegagalan koordinator, peserta, dan partisi jaringan — lalu lihat siapa yang terblokir.', topik: [12, 13] },
   { slug: 'ketersediaan', no: 13, judul: 'Ketersediaan & CAP', ringkas: 'MTBF/MTTR, ketersediaan replika, kuorum R+W>N, CAP dan PACELC, RTO dan RPO.', topik: [1, 8, 13] },
   { slug: 'oracle', no: 14, judul: 'Generator DDL Oracle', ringkas: 'Rancangan terdistribusi diterjemahkan menjadi partisi, database link, dan materialized view.', topik: [5, 6, 12] },
-  { slug: 'soal', no: 15, judul: 'Bank Soal Praktikum', ringkas: '32 soal Praktikum 2–5, termasuk ke-12 soal Praktikum 3, dinilai otomatis dengan membandingkan hasil kueri.', topik: [14] },
+  { slug: 'soal', no: 15, judul: 'Bank Soal Praktikum', ringkas: '38 soal Praktikum 2–5, termasuk ke-12 soal Praktikum 3 dan soal INSERT/UPDATE/DELETE ber-CASCADE, dinilai otomatis dari hasil dan keadaan tabel.', topik: [14] },
   { slug: 'kependudukan', no: 16, judul: 'Studi Kasus Kependudukan', ringkas: 'Skripsi Oracle XE + MySQL lewat ODBC: NIK ganda yang lolos UNIQUE lokal, dan mengapa gateway tidak bisa 2PC.', topik: [1, 7, 12] },
 ];
 

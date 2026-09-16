@@ -1,8 +1,8 @@
 // Lab 06 — Dekomposisi Kueri: empat langkah Modul 7.
-import { RS_SCHEMA } from '../../engine/data/datasets.js?v=8e172babd6';
-import * as D from '../../engine/ddb/decompose.js?v=8e172babd6';
-import { treeToText } from '../../engine/ddb/localize.js?v=8e172babd6';
-import * as U from './ui.js?v=8e172babd6';
+import { RS_SCHEMA } from '../../engine/data/datasets.js?v=849b085103';
+import * as D from '../../engine/ddb/decompose.js?v=849b085103';
+import { treeToText } from '../../engine/ddb/localize.js?v=849b085103';
+import * as U from './ui.js?v=849b085103';
 
 const SKEMA = {
   ...RS_SCHEMA,
@@ -74,6 +74,7 @@ ${CONTOH.map((c) => `<button type="button" class="hantu kecil contoh" data-sql="
 ${U.tabel(['Aturan', 'Jenis'], D.ATURAN_IDEMPOTEN.map((a) => [`<code>${U.esc(a.nama)}</code>`, a.jenis]))}
 `);
   document.getElementById('jalan').addEventListener('click', jalankan);
+  U.langsung(document.getElementById('sql'), jalankan);
   U.$$('.contoh').forEach((b) => b.addEventListener('click', () => {
     document.getElementById('sql').value = b.dataset.sql;
     jalankan();

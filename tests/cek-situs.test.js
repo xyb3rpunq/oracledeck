@@ -2,12 +2,13 @@
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { grup, uji, sama, benar } from './harness.js';
+import { grup, uji, sama, benar, memuat } from './harness.js';
 import { periksa } from '../tools/cek_situs.js';
 
 grup('tools/cek_situs');
 
-const halaman = (judul, isi = '') => `<!doctype html><html lang="id"><head><title>${judul}</title><meta name="description" content="Deskripsi halaman yang cukup panjang untuk lolos."></head><body>${isi}</body></html>`;
+const CSP = '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\'">';
+const halaman = (judul, isi = '') => `<!doctype html><html lang="id"><head><title>${judul}</title><meta name="description" content="Deskripsi halaman yang cukup panjang untuk lolos.">${CSP}</head><body><main><h1>${judul}</h1>${isi}</main></body></html>`;
 
 function situsContoh(tambahan = {}) {
   const d = mkdtempSync(join(tmpdir(), 'oracledeck-cek-'));
@@ -63,5 +64,16 @@ uji('ketiadaan .nojekyll dan sitemap tertangkap', () => {
 uji('nomor telepon internasional tertangkap', () => {
   const d = situsContoh({ 'y.html': halaman('Y', '<p>+6281234567890</p>') });
   benar(periksa(d).masalah.some((m) => m.includes('nomor telepon')));
+  rmSync(d, { recursive: true, force: true });
+});
+
+uji('CSP yang hilang, skrip inline, dan preset terminal tak dikenal dilaporkan', () => {
+  const d = situsContoh({
+    'x.html': '<!doctype html><html lang="id"><head><title>X</title><meta name="description" content="Deskripsi halaman yang cukup panjang untuk lolos."></head><body><main><h1>X</h1><script>alert(1)</script><pre data-sql="SELECT 1" data-db="hantu"></pre></main></body></html>',
+  });
+  const m = periksa(d).masalah.join(' | ');
+  memuat(m, 'Content-Security-Policy tidak ada');
+  memuat(m, 'skrip inline');
+  memuat(m, 'bukan preset terminal');
   rmSync(d, { recursive: true, force: true });
 });

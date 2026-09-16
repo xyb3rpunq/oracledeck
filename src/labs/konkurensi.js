@@ -47,6 +47,7 @@ ${CONTOH.map((c, i) => `<button type="button" class="hantu kecil contoh" data-i=
 `);
 
   document.getElementById('jalan').addEventListener('click', hitung);
+  U.langsung(document.getElementById('jadwal'), hitung);
   document.getElementById('jadwal').addEventListener('keydown', (e) => { if (e.key === 'Enter') hitung(); });
   document.getElementById('varian').addEventListener('change', (e) => { varian = e.target.value; hitung(); });
   U.$$('.contoh').forEach((b) => b.addEventListener('click', () => {

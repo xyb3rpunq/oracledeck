@@ -1,9 +1,9 @@
 // Lab 16 — Studi Kasus: konsistensi data kependudukan lintas desa.
-import { kependudukan } from '../../engine/data/datasets.js?v=8e172babd6';
-import * as I from '../../engine/ddb/integrity.js?v=8e172babd6';
-import * as TP from '../../engine/ddb/twophase.js?v=8e172babd6';
-import { query } from '../../engine/core/sql.js?v=8e172babd6';
-import * as U from './ui.js?v=8e172babd6';
+import { kependudukan } from '../../engine/data/datasets.js?v=849b085103';
+import * as I from '../../engine/ddb/integrity.js?v=849b085103';
+import * as TP from '../../engine/ddb/twophase.js?v=849b085103';
+import { query } from '../../engine/core/sql.js?v=849b085103';
+import * as U from './ui.js?v=849b085103';
 
 const DATA = kependudukan();
 const DESA = ['KARANGANYAR', 'JATILUHUR', 'PLARANGAN'];

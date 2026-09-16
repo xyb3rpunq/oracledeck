@@ -6,8 +6,8 @@
 //   biaya = biaya I/O + biaya CPU + biaya komunikasi
 //   pada WAN biaya komunikasi mendominasi, jadi metrik utamanya adalah byte terkirim.
 
-import { Relation } from '../core/relation.js?v=8e172babd6';
-import * as A from '../core/algebra.js?v=8e172babd6';
+import { Relation } from '../core/relation.js?v=849b085103';
+import * as A from '../core/algebra.js?v=849b085103';
 
 /** Biaya komunikasi: C0 per pesan + C1 per byte. */
 export const BIAYA_DEFAULT = { perPesan: 20, perByte: 0.02, perTupelLokal: 0.1 };

@@ -2,7 +2,9 @@
 // Jawaban mahasiswa dijalankan, kunci dijalankan, lalu HASILNYA dibandingkan.
 // Yang dinilai isi hasil, bukan teks kueri: `sem <> 1` dan `NOT sem = 1` sama benar.
 
-import { execute, parse } from './sql.js';
+import { execute, parse, query } from './sql.js';
+import { executeScript, salinDb } from './dml.js';
+import { RS_KEYS_CASCADE } from '../data/datasets.js';
 
 function normalkan(v) {
   if (v === null || v === undefined) return null;
@@ -13,12 +15,16 @@ function normalkan(v) {
 
 const kunciBaris = (r) => JSON.stringify(r.map(normalkan));
 
-/** Apakah kueri (atau cabang terluarnya) memakai ORDER BY? */
+/**
+ * Apakah hasil kueri terurut secara eksplisit?
+ * ORDER BY di akhir UNION/INTERSECT/MINUS sudah diangkat parser ke simpul
+ * himpunan, dan WITH dinilai dari badannya.
+ */
 export function punyaOrderBy(sql) {
   try {
-    const ast = parse(sql);
-    const q = ast.type === 'union' ? ast.right : ast;
-    return (q.orderBy || []).length > 0;
+    let ast = parse(sql);
+    while (ast.type === 'with') ast = ast.body;
+    return (ast.orderBy || []).length > 0;
   } catch {
     return /order\s+by/i.test(sql);
   }
@@ -103,9 +109,69 @@ export function gradeQuery(sqlJawaban, sqlKunci, db, { urutWajib = null } = {}) 
   return { benar, skor, alasan, petunjuk, hasilJawaban: jawaban, hasilKunci: kunci };
 }
 
+/**
+ * Nilai jawaban berupa perintah DML (INSERT/UPDATE/DELETE).
+ * Jawaban dan kunci dijalankan pada dua salinan basis data yang terpisah, lalu
+ * KEADAAN AKHIR tabel dibandingkan lewat kueri pemeriksa. Basis data asli tidak
+ * pernah diubah, sehingga soal bisa dicoba berulang kali.
+ */
+export function gradeScript(sqlJawaban, sqlKunci, db, { periksa, kunci = null } = {}) {
+  if (!periksa) throw new Error('gradeScript membutuhkan kueri pemeriksa (opsi periksa).');
+  const dbKunci = salinDb(db);
+  const rKunci = executeScript(sqlKunci, dbKunci, { kunci });
+  if (rKunci.galat) throw new Error(`Kunci jawaban gagal dijalankan: ${rKunci.galat}`);
+  const hasilKunci = query(periksa, dbKunci);
+
+  if (!String(sqlJawaban || '').trim()) {
+    return { benar: false, skor: 0, alasan: ['Jawaban masih kosong.'], petunjuk: [], hasilKunci };
+  }
+  const dbJawaban = salinDb(db);
+  const rJawaban = executeScript(sqlJawaban, dbJawaban, { kunci });
+  if (rJawaban.galat) {
+    return { benar: false, skor: 0, alasan: ['Perintah tidak dapat dijalankan.'], petunjuk: [rJawaban.galat], galat: rJawaban.galat, hasilKunci };
+  }
+  const bukanDml = rJawaban.hasil.filter((h) => h.jenis === 'SELECT');
+  const hasilJawaban = query(periksa, dbJawaban);
+
+  const A = new Map();
+  for (const r of hasilJawaban.rows) A.set(kunciBaris(r), (A.get(kunciBaris(r)) || 0) + 1);
+  const B = new Map();
+  for (const r of hasilKunci.rows) B.set(kunciBaris(r), (B.get(kunciBaris(r)) || 0) + 1);
+  const cocok = [...A.entries()].reduce((n, [k, c]) => n + Math.min(c, B.get(k) || 0), 0);
+  const pembagi = Math.max(hasilKunci.cardinality, hasilJawaban.cardinality);
+  const identik = A.size === B.size && [...A.entries()].every(([k, c]) => B.get(k) === c);
+
+  const alasan = [];
+  const petunjuk = [];
+  if (!identik) {
+    alasan.push(`Keadaan tabel setelah perintah berbeda: ${cocok} dari ${hasilKunci.cardinality} baris sesuai.`);
+    if (hasilJawaban.cardinality > hasilKunci.cardinality) petunjuk.push('Tabel berisi lebih banyak baris dari seharusnya — periksa WHERE pada DELETE, atau INSERT yang berlebih.');
+    else if (hasilJawaban.cardinality < hasilKunci.cardinality) petunjuk.push('Tabel berisi lebih sedikit baris dari seharusnya — WHERE pada DELETE mungkin terlalu longgar.');
+    else petunjuk.push('Jumlah baris sama tetapi nilainya berbeda — periksa klausa SET dan kondisi WHERE pada UPDATE.');
+  }
+  if (bukanDml.length) petunjuk.push('Jawaban memuat SELECT; soal ini meminta perintah yang MENGUBAH data.');
+  const skor = identik ? 100 : Math.round(80 * (pembagi ? cocok / pembagi : 0));
+  return {
+    benar: identik,
+    skor,
+    alasan,
+    petunjuk,
+    hasilJawaban,
+    hasilKunci,
+    terdampak: rJawaban.hasil.reduce((n, h) => n + (h.terdampak || 0), 0),
+  };
+}
+
+/** Nilai satu soal bank: soal ber-`periksa` dinilai sebagai DML, sisanya sebagai kueri. */
+export function gradeSoal(soal, jawaban, db) {
+  return soal.periksa
+    ? gradeScript(jawaban, soal.kunci, db, { periksa: soal.periksa, kunci: soal.integritas === 'cascade' ? RS_KEYS_CASCADE : (soal.aturanKunci || null) })
+    : gradeQuery(jawaban, soal.kunci, db);
+}
+
 /** Nilai seluruh bank soal sekaligus. */
 export function gradeAll(jawabanPerSoal, bankSoal, db) {
-  const hasil = bankSoal.map((s) => ({ id: s.id, ...gradeQuery(jawabanPerSoal[s.id] || '', s.kunci, db) }));
+  const hasil = bankSoal.map((s) => ({ id: s.id, ...gradeSoal(s, jawabanPerSoal[s.id] || '', db) }));
   const total = hasil.reduce((a, h) => a + h.skor, 0);
   return {
     hasil,

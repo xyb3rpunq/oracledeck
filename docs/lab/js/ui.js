@@ -79,7 +79,9 @@ export function preSql(teks) {
       .replace(/\u0005([^\u0006]*)\u0006/g, '<span class="sql-f">$1</span>');
     return kode + (kom ? `<span class="sql-c">${kom}</span>` : '');
   }).join('\n');
-  return `<pre><code>${hasil}</code></pre>`;
+  // data-sql-calon: site.js memeriksanya saat peramban senggang dan menambahkan tombol
+  // "Jalankan" hanya bila SQL ini benar-benar bisa dieksekusi Terminal SQL.
+  return `<pre data-sql-calon="${esc(teks)}"><code>${hasil}</code></pre>`;
 }
 
 /** Kelompok tombol pilihan tunggal. */
@@ -127,6 +129,21 @@ export function fmt(n, desimal = 2) {
 
 export function persen(x, desimal = 1) {
   return `${(x * 100).toFixed(desimal)}%`;
+}
+
+/**
+ * Hitung ulang langsung saat masukan berubah — ketikan beruntun digabung menjadi satu perhitungan,
+ * sehingga mengetik cepat tidak pernah menumpuk perhitungan (tanpa lag).
+ */
+export function langsung(elemen, fn, peristiwa = 'input') {
+  let jadwal = 0;
+  const jalan = () => {
+    jadwal = 0;
+    try { fn(); } catch (e) { console.error('lab: perhitungan langsung gagal', e); }
+  };
+  [].concat(elemen).filter(Boolean).forEach((el) => el.addEventListener(peristiwa, () => {
+    if (!jadwal) jadwal = setTimeout(jalan, 0);
+  }));
 }
 
 /** Tangkap galat agar lab tidak pernah berhenti tanpa penjelasan. */

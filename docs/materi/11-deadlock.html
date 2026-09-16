@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-11">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 11</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#empat-syarat-coffman">Empat syarat Coffman</a></li><li><a href="#tiga-metode-deteksi">Tiga metode deteksi</a></li><li><a href="#deadlock-semu-phantom-deadlock">Deadlock semu (phantom deadlock)</a></li><li><a href="#pencegahan-berbasis-cap-waktu">Pencegahan berbasis cap waktu</a></li><li><a href="#pemilihan-korban">Pemilihan korban</a></li></ol>
+    <ol><li><a href="#empat-syarat-coffman">Empat syarat Coffman</a></li><li><a href="#tiga-metode-deteksi">Tiga metode deteksi</a></li><li><a href="#deadlock-semu-phantom-deadlock">Deadlock semu (phantom deadlock)</a></li><li><a href="#pencegahan-berbasis-cap-waktu">Pencegahan berbasis cap waktu</a></li><li><a href="#pemilihan-korban">Pemilihan korban</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 11</p>
@@ -46,24 +57,49 @@
     <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami kejadian deadlock dan dapat mengenalinya dalam pemrosesan data terdistribusi.</p></div>
 
 <h2 id="empat-syarat-coffman">Empat syarat Coffman</h2>
-<p>Mencegah salah satu syarat berarti mencegah deadlock. Skema wait-die dan wound-wait menyerang syarat keempat.</p>
+<p>Mencegah salah satu syarat berarti mencegah <abbr class="istilah" tabindex="0" data-g="g-deadlock" data-istilah="Deadlock" data-arti="Keadaan saat sekumpulan transaksi saling menunggu sumber daya yang dipegang anggota lain, sehingga tidak satu pun dapat maju." data-detail="Syarat Coffman: mutual exclusion, hold and wait, no preemption, circular wait. Pada sistem terdistribusi siklusnya bisa melintasi situs sehingga tidak terlihat oleh satu situs saja." data-contoh="T1 memegang kunci di S1 dan menunggu S2; T2 memegang kunci di S2 dan menunggu S1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">deadlock</abbr>. Skema <abbr class="istilah" tabindex="0" data-g="g-wait-die" data-istilah="Wait-die" data-arti="Skema pencegahan deadlock non-preemptive: transaksi tua boleh menunggu, transaksi muda yang meminta langsung dimatikan." data-detail="Transaksi muda yang meminta kunci milik transaksi tua langsung mati dan diulang dengan cap waktu yang sama, sehingga akhirnya menjadi tua dan tidak kelaparan." data-contoh="T1 (ts=5) menunggu T2 (ts=9); T2 meminta kunci T1 → T2 mati." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">wait-die</abbr> dan <abbr class="istilah" tabindex="0" data-g="g-wound-wait" data-istilah="Wound-wait" data-arti="Skema pencegahan deadlock preemptive: transaksi tua melukai pemegang yang lebih muda, transaksi muda menunggu." data-detail="Transaksi tua yang meminta kunci milik transaksi muda memaksa transaksi muda abort; transaksi muda yang meminta kunci milik yang tua menunggu." data-contoh="T1 (ts=5) meminta kunci T2 (ts=9) → T2 dibatalkan." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">wound-wait</abbr> menyerang syarat keempat.</p>
 <ul><li><b>Mutual exclusion</b> — sumber daya hanya bisa dipegang satu transaksi</li><li><b>Hold and wait</b> — transaksi memegang sumber daya sambil menunggu yang lain</li><li><b>No preemption</b> — sumber daya tidak bisa direbut paksa</li><li><b>Circular wait</b> — ada rantai penantian yang melingkar</li></ul>
 
 <h2 id="tiga-metode-deteksi">Tiga metode deteksi</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Metode</th><th>Cara kerja</th><th>Kelebihan</th><th>Kekurangan</th></tr></thead><tbody><tr><td>Terpusat</td><td>Satu situs mengumpulkan WFG lokal semua situs dan menyatukannya</td><td>Pasti menemukan semua siklus, sederhana</td><td>Titik kegagalan tunggal, bottleneck, deadlock semu</td></tr><tr><td>Path pushing</td><td>Tiap situs mendorong jalur tunggu yang melibatkan transaksi luar ke situs berikutnya</td><td>Tanpa koordinator; pesan sebanding panjang siklus</td><td>Informasi antar situs tidak serentak</td></tr><tr><td>Edge chasing</td><td>Transaksi menunggu mengirim probe (i, j, k); deadlock bila probe kembali ke pengirim</td><td>Beban pesan paling ringan</td><td>Tiap transaksi menunggu harus memulai probe sendiri</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Metode</th><th>Cara kerja</th><th>Kelebihan</th><th>Kekurangan</th></tr></thead><tbody><tr><td>Terpusat</td><td>Satu <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> mengumpulkan WFG lokal semua situs dan menyatukannya</td><td>Pasti menemukan semua siklus, sederhana</td><td>Titik kegagalan tunggal, bottleneck, <abbr class="istilah" tabindex="0" data-g="g-deadlock-semu" data-istilah="Deadlock semu" data-en="phantom deadlock" data-arti="Siklus palsu pada wait-for graph global yang muncul karena WFG tiap situs tidak diambil pada saat yang benar-benar sama." data-detail="Disebabkan keterlambatan pesan: sisi yang sudah hilang masih tercatat di WFG global. Akibatnya transaksi yang tidak bersalah dibatalkan." data-contoh="T1 sudah melepas kunci, tetapi pesan pelepasan belum sampai ke pendeteksi pusat." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">deadlock semu</abbr></td></tr><tr><td><abbr class="istilah" tabindex="0" data-g="g-path-pushing" data-istilah="Path pushing" data-arti="Metode deteksi deadlock terdistribusi yang mendorong jalur tunggu berisi transaksi luar ke situs berikutnya sampai siklus ditemukan." data-detail="Setiap situs mengirim jalur tunggu lokalnya ke situs berikutnya; situs penerima menggabungkan dan mencari siklus. Rentan deadlock semu bila jalur basi." data-contoh="S1 mengirim jalur T1→T2 ke S2 yang mengetahui T2→T1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">Path pushing</abbr></td><td>Tiap situs mendorong jalur tunggu yang melibatkan transaksi luar ke situs berikutnya</td><td>Tanpa koordinator; pesan sebanding panjang siklus</td><td>Informasi antar situs tidak serentak</td></tr><tr><td><abbr class="istilah" tabindex="0" data-g="g-edge-chasing" data-istilah="Edge chasing" data-arti="Metode deteksi deadlock terdistribusi yang mengirim probe (i, j, k) mengikuti sisi tunggu. Deadlock dinyatakan bila probe kembali ke inisiatornya." data-detail="Probe diteruskan sepanjang sisi tunggu; bila probe kembali ke pengirimnya, siklus ditemukan. Tidak perlu graf global sehingga cocok untuk sistem tanpa pusat." data-contoh="Probe (T1, T1, T2) dari S1 diteruskan ke S2 dan kembali ke T1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">Edge chasing</abbr></td><td>Transaksi menunggu mengirim probe (i, j, k); deadlock bila probe kembali ke pengirim</td><td>Beban pesan paling ringan</td><td>Tiap transaksi menunggu harus memulai probe sendiri</td></tr></tbody></table></div>
 
 <h2 id="deadlock-semu-phantom-deadlock">Deadlock semu (phantom deadlock)</h2>
 <p>WFG dari situs A dan situs B tidak pernah diambil pada saat yang benar-benar sama. Sisi yang sebenarnya sudah dilepas masih tercatat, dan siklus palsu terbentuk. Detektor lalu mengorbankan satu transaksi yang sesungguhnya tidak buntu.</p>
 <div class="catatan peringatan"><p>Ini bukan bug yang bisa diperbaiki, melainkan konsekuensi langsung dari tidak adanya waktu global pada sistem terdistribusi. Yang bisa dilakukan hanya mengurangi frekuensinya — misalnya dengan memperpendek jeda pengumpulan WFG.</p></div>
 
 <h2 id="pencegahan-berbasis-cap-waktu">Pencegahan berbasis cap waktu</h2>
-<p>Pada kedua skema, arah sisi tunggu selalu searah cap waktu, sehingga siklus mustahil terbentuk. Transaksi yang di-restart mempertahankan cap waktu lamanya agar tidak kelaparan selamanya.</p>
+<p>Pada kedua skema, arah sisi tunggu selalu searah <abbr class="istilah" tabindex="0" data-g="g-cap" data-istilah="CAP" data-arti="Teorema yang menyatakan sistem terdistribusi hanya dapat menjamin dua dari tiga sifat: Consistency, Availability, dan Partition tolerance." data-detail="Konsistensi (semua node melihat data yang sama), ketersediaan (setiap permintaan dijawab), toleransi partisi (tetap berjalan saat jaringan terbelah). Saat partisi terjadi, pilihannya tinggal C atau A." data-contoh="Replika sinkron yang menolak tulisan saat salah satu situs terputus memilih CP." data-lab="ketersediaan" data-lab-judul="Ketersediaan &amp; CAP">cap</abbr> waktu, sehingga siklus mustahil terbentuk. Transaksi yang di-restart mempertahankan cap waktu lamanya agar tidak kelaparan selamanya.</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Skema</th><th>Peminta lebih tua</th><th>Peminta lebih muda</th><th>Sifat</th></tr></thead><tbody><tr><td>Wait-Die</td><td>Menunggu</td><td>Mati lalu restart dengan cap waktu lama</td><td>Non-preemptive</td></tr><tr><td>Wound-Wait</td><td>Melukai pemegang (pemegang di-rollback)</td><td>Menunggu</td><td>Preemptive</td></tr></tbody></table></div>
 
 <h2 id="pemilihan-korban">Pemilihan korban</h2>
 <ul><li><b>Termuda</b> — paling sedikit kerja yang terbuang</li><li><b>Kunci paling sedikit</b> — paling murah dibatalkan</li><li><b>Kerja paling sedikit</b> — meminimalkan pengulangan</li><li><b>Prioritas terendah</b> — transaksi bisnis paling tidak kritis dikorbankan lebih dulu</li></ul>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Kunci yang ditahan transaksi ragu-ragu</h3>
+<p>Koordinator jatuh setelah PREPARE: peserta menahan kunci, perintah lain ke <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> itu ditolak ORA-01591 — sumber tunggu yang mirip <abbr class="istilah" tabindex="0" data-g="g-deadlock" data-istilah="Deadlock" data-arti="Keadaan saat sekumpulan transaksi saling menunggu sumber daya yang dipegang anggota lain, sehingga tidak satu pun dapat maju." data-detail="Syarat Coffman: mutual exclusion, hold and wait, no preemption, circular wait. Pada sistem terdistribusi siklusnya bisa melintasi situs sehingga tidak terlihat oleh satu situs saja." data-contoh="T1 memegang kunci di S1 dan menunggu S2; T2 memegang kunci di S2 dan menunggu S1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">deadlock</abbr>. <span class="lencana netral">terdistribusi</span> <span class="lencana warn">galat disengaja: ORA-02054, ORA-01591</span></p>
+<pre data-sql="\gagal koordinator
+DELETE FROM daftar@jakarta WHERE id_daftar = 1;
+DELETE FROM daftar@bandung WHERE id_daftar = 5;
+COMMIT;
+DELETE FROM daftar@bandung WHERE id_daftar = 6;" data-db="terdistribusi"><code>\gagal koordinator
+<span class="sql-k">DELETE</span> <span class="sql-k">FROM</span> daftar@jakarta <span class="sql-k">WHERE</span> id_daftar = <span class="sql-n">1</span>;
+<span class="sql-k">DELETE</span> <span class="sql-k">FROM</span> daftar@bandung <span class="sql-k">WHERE</span> id_daftar = <span class="sql-n">5</span>;
+<span class="sql-k">COMMIT</span>;
+<span class="sql-k">DELETE</span> <span class="sql-k">FROM</span> daftar@bandung <span class="sql-k">WHERE</span> id_daftar = <span class="sql-n">6</span>;</code></pre>
+<h3>Graf tunggu dari data transaksi</h3>
+<p>Deteksi <abbr class="istilah" tabindex="0" data-g="g-deadlock" data-istilah="Deadlock" data-arti="Keadaan saat sekumpulan transaksi saling menunggu sumber daya yang dipegang anggota lain, sehingga tidak satu pun dapat maju." data-detail="Syarat Coffman: mutual exclusion, hold and wait, no preemption, circular wait. Pada sistem terdistribusi siklusnya bisa melintasi situs sehingga tidak terlihat oleh satu situs saja." data-contoh="T1 memegang kunci di S1 dan menunggu S2; T2 memegang kunci di S2 dan menunggu S1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">deadlock</abbr> terpusat menyimpan sisi Ti → Tj; siklus dicari dengan join berulang. <span class="lencana netral">kosong</span></p>
+<pre data-sql="CREATE TABLE tunggu (menunggu VARCHAR2(3), ditunggu VARCHAR2(3), situs VARCHAR2(10));
+INSERT INTO tunggu VALUES ('T1', 'T2', 'S1'), ('T2', 'T3', 'S2'), ('T3', 'T1', 'S1');
+SELECT a.menunggu, a.ditunggu, b.ditunggu AS lalu, c.ditunggu AS kembali_ke
+  FROM tunggu a JOIN tunggu b ON a.ditunggu = b.menunggu
+  JOIN tunggu c ON b.ditunggu = c.menunggu
+ WHERE c.ditunggu = a.menunggu;" data-db="kosong"><code><span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> tunggu (menunggu <span class="sql-k">VARCHAR2</span>(<span class="sql-n">3</span>), ditunggu <span class="sql-k">VARCHAR2</span>(<span class="sql-n">3</span>), situs <span class="sql-k">VARCHAR2</span>(<span class="sql-n">10</span>));
+<span class="sql-k">INSERT</span> <span class="sql-k">INTO</span> tunggu <span class="sql-k">VALUES</span> (<span class="sql-s">'T1'</span>, <span class="sql-s">'T2'</span>, <span class="sql-s">'S1'</span>), (<span class="sql-s">'T2'</span>, <span class="sql-s">'T3'</span>, <span class="sql-s">'S2'</span>), (<span class="sql-s">'T3'</span>, <span class="sql-s">'T1'</span>, <span class="sql-s">'S1'</span>);
+<span class="sql-k">SELECT</span> a.menunggu, a.ditunggu, b.ditunggu <span class="sql-k">AS</span> lalu, c.ditunggu <span class="sql-k">AS</span> kembali_ke
+  <span class="sql-k">FROM</span> tunggu a <span class="sql-k">JOIN</span> tunggu b <span class="sql-k">ON</span> a.ditunggu = b.menunggu
+  <span class="sql-k">JOIN</span> tunggu c <span class="sql-k">ON</span> b.ditunggu = c.menunggu
+ <span class="sql-k">WHERE</span> c.ditunggu = a.menunggu;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -79,12 +115,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

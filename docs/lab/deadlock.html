@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="lab-deadlock">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,15 +33,21 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Laboratorium</a> / <span aria-current="page">Lab 11</span></nav>
 
 <p class="kicker">Lab 11</p>
 <h1>Manajemen Deadlock</h1>
-<p class="lede">Deteksi terpusat, path pushing, edge chasing, deadlock semu, dan pencegahan cap waktu.</p>
+<p class="lede">Deteksi terpusat, <abbr class="istilah" tabindex="0" data-g="g-path-pushing" data-istilah="Path pushing" data-arti="Metode deteksi deadlock terdistribusi yang mendorong jalur tunggu berisi transaksi luar ke situs berikutnya sampai siklus ditemukan." data-detail="Setiap situs mengirim jalur tunggu lokalnya ke situs berikutnya; situs penerima menggabungkan dan mencari siklus. Rentan deadlock semu bila jalur basi." data-contoh="S1 mengirim jalur T1→T2 ke S2 yang mengetahui T2→T1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">path pushing</abbr>, <abbr class="istilah" tabindex="0" data-g="g-edge-chasing" data-istilah="Edge chasing" data-arti="Metode deteksi deadlock terdistribusi yang mengirim probe (i, j, k) mengikuti sisi tunggu. Deadlock dinyatakan bila probe kembali ke inisiatornya." data-detail="Probe diteruskan sepanjang sisi tunggu; bila probe kembali ke pengirimnya, siklus ditemukan. Tidak perlu graf global sehingga cocok untuk sistem tanpa pusat." data-contoh="Probe (T1, T1, T2) dari S1 diteruskan ke S2 dan kembali ke T1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">edge chasing</abbr>, <abbr class="istilah" tabindex="0" data-g="g-deadlock-semu" data-istilah="Deadlock semu" data-en="phantom deadlock" data-arti="Siklus palsu pada wait-for graph global yang muncul karena WFG tiap situs tidak diambil pada saat yang benar-benar sama." data-detail="Disebabkan keterlambatan pesan: sisi yang sudah hilang masih tercatat di WFG global. Akibatnya transaksi yang tidak bersalah dibatalkan." data-contoh="T1 sudah melepas kunci, tetapi pesan pelepasan belum sampai ke pendeteksi pusat." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">deadlock semu</abbr>, dan pencegahan <abbr class="istilah" tabindex="0" data-g="g-cap" data-istilah="CAP" data-arti="Teorema yang menyatakan sistem terdistribusi hanya dapat menjamin dua dari tiga sifat: Consistency, Availability, dan Partition tolerance." data-detail="Konsistensi (semua node melihat data yang sama), ketersediaan (setiap permintaan dijawab), toleransi partisi (tetap berjalan saat jaringan terbelah). Saat partisi terjadi, pilihannya tinggal C atau A." data-contoh="Replika sinkron yang menolak tulisan saat salah satu situs terputus memilih CP." data-lab="ketersediaan" data-lab-judul="Ketersediaan &amp; CAP">cap</abbr> waktu.</p>
 <p class="kecil">Topik terkait: <a href="../materi/11-deadlock.html">11. Manajemen Deadlock</a></p>
 
 <div id="lab" data-lab="deadlock">
@@ -49,12 +60,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
-<script type="module" src="../lab/js/deadlock.js?v=8e172babd6"></script>
+<script type="module" src="../site.js?v=849b085103"></script>
+<script type="module" src="../lab/js/deadlock.js?v=849b085103"></script>
 </body>
 </html>

@@ -6,8 +6,8 @@
 // Alur: kueri global -> program lokalisasi (generic query) -> reduksi ->
 //       kueri terreduksi yang hanya menyentuh fragmen yang benar-benar relevan.
 
-import { Relation } from '../core/relation.js?v=8e172babd6';
-import * as A from '../core/algebra.js?v=8e172babd6';
+import { Relation } from '../core/relation.js?v=849b085103';
+import * as A from '../core/algebra.js?v=849b085103';
 
 // --------------------------------------------------------- predikat sederhana
 
@@ -360,6 +360,16 @@ export function treeToText(node, depth = 0) {
     case 'join': head = `⋈ ${node.on || ''}`; break;
     case 'semijoin': head = `⋉ ${node.on || ''}`; break;
     case 'union': head = '∪'; break;
+    case 'union all': head = '∪ ALL'; break;
+    case 'intersect': head = '∩'; break;
+    case 'minus': head = '−'; break;
+    case 'product': head = '×'; break;
+    case 'group': head = `γ ${node.detail || ''}`; break;
+    case 'distinct': head = 'δ'; break;
+    case 'sort': head = `τ ${node.detail || ''}`; break;
+    case 'limit': head = `batasi ${node.detail || ''}`; break;
+    case 'with': head = `WITH ${node.detail || ''}`; break;
+    case 'cte': head = `${node.name} :=`; break;
     default: head = node.op;
   }
   let s = `${pad}${head}\n`;

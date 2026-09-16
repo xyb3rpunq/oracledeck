@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-9">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 9</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#komponen-manajemen-transaksi">Komponen manajemen transaksi</a></li><li><a href="#contoh-transaksi-terdistribusi-dari-modul-6">Contoh transaksi terdistribusi dari Modul 6</a></li><li><a href="#acid-pada-lingkungan-terdistribusi">ACID pada lingkungan terdistribusi</a></li><li><a href="#model-koordinasi">Model koordinasi</a></li></ol>
+    <ol><li><a href="#komponen-manajemen-transaksi">Komponen manajemen transaksi</a></li><li><a href="#contoh-transaksi-terdistribusi-dari-modul-6">Contoh transaksi terdistribusi dari Modul 6</a></li><li><a href="#acid-pada-lingkungan-terdistribusi">ACID pada lingkungan terdistribusi</a></li><li><a href="#model-koordinasi">Model koordinasi</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 09</p>
@@ -46,19 +57,40 @@
     <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Mengetahui lingkup transaksi terdistribusi dan kebutuhan pengelolaannya.</p></div>
 
 <h2 id="komponen-manajemen-transaksi">Komponen manajemen transaksi</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Komponen</th><th>Tugas</th></tr></thead><tbody><tr><td>Transaction Manager</td><td>Mengoordinasi transaksi yang berasal dari situsnya; memecah transaksi global menjadi subtransaksi</td></tr><tr><td>Scheduler</td><td>Menentukan urutan eksekusi operasi agar tetap serializable</td></tr><tr><td>Recovery Manager</td><td>Mengembalikan basis data ke keadaan konsisten setelah kegagalan</td></tr><tr><td>Buffer Manager</td><td>Mengatur perpindahan data antara memori utama dan penyimpanan</td></tr><tr><td>Agent</td><td>Wakil subtransaksi di situs tempat data berada</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Komponen</th><th>Tugas</th></tr></thead><tbody><tr><td>Transaction Manager</td><td>Mengoordinasi transaksi yang berasal dari situsnya; memecah <abbr class="istilah" tabindex="0" data-g="g-transaksi-global" data-istilah="Transaksi global" data-arti="Transaksi yang mengakses data pada lebih dari satu situs." data-detail="Membutuhkan manajer transaksi global, agent per situs, dan protokol komitmen atomik." data-contoh="Satu COMMIT atas perubahan di daftar@jakarta dan daftar@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">transaksi global</abbr> menjadi <abbr class="istilah" tabindex="0" data-g="g-subtransaksi" data-istilah="Subtransaksi" data-arti="Bagian transaksi global yang dijalankan pada satu situs. Diwakili oleh sebuah agent." data-detail="Setiap subtransaksi menulis log di situsnya sendiri dan berperan sebagai peserta dalam protokol komitmen." data-contoh="DELETE FROM daftar@bandung dalam transaksi yang juga mengubah daftar@jakarta." data-lab="sql" data-lab-judul="Terminal SQL Live">subtransaksi</abbr></td></tr><tr><td>Scheduler</td><td>Menentukan urutan eksekusi operasi agar tetap <abbr class="istilah" tabindex="0" data-g="g-serializable" data-istilah="Serializable" data-arti="Sifat jadwal konkuren yang hasilnya setara dengan suatu urutan serial transaksi yang sama." data-detail="Konflik-serializability diuji dengan graf presedensi; 2PL menjaminnya. Serializable adalah tingkat isolasi tertinggi pada standar SQL." data-contoh="Jadwal r1[x] w1[x] r2[x] w2[x] setara dengan T1 lalu T2." data-lab="konkurensi" data-lab-judul="Kendali Konkurensi">serializable</abbr></td></tr><tr><td>Recovery Manager</td><td>Mengembalikan basis data ke keadaan konsisten setelah kegagalan</td></tr><tr><td>Buffer Manager</td><td>Mengatur perpindahan data antara memori utama dan penyimpanan</td></tr><tr><td><abbr class="istilah" tabindex="0" data-g="g-agent" data-istilah="Agent" data-en="agent" data-arti="Wakil sebuah subtransaksi di situs tempat datanya berada. Satu transaksi global melahirkan satu agent per situs yang harus diakses." data-detail="Agent menerima perintah dari manajer transaksi global, menjalankannya pada basis data lokal, lalu melaporkan hasil dan suaranya saat commit. Kegagalan satu agent cukup untuk membatalkan transaksi global." data-contoh="Transfer rekening Jakarta→Bandung melahirkan agent di situs Jakarta (debit) dan agent di situs Bandung (kredit)." data-lab="duafase" data-lab-judul="Simulator 2PC &amp; 3PC">Agent</abbr></td><td>Wakil subtransaksi di <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr> tempat data berada</td></tr></tbody></table></div>
 
 <h2 id="contoh-transaksi-terdistribusi-dari-modul-6">Contoh transaksi terdistribusi dari Modul 6</h2>
-<p>Transaksi T mencetak nama seluruh staf memakai skema fragmentasi S1, S2, S22, dan S23. Subtransaksi TS3, TS5, dan TS7 mewakili agent di lokasi 3, 5, dan 7.</p>
+<p>Transaksi T mencetak nama seluruh staf memakai skema <abbr class="istilah" tabindex="0" data-g="g-fragmentasi" data-istilah="Fragmentasi" data-en="fragmentation" data-arti="Pemecahan relasi menjadi bagian-bagian lebih kecil yang dapat ditempatkan di situs berbeda." data-detail="Tujuannya menaruh data dekat penggunanya, mengurangi data yang dikirim, dan memungkinkan pemrosesan paralel. Wajib memenuhi kelengkapan, rekonstruksi, dan kedisjoinan." data-contoh="Tabel pasien dipecah per kota menjadi pasien@jakarta, pasien@bandung, pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">fragmentasi</abbr> S1, S2, S22, dan S23. Subtransaksi TS3, TS5, dan TS7 mewakili agent di lokasi 3, 5, dan 7.</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Waktu</th><th>TS3</th><th>TS5</th><th>TS7</th></tr></thead><tbody><tr><td>t1</td><td>Begin transaction</td><td>Begin transaction</td><td>Begin transaction</td></tr><tr><td>t2</td><td>Read(fname, lname)</td><td>Read(fname, lname)</td><td>Read(fname, lname)</td></tr><tr><td>t3</td><td>Print(fname, lname)</td><td>Print(fname, lname)</td><td>Print(fname, lname)</td></tr><tr><td>t4</td><td>End_transaction</td><td>End_transaction</td><td>End_transaction</td></tr></tbody></table></div>
 
 <h2 id="acid-pada-lingkungan-terdistribusi">ACID pada lingkungan terdistribusi</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Sifat</th><th>Pada satu situs</th><th>Yang berubah pada banyak situs</th></tr></thead><tbody><tr><td>Atomicity</td><td>Log + rollback lokal</td><td>Perlu protokol komit atomik (2PC/3PC) agar semua situs sepakat</td></tr><tr><td>Consistency</td><td>Constraint diperiksa saat commit</td><td>Constraint lintas situs mahal — kerap dilonggarkan</td></tr><tr><td>Isolation</td><td>Locking atau timestamp lokal</td><td>Perlu penjadwalan global; deadlock bisa lintas situs</td></tr><tr><td>Durability</td><td>Log ditulis ke disk sebelum commit</td><td>Setiap situs menulis lognya sendiri sebelum menjawab PREPARE</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Sifat</th><th>Pada satu situs</th><th>Yang berubah pada banyak situs</th></tr></thead><tbody><tr><td><abbr class="istilah" tabindex="0" data-g="g-atomicity" data-istilah="Atomicity" data-arti="Sifat transaksi yang menjamin semua operasi berhasil atau tidak satu pun berlaku. Pada sistem terdistribusi ditegakkan oleh protokol komitmen atomik." data-detail="Pada sistem terdistribusi atomisitas tidak cukup dijaga log lokal; perlu protokol komitmen atomik seperti 2PC agar semua situs mengambil keputusan yang sama." data-contoh="DELETE di daftar@jakarta dan daftar@bandung lalu COMMIT: keduanya tersimpan atau keduanya batal." data-lab="sql" data-lab-judul="Terminal SQL Live">Atomicity</abbr></td><td>Log + rollback lokal</td><td>Perlu protokol komit atomik (2PC/3PC) agar semua situs sepakat</td></tr><tr><td>Consistency</td><td>Constraint diperiksa saat commit</td><td>Constraint lintas situs mahal — kerap dilonggarkan</td></tr><tr><td>Isolation</td><td>Locking atau timestamp lokal</td><td>Perlu penjadwalan global; <abbr class="istilah" tabindex="0" data-g="g-deadlock" data-istilah="Deadlock" data-arti="Keadaan saat sekumpulan transaksi saling menunggu sumber daya yang dipegang anggota lain, sehingga tidak satu pun dapat maju." data-detail="Syarat Coffman: mutual exclusion, hold and wait, no preemption, circular wait. Pada sistem terdistribusi siklusnya bisa melintasi situs sehingga tidak terlihat oleh satu situs saja." data-contoh="T1 memegang kunci di S1 dan menunggu S2; T2 memegang kunci di S2 dan menunggu S1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">deadlock</abbr> bisa lintas situs</td></tr><tr><td>Durability</td><td>Log ditulis ke disk sebelum commit</td><td>Setiap situs menulis lognya sendiri sebelum menjawab PREPARE</td></tr></tbody></table></div>
 
 <h2 id="model-koordinasi">Model koordinasi</h2>
 <ul><li><b>Terpusat</b> — satu koordinator per transaksi, biasanya situs asal. Sederhana, tetapi koordinator menjadi titik kritis.</li><li><b>Hierarkis</b> — koordinator memiliki subkoordinator; cocok untuk banyak situs.</li><li><b>Terdesentralisasi</b> — setiap peserta berkomunikasi dengan semua peserta lain. Tidak ada titik kegagalan tunggal, tetapi jumlah pesan membengkak menjadi O(n²).</li></ul>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Atomisitas: SAVEPOINT dan ROLLBACK</h3>
+<p>Sebagian transaksi dibatalkan, sisanya tetap tertunda sampai COMMIT. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="UPDATE pasien SET kota = 'Depok' WHERE id_pasien = 1;
+SAVEPOINT s1;
+DELETE FROM pasien_dokter;
+ROLLBACK TO s1;
+SELECT COUNT(*) AS periksa_utuh FROM pasien_dokter;
+\status" data-db="rumahsakit"><code><span class="sql-k">UPDATE</span> pasien <span class="sql-k">SET</span> kota = <span class="sql-s">'Depok'</span> <span class="sql-k">WHERE</span> id_pasien = <span class="sql-n">1</span>;
+SAVEPOINT s1;
+<span class="sql-k">DELETE</span> <span class="sql-k">FROM</span> pasien_dokter;
+<span class="sql-k">ROLLBACK</span> <span class="sql-k">TO</span> s1;
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> periksa_utuh <span class="sql-k">FROM</span> pasien_dokter;
+\status</code></pre>
+<h3>Agent per situs</h3>
+<p>Satu <abbr class="istilah" tabindex="0" data-g="g-transaksi-global" data-istilah="Transaksi global" data-arti="Transaksi yang mengakses data pada lebih dari satu situs." data-detail="Membutuhkan manajer transaksi global, agent per situs, dan protokol komitmen atomik." data-contoh="Satu COMMIT atas perubahan di daftar@jakarta dan daftar@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">transaksi global</abbr> menulis ke dua <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr>; lihat status: situs yang ditulis = <abbr class="istilah" tabindex="0" data-g="g-agent" data-istilah="Agent" data-en="agent" data-arti="Wakil sebuah subtransaksi di situs tempat datanya berada. Satu transaksi global melahirkan satu agent per situs yang harus diakses." data-detail="Agent menerima perintah dari manajer transaksi global, menjalankannya pada basis data lokal, lalu melaporkan hasil dan suaranya saat commit. Kegagalan satu agent cukup untuk membatalkan transaksi global." data-contoh="Transfer rekening Jakarta→Bandung melahirkan agent di situs Jakarta (debit) dan agent di situs Bandung (kredit)." data-lab="duafase" data-lab-judul="Simulator 2PC &amp; 3PC">agent</abbr> yang terlibat. <span class="lencana netral">terdistribusi</span></p>
+<pre data-sql="DELETE FROM daftar@jakarta WHERE id_daftar = 2;
+DELETE FROM daftar@surabaya WHERE id_daftar = 10;
+\status" data-db="terdistribusi"><code><span class="sql-k">DELETE</span> <span class="sql-k">FROM</span> daftar@jakarta <span class="sql-k">WHERE</span> id_daftar = <span class="sql-n">2</span>;
+<span class="sql-k">DELETE</span> <span class="sql-k">FROM</span> daftar@surabaya <span class="sql-k">WHERE</span> id_daftar = <span class="sql-n">10</span>;
+\status</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -75,12 +107,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

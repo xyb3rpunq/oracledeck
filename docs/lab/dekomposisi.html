@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="lab-dekomposisi">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,15 +33,21 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Laboratorium</a> / <span aria-current="page">Lab 06</span></nav>
 
 <p class="kicker">Lab 06</p>
 <h1>Dekomposisi Kueri</h1>
-<p class="lede">Normalisasi CNF/DNF, analisis graf kueri, eliminasi redundansi, dan pohon operator.</p>
+<p class="lede"><abbr class="istilah" tabindex="0" data-g="g-normalisasi" data-istilah="Normalisasi" data-arti="Proses menata relasi agar bebas dari redundansi dan anomali, bertahap dari 1NF sampai BCNF." data-detail="1NF (atribut atomik), 2NF (tanpa ketergantungan parsial), 3NF (tanpa ketergantungan transitif), BCNF (setiap determinan superkey). Skema ternormalisasi adalah titik awal fragmentasi yang benar." data-contoh="Memecah pasien_dokter yang menyimpan nama dokter berulang menjadi tabel dokter terpisah." data-lab="normalisasi" data-lab-judul="Normalisasi 1NF–BCNF">Normalisasi</abbr> <abbr class="istilah" tabindex="0" data-g="g-cnf" data-istilah="CNF" data-en="conjunctive normal form" data-arti="Bentuk normal konjungtif — konjungsi dari disjungsi, (a ∨ b) ∧ (c ∨ d). Bentuk baku langkah normalisasi dekomposisi kueri." data-detail="Bentuk baku kualifikasi kueri sebelum analisis: tiap klausa disjungsi dapat dievaluasi terpisah, memudahkan pendorongan seleksi dan deteksi kontradiksi." data-contoh="(kota = 'Jakarta' OR kota = 'Bandung') AND biaya &gt; 200000." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">CNF</abbr>/<abbr class="istilah" tabindex="0" data-g="g-dnf" data-istilah="DNF" data-en="disjunctive normal form" data-arti="Bentuk normal disjungtif — disjungsi dari konjungsi, (a ∧ b) ∨ (c ∧ d). Dipakai untuk menurunkan predikat minterm pada fragmentasi." data-detail="Setiap term konjungsi dapat dijalankan sebagai subkueri terpisah lalu digabung dengan UNION. DNF juga dipakai menurunkan predikat minterm fragmentasi." data-contoh="(kota = 'Jakarta' AND biaya &gt; 2) OR (kota = 'Bandung' AND biaya &gt; 2)." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">DNF</abbr>, analisis <abbr class="istilah" tabindex="0" data-g="g-graf-kueri" data-istilah="Graf kueri" data-en="query graph" data-arti="Graf dengan simpul relasi dan sisi predikat join. Graf yang tidak terhubung menandakan kueri salah semantik — hasilnya perkalian kartesian." data-detail="Dipakai pada analisis semantik. Relasi yang tidak terhubung predikat join menghasilkan perkalian kartesian yang hampir selalu merupakan kesalahan penulisan kueri." data-contoh="FROM pasien p, dokter d tanpa syarat join: graf tidak terhubung." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">graf kueri</abbr>, <abbr class="istilah" tabindex="0" data-g="g-eliminasi-redundansi" data-istilah="Eliminasi redundansi" data-arti="Langkah ketiga dekomposisi kueri: menyederhanakan kualifikasi memakai hukum idempoten seperti p ∧ p ≡ p dan p ∧ (p ∨ q) ≡ p." data-detail="Memakai aturan idempoten seperti p ∧ p = p, p ∨ ¬p = true, dan p ∧ ¬p = false. Kueri yang kualifikasinya menjadi false dapat dijawab kosong tanpa menyentuh data." data-contoh="kota = 'A' AND kota = 'A' disederhanakan menjadi kota = 'A'." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">eliminasi redundansi</abbr>, dan <abbr class="istilah" tabindex="0" data-g="g-pohon-operator" data-istilah="Pohon operator" data-en="operator tree" data-arti="Representasi grafis kueri aljabar relasional: daun berisi relasi tersimpan, simpul non-daun berisi operator, akar berisi jawaban." data-detail="Pengoptimal mendorong seleksi dan proyeksi sedekat mungkin ke daun agar data yang mengalir ke join dan melewati jaringan sekecil mungkin." data-contoh="π nama (⋈ (σ kota='Bandung' PASIEN, PASIEN_DOKTER))." data-lab="dekomposisi" data-lab-judul="Dekomposisi Kueri">pohon operator</abbr>.</p>
 <p class="kecil">Topik terkait: <a href="../materi/14-query-optimizer.html">14. Query Optimizer dan DDBMS</a></p>
 
 <div id="lab" data-lab="dekomposisi">
@@ -49,12 +60,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
-<script type="module" src="../lab/js/dekomposisi.js?v=8e172babd6"></script>
+<script type="module" src="../site.js?v=849b085103"></script>
+<script type="module" src="../lab/js/dekomposisi.js?v=849b085103"></script>
 </body>
 </html>

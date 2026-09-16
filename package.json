@@ -1,6 +1,6 @@
 {
   "name": "oracledeck",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "ORACLEDECK - Laboratorium Sistem Basis Data Terdistribusi. Mesin relasional nol-dependensi + generator situs statis.",
   "type": "module",
   "private": true,

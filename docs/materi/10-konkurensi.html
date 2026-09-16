@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="materi-10">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,16 +33,22 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Materi</a> / <span aria-current="page">Topik 10</span></nav>
 
 <div class="dua-kolom">
   <aside class="toc">
     <h4>Isi topik</h4>
-    <ol><li><a href="#masalah-yang-harus-dicegah">Masalah yang harus dicegah</a></li><li><a href="#keterserialan-konflik">Keterserialan konflik</a></li><li><a href="#two-phase-locking">Two-Phase Locking</a></li><li><a href="#timestamp-ordering">Timestamp Ordering</a></li><li><a href="#replikasi-memperumit-konkurensi">Replikasi memperumit konkurensi</a></li></ol>
+    <ol><li><a href="#masalah-yang-harus-dicegah">Masalah yang harus dicegah</a></li><li><a href="#keterserialan-konflik">Keterserialan konflik</a></li><li><a href="#two-phase-locking">Two-Phase Locking</a></li><li><a href="#timestamp-ordering">Timestamp Ordering</a></li><li><a href="#replikasi-memperumit-konkurensi">Replikasi memperumit konkurensi</a></li><li><a href="#coba">Coba di terminal</a></li></ol>
   </aside>
   <article>
     <p class="kicker">Topik 10</p>
@@ -46,26 +57,41 @@
     <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami pemrosesan konkuren dan implementasinya dalam pengendalian proses pada basis data terdistribusi.</p></div>
 
 <h2 id="masalah-yang-harus-dicegah">Masalah yang harus dicegah</h2>
-<div class="tabel-bungkus"><table><thead><tr><th>Masalah</th><th>Contoh jadwal</th><th>Akibat</th></tr></thead><tbody><tr><td>Lost update</td><td>r1[x] r2[x] w1[x] w2[x]</td><td>Pembaruan T1 tertimpa T2 dan hilang tanpa jejak</td></tr><tr><td>Dirty read</td><td>w1[x] r2[x] a1</td><td>T2 membaca nilai yang kemudian dibatalkan</td></tr><tr><td>Unrepeatable read</td><td>r1[x] w2[x] c2 r1[x]</td><td>T1 membaca nilai berbeda untuk item yang sama</td></tr><tr><td>Phantom</td><td>σ1[p] i2[p] σ1[p]</td><td>Baris baru muncul di antara dua pembacaan dengan predikat sama</td></tr></tbody></table></div>
+<div class="tabel-bungkus"><table><thead><tr><th>Masalah</th><th>Contoh jadwal</th><th>Akibat</th></tr></thead><tbody><tr><td><abbr class="istilah" tabindex="0" data-g="g-lost-update" data-istilah="Lost update" data-arti="Pembaruan satu transaksi tertimpa transaksi lain sehingga hilang tanpa jejak. Gejala klasik jadwal yang tidak serializable." data-detail="Dicegah dengan penguncian tulis sampai commit (2PL ketat) atau pemeriksaan versi. Tanpa kendali konkurensi, nilai akhir bergantung pada siapa yang menulis terakhir." data-contoh="r1[x] r2[x] w1[x] w2[x]: tulisan T1 tertimpa T2." data-lab="konkurensi" data-lab-judul="Kendali Konkurensi">Lost update</abbr></td><td>r1[x] r2[x] w1[x] w2[x]</td><td>Pembaruan T1 tertimpa T2 dan hilang tanpa jejak</td></tr><tr><td><abbr class="istilah" tabindex="0" data-g="g-dirty-read" data-istilah="Dirty read" data-arti="Membaca nilai yang ditulis transaksi lain yang belum commit. Nilai itu bisa dibatalkan sesudahnya." data-detail="Dicegah dengan tingkat isolasi READ COMMITTED atau lebih tinggi. Oracle tidak pernah mengizinkan dirty read karena pembaca selalu melihat versi yang sudah commit." data-contoh="T2 membaca saldo yang baru ditulis T1, lalu T1 rollback." data-lab="konkurensi" data-lab-judul="Kendali Konkurensi">Dirty read</abbr></td><td>w1[x] r2[x] a1</td><td>T2 membaca nilai yang kemudian dibatalkan</td></tr><tr><td>Unrepeatable read</td><td>r1[x] w2[x] c2 r1[x]</td><td>T1 membaca nilai berbeda untuk item yang sama</td></tr><tr><td>Phantom</td><td>σ1[p] i2[p] σ1[p]</td><td>Baris baru muncul di antara dua pembacaan dengan predikat sama</td></tr></tbody></table></div>
 
 <h2 id="keterserialan-konflik">Keterserialan konflik</h2>
-<p>Sebuah jadwal disebut <i>conflict-serializable</i> bila graf presedensinya asiklik. Sisi Ti → Tj dibuat bila operasi Ti mendahului operasi Tj yang berkonflik — yaitu pada item data yang sama, dari transaksi berbeda, dan minimal salah satunya operasi tulis.</p>
-<div class="catatan info"><p>Lab Konkurensi membangun graf presedensi dari jadwal yang Anda ketik, mencari siklusnya, dan bila asiklik menunjukkan urutan serial yang setara.</p></div>
+<p>Sebuah jadwal disebut <i>conflict-<abbr class="istilah" tabindex="0" data-g="g-serializable" data-istilah="Serializable" data-arti="Sifat jadwal konkuren yang hasilnya setara dengan suatu urutan serial transaksi yang sama." data-detail="Konflik-serializability diuji dengan graf presedensi; 2PL menjaminnya. Serializable adalah tingkat isolasi tertinggi pada standar SQL." data-contoh="Jadwal r1[x] w1[x] r2[x] w2[x] setara dengan T1 lalu T2." data-lab="konkurensi" data-lab-judul="Kendali Konkurensi">serializable</abbr></i> bila graf presedensinya asiklik. Sisi Ti → Tj dibuat bila operasi Ti mendahului operasi Tj yang berkonflik — yaitu pada item data yang sama, dari transaksi berbeda, dan minimal salah satunya operasi tulis.</p>
+<div class="catatan info"><p>Lab Konkurensi membangun <abbr class="istilah" tabindex="0" data-g="g-graf-presedensi" data-istilah="Graf presedensi" data-en="precedence graph" data-arti="Graf berarah dengan simpul transaksi dan sisi Ti → Tj bila operasi Ti mendahului operasi Tj yang berkonflik. Jadwal serializable bila grafnya asiklik." data-detail="Jadwal konflik-serializable jika dan hanya jika graf presedensinya asiklik. Urutan topologis graf memberi urutan serial yang setara." data-contoh="r1[x] w2[x] w1[x] menghasilkan T1→T2 dan T2→T1: siklus, tidak serializable." data-lab="konkurensi" data-lab-judul="Kendali Konkurensi">graf presedensi</abbr> dari jadwal yang Anda ketik, mencari siklusnya, dan bila asiklik menunjukkan urutan serial yang setara.</p></div>
 
 <h2 id="two-phase-locking">Two-Phase Locking</h2>
-<p>Harga 2PL adalah deadlock. Peningkatan kunci S ke X saat transaksi lain juga memegang S menghasilkan deadlock peningkatan yang paling sering terjadi di praktik.</p>
-<div class="tabel-bungkus"><table><thead><tr><th>Varian</th><th>Aturan</th><th>Menjamin</th></tr></thead><tbody><tr><td>2PL dasar</td><td>Setelah melepas satu kunci, transaksi tidak boleh meminta kunci baru</td><td>Serializable, tetapi cascading abort masih mungkin</td></tr><tr><td>2PL ketat (strict)</td><td>Semua kunci tulis dipegang sampai commit/abort</td><td>Serializable + cascadeless</td></tr><tr><td>2PL tegas (rigorous)</td><td>Semua kunci, baca maupun tulis, dipegang sampai commit/abort</td><td>Serializable + strict; urutan commit = urutan serial</td></tr></tbody></table></div>
+<p>Harga 2PL adalah <abbr class="istilah" tabindex="0" data-g="g-deadlock" data-istilah="Deadlock" data-arti="Keadaan saat sekumpulan transaksi saling menunggu sumber daya yang dipegang anggota lain, sehingga tidak satu pun dapat maju." data-detail="Syarat Coffman: mutual exclusion, hold and wait, no preemption, circular wait. Pada sistem terdistribusi siklusnya bisa melintasi situs sehingga tidak terlihat oleh satu situs saja." data-contoh="T1 memegang kunci di S1 dan menunggu S2; T2 memegang kunci di S2 dan menunggu S1." data-lab="deadlock" data-lab-judul="Manajemen Deadlock">deadlock</abbr>. Peningkatan kunci S ke X saat transaksi lain juga memegang S menghasilkan deadlock peningkatan yang paling sering terjadi di praktik.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Varian</th><th>Aturan</th><th>Menjamin</th></tr></thead><tbody><tr><td>2PL dasar</td><td>Setelah melepas satu kunci, transaksi tidak boleh meminta kunci baru</td><td>Serializable, tetapi <abbr class="istilah" tabindex="0" data-g="g-cascading-abort" data-istilah="Cascading abort" data-arti="Pembatalan berantai: satu transaksi dibatalkan, dan semua transaksi yang membaca datanya ikut harus dibatalkan." data-detail="Terjadi pada jadwal yang tidak cascadeless: transaksi yang sudah membaca nilai kotor ikut dibatalkan. Biayanya bisa merambat ke banyak transaksi." data-contoh="T1 menulis x, T2 membaca x, T1 abort → T2 wajib abort." data-lab="konkurensi" data-lab-judul="Kendali Konkurensi">cascading abort</abbr> masih mungkin</td></tr><tr><td>2PL ketat (<abbr class="istilah" tabindex="0" data-g="g-strict" data-istilah="Strict" data-arti="Sifat jadwal yang tidak membaca maupun menimpa data yang penulisnya belum commit. Lebih ketat dari cascadeless." data-detail="Dicapai 2PL ketat: kunci tulis dipegang sampai commit atau abort. Jadwal strict memungkinkan pemulihan sederhana dengan before-image." data-contoh="T2 baru boleh membaca atau menulis x setelah T1 commit." data-lab="konkurensi" data-lab-judul="Kendali Konkurensi">strict</abbr>)</td><td>Semua kunci tulis dipegang sampai commit/abort</td><td>Serializable + <abbr class="istilah" tabindex="0" data-g="g-cascadeless" data-istilah="Cascadeless" data-arti="Sifat jadwal yang tidak pernah membaca data dari transaksi yang belum commit, sehingga pembatalan satu transaksi tidak merembet ke transaksi lain." data-detail="Dicapai dengan hanya membaca data yang sudah di-commit. Jadwal cascadeless otomatis recoverable, tetapi belum tentu strict." data-contoh="T2 menunggu T1 commit sebelum membaca x." data-lab="konkurensi" data-lab-judul="Kendali Konkurensi">cascadeless</abbr></td></tr><tr><td>2PL tegas (rigorous)</td><td>Semua kunci, baca maupun tulis, dipegang sampai commit/abort</td><td>Serializable + strict; urutan commit = urutan serial</td></tr></tbody></table></div>
 
 <h2 id="timestamp-ordering">Timestamp Ordering</h2>
-<p>Setiap transaksi diberi cap waktu saat mulai. Operasi yang melanggar urutan cap waktu ditolak dan transaksinya di-rollback — tidak ada penantian, sehingga tidak ada deadlock.</p>
+<p>Setiap transaksi diberi <abbr class="istilah" tabindex="0" data-g="g-cap" data-istilah="CAP" data-arti="Teorema yang menyatakan sistem terdistribusi hanya dapat menjamin dua dari tiga sifat: Consistency, Availability, dan Partition tolerance." data-detail="Konsistensi (semua node melihat data yang sama), ketersediaan (setiap permintaan dijawab), toleransi partisi (tetap berjalan saat jaringan terbelah). Saat partisi terjadi, pilihannya tinggal C atau A." data-contoh="Replika sinkron yang menolak tulisan saat salah satu situs terputus memilih CP." data-lab="ketersediaan" data-lab-judul="Ketersediaan &amp; CAP">cap</abbr> waktu saat mulai. Operasi yang melanggar urutan cap waktu ditolak dan transaksinya di-rollback — tidak ada penantian, sehingga tidak ada deadlock.</p>
 <div class="tabel-bungkus"><table><thead><tr><th>Operasi</th><th>Syarat</th><th>Bila dilanggar</th></tr></thead><tbody><tr><td>read(x) oleh T</td><td>TS(T) ≥ WTS(x)</td><td>Rollback T — hendak membaca nilai yang sudah ditimpa transaksi lebih muda</td></tr><tr><td>write(x) oleh T</td><td>TS(T) ≥ RTS(x)</td><td>Rollback T — nilainya sudah dibaca transaksi lebih muda</td></tr><tr><td>write(x) oleh T</td><td>TS(T) ≥ WTS(x)</td><td>Abaikan tulisan (aturan tulis Thomas) — tulisan usang aman dibuang</td></tr></tbody></table></div>
-<div class="catatan info"><p>Pada sistem terdistribusi, cap waktu harus unik lintas situs. Solusinya cap waktu majemuk &lt;jam lokal, id situs&gt;, sehingga dua situs tidak pernah menghasilkan cap waktu yang sama.</p></div>
+<div class="catatan info"><p>Pada sistem terdistribusi, cap waktu harus unik lintas <abbr class="istilah" tabindex="0" data-g="g-situs" data-istilah="Situs" data-en="site, node" data-arti="Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data." data-detail="Situs punya DBMS lokal, penyimpanan, dan otonomi. Komunikasi antarsitus lewat jaringan menjadi komponen biaya utama pemrosesan kueri terdistribusi." data-contoh="Situs Bandung menyimpan fragmen pasien@bandung dan dokter@bandung." data-lab="sql" data-lab-judul="Terminal SQL Live">situs</abbr>. Solusinya cap waktu majemuk &lt;jam lokal, id situs&gt;, sehingga dua situs tidak pernah menghasilkan cap waktu yang sama.</p></div>
 
 <h2 id="replikasi-memperumit-konkurensi">Replikasi memperumit konkurensi</h2>
 <p>Jika salinan data yang direplikasi diperbarui, perubahan itu harus segera disebarkan ke semua salinan. Bila salah satu situs pemegang salinan tidak terjangkau, transaksi tertunda sampai situs itu pulih. Semakin banyak salinan, semakin besar kemungkinan transaksi konkuren gagal.</p>
 <ul><li><b>Sinkron (eager)</b> — semua salinan diperbarui dalam satu transaksi. Konsisten, tetapi rapuh dan lambat.</li><li><b>Asinkron (lazy)</b> — salinan diperbarui setelah transaksi asli commit. Cepat, tetapi ada jendela ketidakkonsistenan mulai dari beberapa detik sampai beberapa jam.</li></ul>
 
-
+<h2 id="coba">Coba di terminal</h2>
+<p>Kueri di bawah memperagakan konsep topik ini pada data sungguhan. Tekan <b>▶ Jalankan</b> untuk membukanya di Terminal SQL, lalu ubah sesuka hati — sesi terminal adalah salinan pribadi di peramban Anda.</p>
+<h3>Pembaruan hilang dicegah oleh kendala</h3>
+<p>Dua pembaruan beruntun pada nilai yang sama: tanpa penguncian, yang pertama bisa hilang. Di sini CHECK juga mencegah nilai di luar 0–100. <span class="lencana netral">akademik</span> <span class="lencana warn">galat disengaja: ORA-02290</span></p>
+<pre data-sql="UPDATE nilai SET nilai = nilai + 10 WHERE nim = '11010013' AND kode_kul = 'IT0401';
+SELECT nilai FROM nilai WHERE nim = '11010013' AND kode_kul = 'IT0401';" data-db="akademik"><code><span class="sql-k">UPDATE</span> nilai <span class="sql-k">SET</span> nilai = nilai + <span class="sql-n">10</span> <span class="sql-k">WHERE</span> nim = <span class="sql-s">'<span class="sql-n">11010013</span>'</span> <span class="sql-k">AND</span> kode_kul = <span class="sql-s">'IT0401'</span>;
+<span class="sql-k">SELECT</span> nilai <span class="sql-k">FROM</span> nilai <span class="sql-k">WHERE</span> nim = <span class="sql-s">'<span class="sql-n">11010013</span>'</span> <span class="sql-k">AND</span> kode_kul = <span class="sql-s">'IT0401'</span>;</code></pre>
+<h3>Isolasi: perubahan belum COMMIT</h3>
+<p>Sesi ini melihat perubahannya sendiri; sesi lain baru melihatnya setelah COMMIT. <span class="lencana netral">rumahsakit</span></p>
+<pre data-sql="UPDATE pasien SET penyakit = 'Sembuh' WHERE id_pasien = 2;
+SELECT penyakit FROM pasien WHERE id_pasien = 2;
+\status
+ROLLBACK;" data-db="rumahsakit"><code><span class="sql-k">UPDATE</span> pasien <span class="sql-k">SET</span> penyakit = <span class="sql-s">'Sembuh'</span> <span class="sql-k">WHERE</span> id_pasien = <span class="sql-n">2</span>;
+<span class="sql-k">SELECT</span> penyakit <span class="sql-k">FROM</span> pasien <span class="sql-k">WHERE</span> id_pasien = <span class="sql-n">2</span>;
+\status
+<span class="sql-k">ROLLBACK</span>;</code></pre>
 
 <h2 id="lab">Jalankan sendiri</h2>
 <div class="grid dua">
@@ -82,12 +108,14 @@
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
+<script type="module" src="../site.js?v=849b085103"></script>
 
 </body>
 </html>

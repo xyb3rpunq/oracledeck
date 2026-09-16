@@ -15,9 +15,14 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../styles.css?v=8e172babd6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css?v=849b085103">
+<script src="../tema.js?v=849b085103"></script>
 </head>
-<body>
+<body data-halaman="lab-fragmentasi">
+<a class="lewati" href="#isi">Lewati ke isi</a>
 <header class="site">
   <div class="wrap">
     <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
@@ -28,15 +33,21 @@
       <a href="../oracle.html">Oracle</a>
       <a href="../audit.html">Audit</a>
       <a href="../glosarium.html">Glosarium</a>
+      <a href="../kualitas.html">Kualitas</a>
       <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
     </nav>
+    <div class="alat-header">
+      <button type="button" data-cari-buka aria-label="Cari di situs (Ctrl+K)">Cari<kbd>Ctrl K</kbd></button>
+      <button type="button" data-tema-toggle aria-label="Ganti tema">☀</button>
+    </div>
   </div>
 </header>
-<main><div class="wrap">
+<main id="isi" tabindex="-1"><div class="wrap">
+<nav class="remah" aria-label="Remah roti"><a href="../index.html">Beranda</a> / <a href="index.html">Laboratorium</a> / <span aria-current="page">Lab 04</span></nav>
 
 <p class="kicker">Lab 04</p>
 <h1>Perancang Fragmentasi</h1>
-<p class="lede">Horizontal, vertikal, turunan, campuran — dengan audit kelengkapan, rekonstruksi, dan kedisjoinan.</p>
+<p class="lede">Horizontal, vertikal, turunan, campuran — dengan audit <abbr class="istilah" tabindex="0" data-g="g-kelengkapan" data-istilah="Kelengkapan" data-en="completeness" data-arti="Aturan kebenaran fragmentasi: setiap item data pada relasi asal harus ada di minimal satu fragmen." data-detail="Dijamin bila predikat minterm menutup seluruh domain; partisi DEFAULT pada Oracle adalah jaring pengaman untuk nilai yang tidak terduga." data-contoh="Pasien kota Depok hilang bila fragmen hanya untuk Jakarta, Bandung, dan Surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">kelengkapan</abbr>, <abbr class="istilah" tabindex="0" data-g="g-rekonstruksi" data-istilah="Rekonstruksi" data-en="reconstruction" data-arti="Aturan kebenaran fragmentasi: harus ada operator relasional yang mengembalikan relasi asal dari fragmen-fragmennya." data-detail="Operatornya UNION untuk horizontal dan JOIN untuk vertikal. Tanpa rekonstruksi, relasi global tidak bisa dijawab dari fragmen." data-contoh="PASIEN = pasien@jakarta ∪ pasien@bandung ∪ pasien@surabaya." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">rekonstruksi</abbr>, dan <abbr class="istilah" tabindex="0" data-g="g-kedisjoinan" data-istilah="Kedisjoinan" data-en="disjointness" data-arti="Aturan kebenaran fragmentasi: fragmen horizontal tidak boleh tumpang tindih, dan pada fragmen vertikal hanya atribut kunci yang boleh berulang." data-detail="Untuk fragmen vertikal aturan ini dilonggarkan: kunci primer boleh (dan harus) muncul di setiap fragmen." data-contoh="SELECT id FROM pasien@jakarta INTERSECT SELECT id FROM pasien@bandung harus kosong." data-lab="fragmentasi" data-lab-judul="Perancang Fragmentasi">kedisjoinan</abbr>.</p>
 <p class="kecil">Topik terkait: <a href="../materi/04-perancangan.html">4. Perancangan Basis Data Terdistribusi</a> · <a href="../materi/05-fragmentasi-alokasi-replikasi.html">5. Basis Data Relasional Terdistribusi</a></p>
 
 <div id="lab" data-lab="fragmentasi">
@@ -44,17 +55,19 @@
 </div>
 
 <div class="nav-bawah">
-  <div><a href="sql.html">&larr; Mesin SQL</a></div>
+  <div><a href="sql.html">&larr; Terminal SQL Live</a></div>
   <div><a href="alokasi.html">Alokasi & Replikasi &rarr;</a></div>
 </div>
 
 </div></main>
+<button type="button" class="tombol-terminal" data-terminal-buka aria-label="Buka Terminal SQL (Ctrl+`)">&gt;_ Terminal SQL</button>
 <footer class="site"><div class="wrap">
   <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
   <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
-<script type="module" src="../lab/js/fragmentasi.js?v=8e172babd6"></script>
+<script type="module" src="../site.js?v=849b085103"></script>
+<script type="module" src="../lab/js/fragmentasi.js?v=849b085103"></script>
 </body>
 </html>

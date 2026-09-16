@@ -360,6 +360,16 @@ export function treeToText(node, depth = 0) {
     case 'join': head = `⋈ ${node.on || ''}`; break;
     case 'semijoin': head = `⋉ ${node.on || ''}`; break;
     case 'union': head = '∪'; break;
+    case 'union all': head = '∪ ALL'; break;
+    case 'intersect': head = '∩'; break;
+    case 'minus': head = '−'; break;
+    case 'product': head = '×'; break;
+    case 'group': head = `γ ${node.detail || ''}`; break;
+    case 'distinct': head = 'δ'; break;
+    case 'sort': head = `τ ${node.detail || ''}`; break;
+    case 'limit': head = `batasi ${node.detail || ''}`; break;
+    case 'with': head = `WITH ${node.detail || ''}`; break;
+    case 'cte': head = `${node.name} :=`; break;
     default: head = node.op;
   }
   let s = `${pad}${head}\n`;

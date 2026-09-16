@@ -1,7 +1,7 @@
 // Lab 14 — Generator DDL Oracle dari rancangan terdistribusi.
-import { rumahsakit, RS_KEYS, dreamhome, DEFAULT_SITES } from '../../engine/data/datasets.js?v=8e172babd6';
-import * as O from '../../engine/oracle/emit.js?v=8e172babd6';
-import * as U from './ui.js?v=8e172babd6';
+import { rumahsakit, RS_KEYS, dreamhome, DEFAULT_SITES } from '../../engine/data/datasets.js?v=849b085103';
+import * as O from '../../engine/oracle/emit.js?v=849b085103';
+import * as U from './ui.js?v=849b085103';
 
 const db = rumahsakit();
 const { STAFF } = dreamhome();
