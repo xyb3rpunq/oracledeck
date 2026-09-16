@@ -1,6 +1,6 @@
 // Lab 10 — Kendali Konkurensi: keterserialan, 2PL, timestamp ordering.
-import * as C from '../../engine/ddb/concurrency.js?v=76a896ebe2';
-import * as U from './ui.js?v=76a896ebe2';
+import * as C from '../../engine/ddb/concurrency.js?v=8e172babd6';
+import * as U from './ui.js?v=8e172babd6';
 
 const CONTOH = [
   { nama: 'Jadwal serial', jadwal: 'r1[x] w1[x] c1 r2[x] w2[x] c2', cerita: 'Dua transaksi berjalan bergantian tanpa tumpang tindih. Selalu serializable, selalu strict.' },

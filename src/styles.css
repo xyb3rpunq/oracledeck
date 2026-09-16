@@ -101,6 +101,7 @@ strong { color: var(--ink); font-weight: 600; }
   padding: 18px;
 }
 .kartu + .kartu { margin-top: 12px; }
+.grid > .kartu + .kartu { margin-top: 0; } /* di dalam grid, jarak diatur gap — bukan margin */
 .kartu h3:first-child, .kartu h2:first-child { margin-top: 0; }
 
 .grid { display: grid; gap: 12px; }

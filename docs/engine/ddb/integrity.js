@@ -7,7 +7,7 @@
 // Tiap desa bisa lulus UNIQUE(nik) di basis datanya sendiri, sementara NIK yang
 // sama tercatat di dua desa sekaligus. Tidak ada satu DBMS pun yang melihatnya.
 
-import { Relation, canon } from '../core/relation.js?v=76a896ebe2';
+import { Relation, canon } from '../core/relation.js?v=8e172babd6';
 
 /** Apakah kunci unik di dalam SATU fragmen? (yang ditegakkan DBMS lokal) */
 export function localUniqueCheck(fragmen, kunci) {

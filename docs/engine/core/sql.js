@@ -6,8 +6,8 @@
 //   COUNT/SUM/AVG/MIN/MAX, UNION [ALL], subquery pada IN dan pada FROM.
 // Nol dependensi.
 
-import { Relation } from './relation.js?v=76a896ebe2';
-import * as A from './algebra.js?v=76a896ebe2';
+import { Relation } from './relation.js?v=8e172babd6';
+import * as A from './algebra.js?v=8e172babd6';
 
 const KEYWORDS = new Set([
   'SELECT', 'DISTINCT', 'FROM', 'WHERE', 'GROUP', 'BY', 'HAVING', 'ORDER', 'ASC', 'DESC',

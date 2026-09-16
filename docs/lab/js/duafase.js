@@ -1,6 +1,6 @@
 // Lab 12 — Simulator 2PC & 3PC dengan injeksi kegagalan.
-import * as TP from '../../engine/ddb/twophase.js?v=76a896ebe2';
-import * as U from './ui.js?v=76a896ebe2';
+import * as TP from '../../engine/ddb/twophase.js?v=8e172babd6';
+import * as U from './ui.js?v=8e172babd6';
 
 const state = {
   peserta: [

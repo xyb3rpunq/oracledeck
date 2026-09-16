@@ -6,8 +6,8 @@
 //   3. Kedisjoinan (disjointness)   — horizontal: fragmen tidak tumpang tindih
 //                                     vertikal : hanya atribut kunci yang berulang
 
-import { Relation } from '../core/relation.js?v=76a896ebe2';
-import * as A from '../core/algebra.js?v=76a896ebe2';
+import { Relation } from '../core/relation.js?v=8e172babd6';
+import * as A from '../core/algebra.js?v=8e172babd6';
 
 /** @typedef {{nama:string, tipe:string, relasi:Relation, definisi:string, situs?:string}} Fragment */
 

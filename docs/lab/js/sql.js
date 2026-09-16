@@ -1,7 +1,7 @@
 // Lab 03 — Mesin SQL. Menjalankan SQL sungguhan atas data praktikum.
-import { akademik, rumahsakit, dreamhome } from '../../engine/data/datasets.js?v=76a896ebe2';
-import { execute, planToText } from '../../engine/core/sql.js?v=76a896ebe2';
-import * as U from './ui.js?v=76a896ebe2';
+import { akademik, rumahsakit, dreamhome } from '../../engine/data/datasets.js?v=8e172babd6';
+import { execute, planToText } from '../../engine/core/sql.js?v=8e172babd6';
+import * as U from './ui.js?v=8e172babd6';
 
 const DB = { ...akademik(), ...rumahsakit(), ...dreamhome() };
 

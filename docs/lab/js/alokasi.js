@@ -1,7 +1,7 @@
 // Lab 05 — Alokasi & Replikasi.
-import { DEFAULT_SITES, DEFAULT_NETWORK } from '../../engine/data/datasets.js?v=76a896ebe2';
-import * as AL from '../../engine/ddb/allocate.js?v=76a896ebe2';
-import * as U from './ui.js?v=76a896ebe2';
+import { DEFAULT_SITES, DEFAULT_NETWORK } from '../../engine/data/datasets.js?v=8e172babd6';
+import * as AL from '../../engine/ddb/allocate.js?v=8e172babd6';
+import * as U from './ui.js?v=8e172babd6';
 
 const SITUS = DEFAULT_SITES.map((s) => ({ ...s, keandalan: 0.97 }));
 

@@ -1,6 +1,6 @@
 // Lab 13 — Ketersediaan, kuorum, CAP, dan PACELC.
-import * as AV from '../../engine/ddb/availability.js?v=76a896ebe2';
-import * as U from './ui.js?v=76a896ebe2';
+import * as AV from '../../engine/ddb/availability.js?v=8e172babd6';
+import * as U from './ui.js?v=8e172babd6';
 
 const state = {
   mtbf: 720, mttr: 4, replika: 2, fragmen: 4,

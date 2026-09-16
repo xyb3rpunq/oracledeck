@@ -1,6 +1,6 @@
 // Lab 02 — Normalisasi 1NF sampai BCNF.
-import * as F from '../../engine/core/fd.js?v=76a896ebe2';
-import * as U from './ui.js?v=76a896ebe2';
+import * as F from '../../engine/core/fd.js?v=8e172babd6';
+import * as U from './ui.js?v=8e172babd6';
 
 const CONTOH = [
   {

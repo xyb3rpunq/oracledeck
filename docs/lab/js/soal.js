@@ -1,8 +1,8 @@
 // Lab 15 — Bank Soal Praktikum, dinilai otomatis.
-import { bankSoalDb } from '../../engine/data/datasets.js?v=76a896ebe2';
-import { gradeQuery } from '../../engine/core/grader.js?v=76a896ebe2';
-import { BANK_SOAL, JUDUL_PRAKTIKUM } from '../../content/soal.js?v=76a896ebe2';
-import * as U from './ui.js?v=76a896ebe2';
+import { bankSoalDb } from '../../engine/data/datasets.js?v=8e172babd6';
+import { gradeQuery } from '../../engine/core/grader.js?v=8e172babd6';
+import { BANK_SOAL, JUDUL_PRAKTIKUM } from '../../content/soal.js?v=8e172babd6';
+import * as U from './ui.js?v=8e172babd6';
 
 const DB = bankSoalDb();
 const KUNCI_SIMPAN = 'oracledeck-bank-soal-v1';
