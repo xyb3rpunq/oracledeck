@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09. Manajemen Transaksi Terdistribusi · ORACLEDECK</title>
+<meta name="description" content="ACID lintas situs, manajer transaksi, scheduler, agent, dan model koordinasi.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/09-transaksi.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="09. Manajemen Transaksi Terdistribusi · ORACLEDECK">
+<meta property="og:description" content="ACID lintas situs, manajer transaksi, scheduler, agent, dan model koordinasi.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/09-transaksi.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#komponen-manajemen-transaksi">Komponen manajemen transaksi</a></li><li><a href="#contoh-transaksi-terdistribusi-dari-modul-6">Contoh transaksi terdistribusi dari Modul 6</a></li><li><a href="#acid-pada-lingkungan-terdistribusi">ACID pada lingkungan terdistribusi</a></li><li><a href="#model-koordinasi">Model koordinasi</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 09</p>
+    <h1>Manajemen Transaksi Terdistribusi</h1>
+    <p class="lede">ACID lintas situs, manajer transaksi, scheduler, agent, dan model koordinasi.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Mengetahui lingkup transaksi terdistribusi dan kebutuhan pengelolaannya.</p></div>
+
+<h2 id="komponen-manajemen-transaksi">Komponen manajemen transaksi</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Komponen</th><th>Tugas</th></tr></thead><tbody><tr><td>Transaction Manager</td><td>Mengoordinasi transaksi yang berasal dari situsnya; memecah transaksi global menjadi subtransaksi</td></tr><tr><td>Scheduler</td><td>Menentukan urutan eksekusi operasi agar tetap serializable</td></tr><tr><td>Recovery Manager</td><td>Mengembalikan basis data ke keadaan konsisten setelah kegagalan</td></tr><tr><td>Buffer Manager</td><td>Mengatur perpindahan data antara memori utama dan penyimpanan</td></tr><tr><td>Agent</td><td>Wakil subtransaksi di situs tempat data berada</td></tr></tbody></table></div>
+
+<h2 id="contoh-transaksi-terdistribusi-dari-modul-6">Contoh transaksi terdistribusi dari Modul 6</h2>
+<p>Transaksi T mencetak nama seluruh staf memakai skema fragmentasi S1, S2, S22, dan S23. Subtransaksi TS3, TS5, dan TS7 mewakili agent di lokasi 3, 5, dan 7.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Waktu</th><th>TS3</th><th>TS5</th><th>TS7</th></tr></thead><tbody><tr><td>t1</td><td>Begin transaction</td><td>Begin transaction</td><td>Begin transaction</td></tr><tr><td>t2</td><td>Read(fname, lname)</td><td>Read(fname, lname)</td><td>Read(fname, lname)</td></tr><tr><td>t3</td><td>Print(fname, lname)</td><td>Print(fname, lname)</td><td>Print(fname, lname)</td></tr><tr><td>t4</td><td>End_transaction</td><td>End_transaction</td><td>End_transaction</td></tr></tbody></table></div>
+
+<h2 id="acid-pada-lingkungan-terdistribusi">ACID pada lingkungan terdistribusi</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Sifat</th><th>Pada satu situs</th><th>Yang berubah pada banyak situs</th></tr></thead><tbody><tr><td>Atomicity</td><td>Log + rollback lokal</td><td>Perlu protokol komit atomik (2PC/3PC) agar semua situs sepakat</td></tr><tr><td>Consistency</td><td>Constraint diperiksa saat commit</td><td>Constraint lintas situs mahal — kerap dilonggarkan</td></tr><tr><td>Isolation</td><td>Locking atau timestamp lokal</td><td>Perlu penjadwalan global; deadlock bisa lintas situs</td></tr><tr><td>Durability</td><td>Log ditulis ke disk sebelum commit</td><td>Setiap situs menulis lognya sendiri sebelum menjawab PREPARE</td></tr></tbody></table></div>
+
+<h2 id="model-koordinasi">Model koordinasi</h2>
+<ul><li><b>Terpusat</b> — satu koordinator per transaksi, biasanya situs asal. Sederhana, tetapi koordinator menjadi titik kritis.</li><li><b>Hierarkis</b> — koordinator memiliki subkoordinator; cocok untuk banyak situs.</li><li><b>Terdesentralisasi</b> — setiap peserta berkomunikasi dengan semua peserta lain. Tidak ada titik kegagalan tunggal, tetapi jumlah pesan membengkak menjadi O(n²).</li></ul>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/duafase.html"><div class="no">LAB 12</div><h3>Simulator 2PC & 3PC</h3><p>Injeksi kegagalan koordinator, peserta, dan partisi jaringan — lalu lihat siapa yang terblokir.</p></a>
+  <a class="tile" href="../lab/konkurensi.html"><div class="no">LAB 10</div><h3>Kendali Konkurensi</h3><p>Graf presedensi, 2PL, timestamp ordering, dan sifat pemulihan sebuah jadwal.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 6 bagian Transparansi Transaksi; Modul 1 (RPS pekan 9)</p>
+    <div class="nav-bawah">
+      <div><a href="08-prinsip.html">&larr; Prinsip Basis Data Terdistribusi</a></div>
+      <div><a href="10-konkurensi.html">Pemrosesan Konkuren dan Kendali &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

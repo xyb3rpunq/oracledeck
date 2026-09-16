@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08. Prinsip Basis Data Terdistribusi · ORACLEDECK</title>
+<meta name="description" content="Dua belas aturan Date, otonomi sistem, tidak bergantung situs pusat, dan operasi berkelanjutan.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/08-prinsip.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="08. Prinsip Basis Data Terdistribusi · ORACLEDECK">
+<meta property="og:description" content="Dua belas aturan Date, otonomi sistem, tidak bergantung situs pusat, dan operasi berkelanjutan.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/08-prinsip.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#aturan-dasar">Aturan dasar</a></li><li><a href="#mengapa-aturan-ke-2-sering-dilanggar">Mengapa aturan ke-2 sering dilanggar</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 08</p>
+    <h1>Prinsip Basis Data Terdistribusi</h1>
+    <p class="lede">Dua belas aturan Date, otonomi sistem, tidak bergantung situs pusat, dan operasi berkelanjutan.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami prinsip-prinsip dasar basis data terdistribusi.</p></div>
+
+<h2 id="aturan-dasar">Aturan dasar</h2>
+<p>Satu aturan mendasari semuanya: <b>bagi pengguna, sistem terdistribusi harus terlihat persis seperti sistem yang tidak terdistribusi.</b> Dua belas aturan berikut adalah penjabarannya.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>#</th><th>Prinsip</th><th>Arti praktis</th></tr></thead><tbody><tr><td>1</td><td>Otonomi lokal</td><td>Situs mengelola datanya sendiri; tidak ada operasi lokal yang bergantung situs lain</td></tr><tr><td>2</td><td>Tidak bergantung situs pusat</td><td>Tidak ada satu situs yang, bila mati, mematikan seluruh sistem</td></tr><tr><td>3</td><td>Operasi berkelanjutan</td><td>Menambah situs atau mengubah skema tidak memerlukan penghentian sistem</td></tr><tr><td>4</td><td>Independensi lokasi</td><td>Pengguna tidak perlu tahu di mana data disimpan</td></tr><tr><td>5</td><td>Independensi fragmentasi</td><td>Pengguna tidak perlu tahu data dipecah</td></tr><tr><td>6</td><td>Independensi replikasi</td><td>Pengguna tidak perlu tahu ada berapa salinan</td></tr><tr><td>7</td><td>Pemrosesan kueri terdistribusi</td><td>Satu kueri boleh menyentuh banyak situs dan tetap dioptimasi</td></tr><tr><td>8</td><td>Manajemen transaksi terdistribusi</td><td>Atomicity dan durability tetap berlaku lintas situs</td></tr><tr><td>9</td><td>Independensi perangkat keras</td><td>Bebas arsitektur mesin</td></tr><tr><td>10</td><td>Independensi sistem operasi</td><td>Bebas OS</td></tr><tr><td>11</td><td>Independensi jaringan</td><td>Bebas topologi dan protokol jaringan</td></tr><tr><td>12</td><td>Independensi DBMS</td><td>Bebas produk DBMS — inilah yang paling jarang tercapai</td></tr></tbody></table></div>
+
+<h2 id="mengapa-aturan-ke-2-sering-dilanggar">Mengapa aturan ke-2 sering dilanggar</h2>
+<p>Server nama terpusat melanggar aturan 1, 2, dan 3 sekaligus: otonomi lokal berkurang, ada titik kegagalan tunggal, dan bila situs pusat gagal situs lain tidak dapat membuat objek baru. Itulah sebabnya pendekatan awalan situs dan alias lebih disukai walau lebih rumit.</p>
+<div class="catatan bahaya"><p>Koordinator 2PC juga merupakan titik kegagalan tunggal — bukan untuk seluruh sistem, tetapi untuk setiap transaksi global yang sedang berjalan. Lab 2PC/3PC menunjukkan persis kapan hal itu berubah menjadi blokir.</p></div>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/ketersediaan.html"><div class="no">LAB 13</div><h3>Ketersediaan & CAP</h3><p>MTBF/MTTR, ketersediaan replika, kuorum R+W>N, CAP dan PACELC, RTO dan RPO.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 1 (RPS pekan 8); C.J. Date, dua belas aturan basis data terdistribusi</p>
+    <div class="nav-bawah">
+      <div><a href="07-independensi.html">&larr; Independensi Basis Data Terdistribusi</a></div>
+      <div><a href="09-transaksi.html">Manajemen Transaksi Terdistribusi &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13. Pemulihan Sistem Basis Data Terdistribusi · ORACLEDECK</title>
+<meta name="description" content="Komitmen tiga fase, partisi jaringan, kuorum, dan CAP.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/13-pemulihan.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="13. Pemulihan Sistem Basis Data Terdistribusi · ORACLEDECK">
+<meta property="og:description" content="Komitmen tiga fase, partisi jaringan, kuorum, dan CAP.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/13-pemulihan.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#mengapa-3pc-ada">Mengapa 3PC ada</a></li><li><a href="#aturan-terminasi-3pc">Aturan terminasi 3PC</a></li><li><a href="#partisi-jaringan">Partisi jaringan</a></li><li><a href="#kuorum">Kuorum</a></li><li><a href="#rto-dan-rpo">RTO dan RPO</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 13</p>
+    <h1>Pemulihan Sistem Basis Data Terdistribusi</h1>
+    <p class="lede">Komitmen tiga fase, partisi jaringan, kuorum, dan CAP.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami teknik pemulihan kegagalan pemrosesan data terdistribusi.</p></div>
+
+<h2 id="mengapa-3pc-ada">Mengapa 3PC ada</h2>
+<p>Kelemahan 2PC bukan kelalaian implementasi, melainkan sifat protokolnya: keadaan READY bertetangga langsung dengan COMMIT maupun ABORT, sehingga peserta di keadaan itu tidak punya dasar untuk memilih. 3PC menyisipkan satu keadaan antara — PRE-COMMIT — yang hanya bertetangga dengan COMMIT.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Fase</th><th>Koordinator</th><th>Peserta</th></tr></thead><tbody><tr><td>1 — Voting</td><td>Kirim PREPARE</td><td>Balas VOTE-COMMIT / VOTE-ABORT, masuk READY</td></tr><tr><td>2 — Pre-commit</td><td>Kirim PRE-COMMIT bila semua setuju</td><td>Masuk PRE-COMMIT, balas ACK — kini tahu keputusan global pasti COMMIT</td></tr><tr><td>3 — Commit</td><td>Kirim GLOBAL-COMMIT</td><td>Commit dan balas ACK</td></tr></tbody></table></div>
+
+<h2 id="aturan-terminasi-3pc">Aturan terminasi 3PC</h2>
+<ul><li>Ada peserta di keadaan COMMIT → semua commit</li><li>Ada peserta di keadaan ABORT → semua abort</li><li>Ada peserta di keadaan PRE-COMMIT → semua commit, karena PRE-COMMIT hanya dikirim setelah semua suara masuk</li><li>Tidak ada satu pun di PRE-COMMIT → semua abort, karena berarti keputusan commit belum pernah dibuat</li></ul>
+<div class="catatan baik"><p>3PC menambah satu putaran pesan sehingga lebih lambat pada jalur normal. Imbalannya: tidak ada keadaan yang bertetangga dengan COMMIT dan ABORT sekaligus, sehingga peserta selalu bisa memutuskan sendiri.</p></div>
+
+<h2 id="partisi-jaringan">Partisi jaringan</h2>
+<p>Jaringan terbelah menjadi dua kelompok yang saling tak terlihat. Tidak ada protokol yang dapat menjamin konsistensi <i>sekaligus</i> ketersediaan di kedua sisi — inilah isi teorema CAP.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Strategi</th><th>Yang dikorbankan</th><th>Contoh sistem</th></tr></thead><tbody><tr><td>CP — hanya sisi mayoritas melayani tulis</td><td>Ketersediaan di sisi minoritas</td><td>Oracle RAC dengan voting disk, etcd, ZooKeeper</td></tr><tr><td>AP — kedua sisi tetap melayani</td><td>Konsistensi (diselesaikan belakangan)</td><td>Cassandra, DynamoDB, Oracle GoldenGate asinkron</td></tr><tr><td>CA — asumsi partisi tidak terjadi</td><td>Toleransi partisi, yang tidak boleh dikorbankan</td><td>Basis data satu mesin</td></tr></tbody></table></div>
+<p>PACELC melengkapi CAP: <b>kalau ada Partisi</b> pilih A atau C; <b>Else</b> (jaringan sehat) pilih L (latensi rendah) atau C (konsistensi). Pertukaran tetap ada bahkan ketika tidak ada kegagalan sama sekali.</p>
+
+<h2 id="kuorum">Kuorum</h2>
+<p>Dengan N salinan, kuorum baca R dan kuorum tulis W, konsistensi kuat dijamin bila <b>R + W &gt; N</b> — himpunan baca dan himpunan tulis pasti beririsan sehingga pembaca selalu melihat tulisan terakhir. Bila W &gt; N/2, urutan tulis juga terjamin.</p>
+
+<h2 id="rto-dan-rpo">RTO dan RPO</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Strategi replikasi</th><th>RPO (data yang mungkin hilang)</th><th>Harga</th></tr></thead><tbody><tr><td>Sinkron</td><td>0 — tidak ada transaksi hilang</td><td>Setiap commit menunggu situs jauh; latensi naik</td></tr><tr><td>Asinkron</td><td>Sebesar jeda replikasi (detik sampai menit)</td><td>Commit lokal tetap cepat</td></tr><tr><td>Backup berkala</td><td>Sebesar interval backup (jam)</td><td>Paling murah, paling banyak kehilangan</td></tr></tbody></table></div>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/duafase.html"><div class="no">LAB 12</div><h3>Simulator 2PC & 3PC</h3><p>Injeksi kegagalan koordinator, peserta, dan partisi jaringan — lalu lihat siapa yang terblokir.</p></a>
+  <a class="tile" href="../lab/ketersediaan.html"><div class="no">LAB 13</div><h3>Ketersediaan & CAP</h3><p>MTBF/MTTR, ketersediaan replika, kuorum R+W>N, CAP dan PACELC, RTO dan RPO.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 1 (RPS pekan 13)</p>
+    <div class="nav-bawah">
+      <div><a href="12-kegagalan.html">&larr; Kegagalan pada Sistem Basis Data Terdistribusi</a></div>
+      <div><a href="14-query-optimizer.html">Query Optimizer dan DDBMS &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

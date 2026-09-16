@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>14. Query Optimizer dan DDBMS · ORACLEDECK</title>
+<meta name="description" content="Dekomposisi kueri, lokalisasi data, join terdistribusi, dan optimasi global.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/14-query-optimizer.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="14. Query Optimizer dan DDBMS · ORACLEDECK">
+<meta property="og:description" content="Dekomposisi kueri, lokalisasi data, join terdistribusi, dan optimasi global.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/14-query-optimizer.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#empat-lapisan-pemrosesan-kueri">Empat lapisan pemrosesan kueri</a></li><li><a href="#empat-langkah-dekomposisi-kueri">Empat langkah dekomposisi kueri</a></li><li><a href="#lokalisasi-data-dan-reduksi">Lokalisasi data dan reduksi</a></li><li><a href="#strategi-join-terdistribusi">Strategi join terdistribusi</a></li><li><a href="#optimasi-global">Optimasi global</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 14</p>
+    <h1>Query Optimizer dan DDBMS</h1>
+    <p class="lede">Dekomposisi kueri, lokalisasi data, join terdistribusi, dan optimasi global.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami optimasi pada data terdistribusi dan mengenali DDBMS beserta fungsionalitasnya.</p></div>
+
+<h2 id="empat-lapisan-pemrosesan-kueri">Empat lapisan pemrosesan kueri</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Lapisan</th><th>Masukan</th><th>Keluaran</th><th>Peduli distribusi?</th></tr></thead><tbody><tr><td>1. Dekomposisi kueri</td><td>Kueri kalkulus relasional (SQL)</td><td>Kueri aljabar atas relasi global</td><td>Tidak — sama untuk sistem terpusat</td></tr><tr><td>2. Lokalisasi data</td><td>Kueri aljabar atas relasi global</td><td>Kueri aljabar atas fragmen fisik</td><td>Ya — memakai skema fragmen</td></tr><tr><td>3. Optimasi global</td><td>Kueri atas fragmen</td><td>Rencana eksekusi beserta urutan dan situsnya</td><td>Ya — memakai statistik dan biaya jaringan</td></tr><tr><td>4. Optimasi lokal</td><td>Bagian kueri untuk satu situs</td><td>Rencana akses fisik di situs itu</td><td>Tidak — tugas DBMS lokal</td></tr></tbody></table></div>
+
+<h2 id="empat-langkah-dekomposisi-kueri">Empat langkah dekomposisi kueri</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Langkah</th><th>Tujuan</th><th>Teknik</th></tr></thead><tbody><tr><td>1. Normalisasi</td><td>Mengubah kualifikasi WHERE ke bentuk normal</td><td>Bentuk normal konjungtif (CNF) atau disjungtif (DNF)</td></tr><tr><td>2. Analisis</td><td>Menolak kueri yang salah tipe atau salah semantik</td><td>Pemeriksaan tipe terhadap skema global + graf kueri</td></tr><tr><td>3. Eliminasi redundansi</td><td>Membuang predikat berlebih</td><td>Hukum idempoten: p∧p≡p, p∧(p∨q)≡p, p∧¬p≡false</td></tr><tr><td>4. Penulisan ulang</td><td>Mengubah kueri menjadi pohon operator</td><td>Daun = relasi, akar = proyeksi hasil</td></tr></tbody></table></div>
+<div class="catatan info"><p>Kueri disebut <b>salah tipe</b> bila atribut atau relasinya tidak ada dalam skema global, atau operasi diterapkan pada tipe yang salah. Disebut <b>salah semantik</b> bila graf kuerinya tidak terhubung — hasilnya perkalian kartesian yang hampir pasti bukan yang dimaksud pengguna.</p></div>
+
+<h2 id="lokalisasi-data-dan-reduksi">Lokalisasi data dan reduksi</h2>
+<p>Lapisan lokalisasi menerjemahkan kueri aljabar atas relasi global menjadi kueri atas fragmen fisik, memakai <b>program lokalisasi</b>: UNION untuk fragmen horizontal, JOIN untuk fragmen vertikal. Kueri hasilnya lalu direduksi.</p>
+<ul><li><b>Reduksi horizontal primer</b> — σ<sub>p</sub>(F<sub>i</sub>) = ∅ bila p bertentangan dengan predikat fragmen</li><li><b>Reduksi vertikal</b> — fragmen yang tidak menyumbang atribut hasil dibuang dari join</li><li><b>Reduksi join</b> — pasangan fragmen dengan predikat bertentangan pada atribut join dibuang</li><li><b>Reduksi turunan</b> — fragmen anak hanya dipasangkan dengan fragmen induknya</li></ul>
+
+<h2 id="strategi-join-terdistribusi">Strategi join terdistribusi</h2>
+<p>Semijoin memakai identitas R ⋈ S = (R ⋉ S) ⋈ S. Bloom join menggantikan daftar nilai join dengan penapis Bloom yang jauh lebih ringkas, dengan imbalan positif palsu yang baru tersaring saat join akhir — hasil akhirnya tetap identik.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Strategi</th><th>Yang dikirim</th><th>Pesan</th><th>Menang bila</th></tr></thead><tbody><tr><td>Kirim R utuh</td><td>Seluruh relasi R</td><td>1</td><td>R kecil atau hampir semua barisnya berpasangan</td></tr><tr><td>Kirim S utuh</td><td>Seluruh relasi S</td><td>1</td><td>S jauh lebih kecil daripada R</td></tr><tr><td>Semijoin</td><td>π kolom join dari S, lalu R yang tersaring</td><td>2</td><td>R besar dan selektivitasnya rendah</td></tr><tr><td>Bloom join</td><td>Penapis Bloom, lalu R yang tersaring</td><td>2</td><td>Sama seperti semijoin, dengan pesan pertama jauh lebih kecil</td></tr></tbody></table></div>
+
+<h2 id="optimasi-global">Optimasi global</h2>
+<ul><li>Urutan join — ruang pencariannya tumbuh faktorial, sehingga dipakai heuristik atau pemrograman dinamis</li><li>Pemilihan salinan — replika mana yang paling murah diakses dari situs asal kueri</li><li>Penempatan operasi — di situs mana tiap operator dijalankan</li><li>Dorong selection dan projection sedekat mungkin ke daun, sebelum data melintasi jaringan</li></ul>
+<div class="catatan baik"><p>Di Oracle, bukti bahwa reduksi benar-benar terjadi ada pada kolom PSTART/PSTOP (partition pruning) dan operasi REMOTE pada rencana eksekusi. Kolom OTHER berisi SQL yang sesungguhnya dikirim ke situs jauh.</p></div>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/dekomposisi.html"><div class="no">LAB 06</div><h3>Dekomposisi Kueri</h3><p>Normalisasi CNF/DNF, analisis graf kueri, eliminasi redundansi, dan pohon operator.</p></a>
+  <a class="tile" href="../lab/lokalisasi.html"><div class="no">LAB 07</div><h3>Lokalisasi Data</h3><p>Program lokalisasi dan reduksi fragmen, diverifikasi terhadap hasil kueri global.</p></a>
+  <a class="tile" href="../lab/join.html"><div class="no">LAB 09</div><h3>Join Terdistribusi</h3><p>Kirim utuh, semijoin, dan bloom join dijalankan sungguhan lalu dibandingkan biayanya.</p></a>
+  <a class="tile" href="../lab/sql.html"><div class="no">LAB 03</div><h3>Mesin SQL</h3><p>Jalankan SQL sungguhan atas data praktikum, lengkap dengan rencana eksekusinya.</p></a>
+  <a class="tile" href="../lab/soal.html"><div class="no">LAB 15</div><h3>Bank Soal Praktikum</h3><p>32 soal Praktikum 2–5, termasuk ke-12 soal Praktikum 3, dinilai otomatis dengan membandingkan hasil kueri.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul Pertemuan 7 — Dekomposisi Kueri dan Lokalisasi Data; Modul 1 (RPS pekan 14)</p>
+    <div class="nav-bawah">
+      <div><a href="13-pemulihan.html">&larr; Pemulihan Sistem Basis Data Terdistribusi</a></div>
+      <div><a href="../lab/index.html">Laboratorium &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

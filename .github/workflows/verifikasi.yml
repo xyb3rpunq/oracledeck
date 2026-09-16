@@ -1,0 +1,42 @@
+name: verifikasi
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verifikasi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Uji otomatis
+        run: node tests/run.js
+
+      - name: Verifikasi silang terhadap SQLite
+        run: python tools/verify_sqlite.py
+
+      - name: Skrip Oracle tidak boleh basi
+        run: |
+          node tools/gen_oracle.js
+          git diff --exit-code -- oracle/ || (echo "oracle/ berbeda dari hasil generator — jalankan node tools/gen_oracle.js lalu commit" && exit 1)
+
+      - name: Situs tidak boleh basi
+        run: |
+          node tools/build.js
+          git diff --exit-code -- docs/ || (echo "docs/ berbeda dari hasil build — jalankan node tools/build.js lalu commit" && exit 1)
+
+      - name: Periksa keluaran situs
+        run: node tools/cek_situs.js

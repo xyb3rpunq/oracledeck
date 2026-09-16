@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05. Basis Data Relasional Terdistribusi · ORACLEDECK</title>
+<meta name="description" content="Fragmentasi horizontal, vertikal, turunan, dan campuran; aturan kebenaran; alokasi dan replikasi.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/05-fragmentasi-alokasi-replikasi.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="05. Basis Data Relasional Terdistribusi · ORACLEDECK">
+<meta property="og:description" content="Fragmentasi horizontal, vertikal, turunan, dan campuran; aturan kebenaran; alokasi dan replikasi.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/05-fragmentasi-alokasi-replikasi.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#mengapa-relasi-dipecah">Mengapa relasi dipecah</a></li><li><a href="#empat-jenis-fragmentasi">Empat jenis fragmentasi</a></li><li><a href="#tiga-aturan-kebenaran-fragmentasi">Tiga aturan kebenaran fragmentasi</a></li><li><a href="#contoh-dari-modul-6-dan-7">Contoh dari Modul 6 dan 7</a></li><li><a href="#alokasi-dan-replikasi">Alokasi dan replikasi</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 05</p>
+    <h1>Basis Data Relasional Terdistribusi</h1>
+    <p class="lede">Fragmentasi horizontal, vertikal, turunan, dan campuran; aturan kebenaran; alokasi dan replikasi.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami penerapan basis data relasional dalam sistem terdistribusi.</p></div>
+
+<h2 id="mengapa-relasi-dipecah">Mengapa relasi dipecah</h2>
+<p>Pada DBMS terdistribusi, relasi disimpan di beberapa tempat. Mengakses relasi yang disimpan di sisi jauh menimbulkan biaya pengiriman pesan. Untuk menguranginya, relasi dipartisi atau difragmentasi, lalu fragmen dikirim ke tempat fragmen itu paling sering diakses.</p>
+
+<h2 id="empat-jenis-fragmentasi">Empat jenis fragmentasi</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Jenis</th><th>Operator</th><th>Isi fragmen</th><th>Rekonstruksi</th></tr></thead><tbody><tr><td>Horizontal primer</td><td>σ (selection)</td><td>Subset baris dari relasi asal</td><td>UNION seluruh fragmen</td></tr><tr><td>Vertikal</td><td>π (projection)</td><td>Subset kolom, selalu memuat kunci</td><td>NATURAL JOIN atas kunci</td></tr><tr><td>Horizontal turunan</td><td>⋉ (semijoin)</td><td>Baris anak yang induknya ada di fragmen induk</td><td>UNION seluruh fragmen</td></tr><tr><td>Campuran (hybrid)</td><td>σ∘π</td><td>Vertikal lalu horizontal, atau sebaliknya</td><td>Kebalikan urutan pembentukannya</td></tr></tbody></table></div>
+
+<h2 id="tiga-aturan-kebenaran-fragmentasi">Tiga aturan kebenaran fragmentasi</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Aturan</th><th>Horizontal</th><th>Vertikal</th></tr></thead><tbody><tr><td><b>Kelengkapan</b></td><td>Setiap tupel relasi asal ada di minimal satu fragmen</td><td>Setiap atribut relasi asal ada di minimal satu fragmen</td></tr><tr><td><b>Rekonstruksi</b></td><td>R = F₁ ∪ F₂ ∪ … ∪ Fₙ</td><td>R = F₁ ⋈ F₂ ⋈ … ⋈ Fₙ atas kunci</td></tr><tr><td><b>Kedisjoinan</b></td><td>Fragmen tidak tumpang tindih (disjoint)</td><td>Hanya atribut kunci yang boleh berulang</td></tr></tbody></table></div>
+<div class="catatan bahaya"><p>Untuk menjamin fragmentasi vertikal bersifat <b>lossless-join</b>, sistem wajib menyediakan id tupel yang unik pada setiap fragmen. Tanpa kunci di setiap fragmen, hasil join kembali bukan relasi aslinya.</p></div>
+
+<h2 id="contoh-dari-modul-6-dan-7">Contoh dari Modul 6 dan 7</h2>
+<p>STAFF dipecah vertikal menjadi S1 dan S2, lalu S2 dipecah horizontal per cabang menjadi S21, S22, dan S23. Inilah fragmentasi campuran. Lab Fragmentasi menjalankan skema persis ini atas data sungguhan dan memeriksa ketiga aturan kebenarannya.</p>
+<pre><code>S1  = π staffno, position, sex, DOB, salary (STAFF)        ditempatkan di site 3
+S2  = π staffno, fname, lname, branchno, sex, DOB, salary (STAFF)
+
+S21 = σ Bno = B3 (S2)     ditempatkan di site 3
+S22 = σ Bno = B5 (S2)     ditempatkan di site 5
+S23 = σ Bno = B7 (S2)     ditempatkan di site 7</code></pre>
+
+<h2 id="alokasi-dan-replikasi">Alokasi dan replikasi</h2>
+<p>Setelah relasi dipecah, tiap fragmen harus ditempatkan. Keputusannya menyangkut tiga hal sekaligus: di situs mana, berapa salinan, dan siapa yang menanggung biaya pembaruan.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Strategi</th><th>Biaya baca</th><th>Biaya tulis</th><th>Ketersediaan</th><th>Cocok untuk</th></tr></thead><tbody><tr><td>Terpusat (satu situs)</td><td>Mahal untuk situs jauh</td><td>Murah — satu salinan</td><td>Rendah</td><td>Sistem kecil, satu lokasi dominan</td></tr><tr><td>Terfragmentasi tanpa replika</td><td>Murah bila akses lokal</td><td>Murah</td><td>Sedang</td><td>Data yang jelas terpisah per wilayah</td></tr><tr><td>Replikasi penuh</td><td>Sangat murah</td><td>Sangat mahal — semua salinan disentuh</td><td>Tinggi</td><td>Tabel referensi yang jarang berubah</td></tr><tr><td>Replikasi selektif</td><td>Murah untuk fragmen panas</td><td>Sedang</td><td>Tinggi untuk yang direplikasi</td><td>Pilihan praktis pada hampir semua kasus</td></tr></tbody></table></div>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/fragmentasi.html"><div class="no">LAB 04</div><h3>Perancang Fragmentasi</h3><p>Horizontal, vertikal, turunan, campuran — dengan audit kelengkapan, rekonstruksi, dan kedisjoinan.</p></a>
+  <a class="tile" href="../lab/alokasi.html"><div class="no">LAB 05</div><h3>Alokasi & Replikasi</h3><p>Model biaya empat kelompok informasi, pencarian alokasi optimal, dan hitungan ketersediaan.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 1 (RPS pekan 5), Modul Pertemuan 7 bagian Alokasi Data</p>
+    <div class="nav-bawah">
+      <div><a href="04-perancangan.html">&larr; Perancangan Basis Data Terdistribusi</a></div>
+      <div><a href="06-transparansi.html">Manajemen Data Terdistribusi: Transparansi &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

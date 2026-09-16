@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02. Sistem Komputer Modern dan Tren Layanan · ORACLEDECK</title>
+<meta name="description" content="Jaringan LAN/MAN/WAN, topologi, protokol, sistem informasi global, dan komputasi awan.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/02-sistem-komputer-modern.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="02. Sistem Komputer Modern dan Tren Layanan · ORACLEDECK">
+<meta property="og:description" content="Jaringan LAN/MAN/WAN, topologi, protokol, sistem informasi global, dan komputasi awan.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/02-sistem-komputer-modern.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#jaringan-menurut-jangkauan">Jaringan menurut jangkauan</a></li><li><a href="#klasifikasi-lain">Klasifikasi lain</a></li><li><a href="#sistem-informasi-global">Sistem informasi global</a></li><li><a href="#komputasi-awan">Komputasi awan</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 02</p>
+    <h1>Sistem Komputer Modern dan Tren Layanan</h1>
+    <p class="lede">Jaringan LAN/MAN/WAN, topologi, protokol, sistem informasi global, dan komputasi awan.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memiliki wawasan tentang tren perkembangan sistem komunikasi data dan kebutuhan layanan sistem komputer dan informasi.</p></div>
+
+<h2 id="jaringan-menurut-jangkauan">Jaringan menurut jangkauan</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Jenis</th><th>Jangkauan</th><th>Ciri</th><th>Dampak bagi BDT</th></tr></thead><tbody><tr><td>LAN</td><td>Gedung / kampus</td><td>Laju data tinggi, tanpa jalur sewa operator</td><td>Biaya komunikasi kecil — biaya I/O dan CPU tidak boleh diabaikan</td></tr><tr><td>MAN</td><td>Kota</td><td>Cakupan lebih luas, pemeliharaan lama</td><td>Perantara; biaya komunikasi mulai terasa</td></tr><tr><td>WAN</td><td>Antar kota / negara</td><td>Biaya operasional tinggi, rentan penyadapan</td><td>Biaya komunikasi mendominasi — optimasi kueri fokus ke byte terkirim</td></tr></tbody></table></div>
+<div class="catatan info"><p>Pilihan jaringan menentukan fungsi biaya pengoptimal kueri. Pada WAN dengan bandwidth kecil, optimasi boleh mengabaikan I/O dan CPU. Pada LAN, tidak boleh.</p></div>
+
+<h2 id="klasifikasi-lain">Klasifikasi lain</h2>
+<ul><li><b>Berdasarkan kelas transmisi</b> — jaringan point-to-point dan jaringan broadcast</li><li><b>Berdasarkan fungsi</b> — client-server dan peer-to-peer</li><li><b>Berdasarkan topologi</b> — bus, star, ring, mesh, tree</li><li><b>Berdasarkan distribusi sumber data</b> — terpusat dan terdistribusi</li><li><b>Berdasarkan media transmisi</b> — berkabel dan nirkabel</li></ul>
+
+<h2 id="sistem-informasi-global">Sistem informasi global</h2>
+<p>Perusahaan multinasional beroperasi di banyak negara sehingga arus datanya melintasi batas yurisdiksi. Jenis data yang mengalir lintas negara: data operasional (transaksi pembelian dan penjualan), data pribadi individu, transfer data elektronik antarnegara, serta data teknik dan ilmiah.</p>
+<div class="catatan peringatan"><p>Data pribadi yang melintasi batas negara kini tunduk pada UU PDP No. 27/2022 di Indonesia. Keputusan alokasi fragmen bukan lagi semata soal biaya — ada syarat hukum tentang di mana data warga boleh disimpan.</p></div>
+
+<h2 id="komputasi-awan">Komputasi awan</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Keuntungan</th><th>Penjelasan</th></tr></thead><tbody><tr><td>Skalabilitas</td><td>Kapasitas dapat ditambah tanpa membeli perangkat baru</td></tr><tr><td>Aksesibilitas</td><td>Data dapat diakses kapan pun dan di mana pun</td></tr><tr><td>Keamanan</td><td>Keamanan dijamin penyedia layanan, dengan konsekuensi ketergantungan</td></tr><tr><td>Kreasi</td><td>Pengguna dapat mengembangkan proyek tanpa investasi infrastruktur</td></tr><tr><td>Kecemasan berkurang</td><td>Data tetap aman saat bencana menimpa lokasi fisik pengguna</td></tr></tbody></table></div>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/alokasi.html"><div class="no">LAB 05</div><h3>Alokasi & Replikasi</h3><p>Model biaya empat kelompok informasi, pencarian alokasi optimal, dan hitungan ketersediaan.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 2 — CTI313 Modern Computer Systems (Ir. Nixon Erzed, MT)</p>
+    <div class="nav-bawah">
+      <div><a href="01-pengantar.html">&larr; Pengantar Basis Data Terdistribusi</a></div>
+      <div><a href="03-arsitektur.html">Fungsi dan Arsitektur Basis Data Terdistribusi &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

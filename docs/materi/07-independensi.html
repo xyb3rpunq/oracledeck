@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07. Independensi Basis Data Terdistribusi · ORACLEDECK</title>
+<meta name="description" content="Independensi perangkat keras, sistem operasi, jaringan, dan basis data.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/07-independensi.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="07. Independensi Basis Data Terdistribusi · ORACLEDECK">
+<meta property="og:description" content="Independensi perangkat keras, sistem operasi, jaringan, dan basis data.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/07-independensi.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#empat-tingkat-independensi">Empat tingkat independensi</a></li><li><a href="#dua-jenis-kebebasan-data">Dua jenis kebebasan data</a></li><li><a href="#siapa-yang-menyediakan-transparansi">Siapa yang menyediakan transparansi</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 07</p>
+    <h1>Independensi Basis Data Terdistribusi</h1>
+    <p class="lede">Independensi perangkat keras, sistem operasi, jaringan, dan basis data.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami konsep independensi dan kebutuhan penerapannya dalam basis data terdistribusi.</p></div>
+
+<h2 id="empat-tingkat-independensi">Empat tingkat independensi</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Tingkat</th><th>Arti</th><th>Diuji dengan pertanyaan</th></tr></thead><tbody><tr><td>Perangkat keras</td><td>Sistem berjalan tanpa peduli arsitektur mesin dan panjang kata</td><td>Bisakah satu situs diganti server merek lain tanpa mengubah aplikasi?</td></tr><tr><td>Sistem operasi</td><td>Sistem berjalan di atas OS yang berbeda-beda</td><td>Bisakah satu situs pakai Linux dan lainnya Windows?</td></tr><tr><td>Jaringan</td><td>Perintah yang sama berlaku lokal maupun lintas mesin</td><td>Apakah <code>cp</code> dan <code>rcp</code> masih dibedakan pengguna?</td></tr><tr><td>Basis data</td><td>Produk DBMS di tiap situs boleh berbeda</td><td>Bisakah satu situs pakai Oracle dan lainnya PostgreSQL?</td></tr></tbody></table></div>
+
+<h2 id="dua-jenis-kebebasan-data">Dua jenis kebebasan data</h2>
+<ul><li><b>Kebebasan data logis</b> — kekebalan aplikasi terhadap perubahan struktur logis. Menambah atribut baru pada relasi tidak boleh memengaruhi aplikasi yang hanya memakai sebagian atribut.</li><li><b>Kebebasan data fisik</b> — penyembunyian rincian struktur penyimpanan. Saat aplikasi ditulis, organisasi fisik data tidak perlu diperhatikan.</li></ul>
+
+<h2 id="siapa-yang-menyediakan-transparansi">Siapa yang menyediakan transparansi</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Lapis</th><th>Penyedia</th><th>Kenyataannya</th></tr></thead><tbody><tr><td>1</td><td>Bahasa pemrograman</td><td>Compiler atau interpreter menerjemahkan permintaan layanan ke operasi; tidak ada layanan transparan untuk compiler itu sendiri</td></tr><tr><td>2</td><td>Sistem operasi</td><td>Akses transparan ke sumber daya diperluas ke distribusi — sayangnya tidak semua OS punya manajemen jaringan ini</td></tr><tr><td>3</td><td>DBMS</td><td>DBMS menanggung hampir semua penerjemahan dari OS ke antarmuka pengguna tingkat tinggi</td></tr></tbody></table></div>
+<div class="catatan peringatan"><p>Karena lapis 1 dan 2 jarang menyediakan transparansi yang memadai, beban itu jatuh hampir seluruhnya ke DBMS. Itulah sebabnya fitur seperti database link dan sinonim ada di Oracle, bukan di sistem operasi.</p></div>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/transparansi.html"><div class="no">LAB 08</div><h3>Tangga Transparansi</h3><p>Satu kueri ditulis ulang pada lima tingkat transparansi, dengan ukuran kebocoran detailnya.</p></a>
+  <a class="tile" href="../lab/kependudukan.html"><div class="no">LAB 16</div><h3>Studi Kasus Kependudukan</h3><p>Skripsi Oracle XE + MySQL lewat ODBC: NIK ganda yang lolos UNIQUE lokal, dan mengapa gateway tidak bisa 2PC.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 6 bagian Transparansi pada DDBMS; Modul 1 (RPS pekan 7)</p>
+    <div class="nav-bawah">
+      <div><a href="06-transparansi.html">&larr; Manajemen Data Terdistribusi: Transparansi</a></div>
+      <div><a href="08-prinsip.html">Prinsip Basis Data Terdistribusi &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

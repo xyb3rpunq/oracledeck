@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04. Perancangan Basis Data Terdistribusi · ORACLEDECK</title>
+<meta name="description" content="Pendekatan top-down dan bottom-up, dari ERD sampai skema fragmen dan alokasi.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/04-perancangan.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="04. Perancangan Basis Data Terdistribusi · ORACLEDECK">
+<meta property="og:description" content="Pendekatan top-down dan bottom-up, dari ERD sampai skema fragmen dan alokasi.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/04-perancangan.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#dua-pendekatan">Dua pendekatan</a></li><li><a href="#langkah-perancangan-top-down">Langkah perancangan top-down</a></li><li><a href="#informasi-yang-wajib-dikumpulkan-sebelum-alokasi">Informasi yang wajib dikumpulkan sebelum alokasi</a></li><li><a href="#kesalahan-perancangan-yang-paling-sering">Kesalahan perancangan yang paling sering</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 04</p>
+    <h1>Perancangan Basis Data Terdistribusi</h1>
+    <p class="lede">Pendekatan top-down dan bottom-up, dari ERD sampai skema fragmen dan alokasi.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami pendekatan-pendekatan dalam merancang basis data terdistribusi.</p></div>
+
+<h2 id="dua-pendekatan">Dua pendekatan</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Aspek</th><th>Top-down</th><th>Bottom-up</th></tr></thead><tbody><tr><td>Titik mulai</td><td>Belum ada basis data — dirancang dari nol</td><td>Sudah ada basis data yang berjalan di tiap situs</td></tr><tr><td>Urutan</td><td>Analisis kebutuhan → skema konseptual global → fragmentasi → alokasi → skema lokal</td><td>Skema lokal → penerjemahan ke model bersama → integrasi menjadi skema global</td></tr><tr><td>Cocok untuk</td><td>Sistem homogen yang dibangun serentak</td><td>Sistem heterogen hasil penggabungan organisasi</td></tr><tr><td>Masalah utama</td><td>Menebak pola akses yang belum terjadi</td><td>Konflik nama, konflik struktur, dan konflik semantik antar skema</td></tr></tbody></table></div>
+
+<h2 id="langkah-perancangan-top-down">Langkah perancangan top-down</h2>
+<ol><li>Analisis kebutuhan: entitas, atribut, volume, dan frekuensi akses</li><li>Perancangan konseptual: ERD → skema relasional → normalisasi</li><li>Perancangan fragmentasi: horizontal, vertikal, turunan, atau campuran</li><li>Perancangan alokasi: fragmen mana ditempatkan di situs mana, direplikasi atau tidak</li><li>Perancangan fisik: indeks, tablespace, dan parameter penyimpanan di tiap situs</li></ol>
+
+<h2 id="informasi-yang-wajib-dikumpulkan-sebelum-alokasi">Informasi yang wajib dikumpulkan sebelum alokasi</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Kelompok</th><th>Rincian</th></tr></thead><tbody><tr><td>Informasi basis data</td><td>Skema konseptual, jumlah situs, jumlah/ukuran/selektivitas fragmen per relasi global</td></tr><tr><td>Informasi aplikasi</td><td>Jumlah kueri, rata-rata akses baca dan akses update per fragmen, matriks kueri–fragmen, situs asal tiap kueri</td></tr><tr><td>Informasi situs</td><td>Unit cost penyimpanan dan unit cost pemrosesan di tiap situs</td></tr><tr><td>Informasi jaringan</td><td>Bandwidth dan latensi antar pasangan situs</td></tr></tbody></table></div>
+<div class="catatan info"><p>Keempat kelompok inilah masukan Lab Alokasi &amp; Replikasi. Tanpa angka-angka ini, keputusan replikasi hanya tebakan.</p></div>
+
+<h2 id="kesalahan-perancangan-yang-paling-sering">Kesalahan perancangan yang paling sering</h2>
+<ul><li>Memfragmentasi tabel referensi kecil yang justru dibaca semua situs — seharusnya direplikasi</li><li>Mereplikasi tabel transaksi yang sering di-update — biaya tulis naik berlipat karena 2PC menyentuh semua salinan</li><li>Memilih atribut fragmentasi yang tidak pernah muncul di klausa WHERE — reduksi lokalisasi tidak pernah terjadi</li><li>Melupakan kunci pada fragmen vertikal — rekonstruksi menjadi lossy</li></ul>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/erd.html"><div class="no">LAB 01</div><h3>Perancang ERD</h3><p>Kasus Tono Rental: ERD → skema relasional → DDL Oracle, lengkap dengan jejak transformasinya.</p></a>
+  <a class="tile" href="../lab/normalisasi.html"><div class="no">LAB 02</div><h3>Normalisasi 1NF–BCNF</h3><p>Penutupan atribut, candidate key, pelanggaran per tingkat, sintesis 3NF, dan uji lossless-join.</p></a>
+  <a class="tile" href="../lab/fragmentasi.html"><div class="no">LAB 04</div><h3>Perancang Fragmentasi</h3><p>Horizontal, vertikal, turunan, campuran — dengan audit kelengkapan, rekonstruksi, dan kedisjoinan.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 1 (RPS pekan 4) dan Modul Pertemuan 7</p>
+    <div class="nav-bawah">
+      <div><a href="03-arsitektur.html">&larr; Fungsi dan Arsitektur Basis Data Terdistribusi</a></div>
+      <div><a href="05-fragmentasi-alokasi-replikasi.html">Basis Data Relasional Terdistribusi &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORACLEDECK — Laboratorium Sistem Basis Data Terdistribusi</title>
+<meta name="description" content="Empat belas topik CTI313, enam belas laboratorium interaktif, dan bank soal praktikum yang dinilai otomatis. Mesin relasionalnya ditulis dari nol, hasilnya diverifikasi silang terhadap SQLite, dan rancangannya diterjemahkan menjadi DDL Oracle sungguhan.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ORACLEDECK — Laboratorium Sistem Basis Data Terdistribusi">
+<meta property="og:description" content="Empat belas topik CTI313, enam belas laboratorium interaktif, dan bank soal praktikum yang dinilai otomatis. Mesin relasionalnya ditulis dari nol, hasilnya diverifikasi silang terhadap SQLite, dan rancangannya diterjemahkan menjadi DDL Oracle sungguhan.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="index.html" class="aktif">Beranda</a>
+      <a href="materi/index.html">Materi</a>
+      <a href="lab/index.html">Laboratorium</a>
+      <a href="oracle.html">Oracle</a>
+      <a href="audit.html">Audit</a>
+      <a href="glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<section class="hero">
+  <p class="kicker">CTI313 — Sistem Basis Data Terdistribusi</p>
+  <h1>Basis data terdistribusi, dijalankan — bukan sekadar dibaca.</h1>
+  <p class="lede">Empat belas topik CTI313, enam belas laboratorium interaktif, dan bank soal praktikum yang dinilai otomatis. Mesin relasionalnya ditulis dari nol, hasilnya diverifikasi silang terhadap SQLite, dan rancangannya diterjemahkan menjadi DDL Oracle sungguhan.</p>
+  <div class="pita">
+    <span>nol dependensi runtime</span>
+    <span>528 uji otomatis</span>
+    <span>diverifikasi silang terhadap SQLite</span>
+    <span>12 skrip Oracle</span>
+    <span>statis — tanpa server, tanpa pelacak</span>
+  </div>
+  <div class="statbar">
+    <div class="stat"><b>14</b><span>topik kuliah</span></div>
+    <div class="stat"><b>16</b><span>laboratorium</span></div>
+    <div class="stat"><b>528</b><span>uji lulus</span></div>
+    <div class="stat"><b>39</b><span>kueri terverifikasi</span></div>
+    <div class="stat"><b>195</b><span>fungsi mesin</span></div>
+  </div>
+</section>
+
+<h2>Laboratorium</h2>
+<p>Setiap lab menjalankan perhitungan sungguhan di peramban Anda. Tidak ada hasil yang disiapkan sebelumnya — ubah masukannya, angkanya ikut berubah.</p>
+<div class="grid tiga">
+  <a class="tile" href="lab/erd.html">
+    <div class="no">LAB 01</div>
+    <h3>Perancang ERD</h3>
+    <p>Kasus Tono Rental: ERD → skema relasional → DDL Oracle, lengkap dengan jejak transformasinya.</p>
+  </a>
+  <a class="tile" href="lab/normalisasi.html">
+    <div class="no">LAB 02</div>
+    <h3>Normalisasi 1NF–BCNF</h3>
+    <p>Penutupan atribut, candidate key, pelanggaran per tingkat, sintesis 3NF, dan uji lossless-join.</p>
+  </a>
+  <a class="tile" href="lab/sql.html">
+    <div class="no">LAB 03</div>
+    <h3>Mesin SQL</h3>
+    <p>Jalankan SQL sungguhan atas data praktikum, lengkap dengan rencana eksekusinya.</p>
+  </a>
+  <a class="tile" href="lab/fragmentasi.html">
+    <div class="no">LAB 04</div>
+    <h3>Perancang Fragmentasi</h3>
+    <p>Horizontal, vertikal, turunan, campuran — dengan audit kelengkapan, rekonstruksi, dan kedisjoinan.</p>
+  </a>
+  <a class="tile" href="lab/alokasi.html">
+    <div class="no">LAB 05</div>
+    <h3>Alokasi & Replikasi</h3>
+    <p>Model biaya empat kelompok informasi, pencarian alokasi optimal, dan hitungan ketersediaan.</p>
+  </a>
+  <a class="tile" href="lab/dekomposisi.html">
+    <div class="no">LAB 06</div>
+    <h3>Dekomposisi Kueri</h3>
+    <p>Normalisasi CNF/DNF, analisis graf kueri, eliminasi redundansi, dan pohon operator.</p>
+  </a>
+  <a class="tile" href="lab/lokalisasi.html">
+    <div class="no">LAB 07</div>
+    <h3>Lokalisasi Data</h3>
+    <p>Program lokalisasi dan reduksi fragmen, diverifikasi terhadap hasil kueri global.</p>
+  </a>
+  <a class="tile" href="lab/transparansi.html">
+    <div class="no">LAB 08</div>
+    <h3>Tangga Transparansi</h3>
+    <p>Satu kueri ditulis ulang pada lima tingkat transparansi, dengan ukuran kebocoran detailnya.</p>
+  </a>
+  <a class="tile" href="lab/join.html">
+    <div class="no">LAB 09</div>
+    <h3>Join Terdistribusi</h3>
+    <p>Kirim utuh, semijoin, dan bloom join dijalankan sungguhan lalu dibandingkan biayanya.</p>
+  </a>
+  <a class="tile" href="lab/konkurensi.html">
+    <div class="no">LAB 10</div>
+    <h3>Kendali Konkurensi</h3>
+    <p>Graf presedensi, 2PL, timestamp ordering, dan sifat pemulihan sebuah jadwal.</p>
+  </a>
+  <a class="tile" href="lab/deadlock.html">
+    <div class="no">LAB 11</div>
+    <h3>Manajemen Deadlock</h3>
+    <p>Deteksi terpusat, path pushing, edge chasing, deadlock semu, dan pencegahan cap waktu.</p>
+  </a>
+  <a class="tile" href="lab/duafase.html">
+    <div class="no">LAB 12</div>
+    <h3>Simulator 2PC & 3PC</h3>
+    <p>Injeksi kegagalan koordinator, peserta, dan partisi jaringan — lalu lihat siapa yang terblokir.</p>
+  </a>
+  <a class="tile" href="lab/ketersediaan.html">
+    <div class="no">LAB 13</div>
+    <h3>Ketersediaan & CAP</h3>
+    <p>MTBF/MTTR, ketersediaan replika, kuorum R+W>N, CAP dan PACELC, RTO dan RPO.</p>
+  </a>
+  <a class="tile" href="lab/oracle.html">
+    <div class="no">LAB 14</div>
+    <h3>Generator DDL Oracle</h3>
+    <p>Rancangan terdistribusi diterjemahkan menjadi partisi, database link, dan materialized view.</p>
+  </a>
+  <a class="tile" href="lab/soal.html">
+    <div class="no">LAB 15</div>
+    <h3>Bank Soal Praktikum</h3>
+    <p>32 soal Praktikum 2–5, termasuk ke-12 soal Praktikum 3, dinilai otomatis dengan membandingkan hasil kueri.</p>
+  </a>
+  <a class="tile" href="lab/kependudukan.html">
+    <div class="no">LAB 16</div>
+    <h3>Studi Kasus Kependudukan</h3>
+    <p>Skripsi Oracle XE + MySQL lewat ODBC: NIK ganda yang lolos UNIQUE lokal, dan mengapa gateway tidak bisa 2PC.</p>
+  </a>
+</div>
+
+<h2>Empat belas topik</h2>
+<p>Disusun mengikuti Rencana Pembelajaran Semester pada Modul 1. Tiap topik menautkan ke lab yang menjalankan konsepnya.</p>
+<div class="grid dua">
+  <a class="tile" href="materi/01-pengantar.html">
+    <div class="no">TOPIK 01</div>
+    <h3>Pengantar Basis Data Terdistribusi</h3>
+    <p>Beda basis data terpusat dan terdistribusi, klasifikasi model data, serta untung-rugi DDBS.</p>
+  </a>
+  <a class="tile" href="materi/02-sistem-komputer-modern.html">
+    <div class="no">TOPIK 02</div>
+    <h3>Sistem Komputer Modern dan Tren Layanan</h3>
+    <p>Jaringan LAN/MAN/WAN, topologi, protokol, sistem informasi global, dan komputasi awan.</p>
+  </a>
+  <a class="tile" href="materi/03-arsitektur.html">
+    <div class="no">TOPIK 03</div>
+    <h3>Fungsi dan Arsitektur Basis Data Terdistribusi</h3>
+    <p>Empat arsitektur sistem, model struktural DDBS tiga lapis, model ANSI/SPARC, dan arsitektur N-tier.</p>
+  </a>
+  <a class="tile" href="materi/04-perancangan.html">
+    <div class="no">TOPIK 04</div>
+    <h3>Perancangan Basis Data Terdistribusi</h3>
+    <p>Pendekatan top-down dan bottom-up, dari ERD sampai skema fragmen dan alokasi.</p>
+  </a>
+  <a class="tile" href="materi/05-fragmentasi-alokasi-replikasi.html">
+    <div class="no">TOPIK 05</div>
+    <h3>Basis Data Relasional Terdistribusi</h3>
+    <p>Fragmentasi horizontal, vertikal, turunan, dan campuran; aturan kebenaran; alokasi dan replikasi.</p>
+  </a>
+  <a class="tile" href="materi/06-transparansi.html">
+    <div class="no">TOPIK 06</div>
+    <h3>Manajemen Data Terdistribusi: Transparansi</h3>
+    <p>Empat jenis transparansi, lima tingkat transparansi distribusi, dan klasifikasi transaksi DRDA.</p>
+  </a>
+  <a class="tile" href="materi/07-independensi.html">
+    <div class="no">TOPIK 07</div>
+    <h3>Independensi Basis Data Terdistribusi</h3>
+    <p>Independensi perangkat keras, sistem operasi, jaringan, dan basis data.</p>
+  </a>
+  <a class="tile" href="materi/08-prinsip.html">
+    <div class="no">TOPIK 08</div>
+    <h3>Prinsip Basis Data Terdistribusi</h3>
+    <p>Dua belas aturan Date, otonomi sistem, tidak bergantung situs pusat, dan operasi berkelanjutan.</p>
+  </a>
+  <a class="tile" href="materi/09-transaksi.html">
+    <div class="no">TOPIK 09</div>
+    <h3>Manajemen Transaksi Terdistribusi</h3>
+    <p>ACID lintas situs, manajer transaksi, scheduler, agent, dan model koordinasi.</p>
+  </a>
+  <a class="tile" href="materi/10-konkurensi.html">
+    <div class="no">TOPIK 10</div>
+    <h3>Pemrosesan Konkuren dan Kendali</h3>
+    <p>Keterserialan, protokol locking dua fase, timestamp ordering, dan kendali konkurensi terdistribusi.</p>
+  </a>
+  <a class="tile" href="materi/11-deadlock.html">
+    <div class="no">TOPIK 11</div>
+    <h3>Manajemen Deadlock</h3>
+    <p>Wait-for graph, deteksi terpusat dan terdistribusi, deadlock semu, pencegahan, dan pemilihan korban.</p>
+  </a>
+  <a class="tile" href="materi/12-kegagalan.html">
+    <div class="no">TOPIK 12</div>
+    <h3>Kegagalan pada Sistem Basis Data Terdistribusi</h3>
+    <p>Jenis kegagalan, pengaruhnya terhadap pemulihan, dan protokol komitmen dua fase.</p>
+  </a>
+  <a class="tile" href="materi/13-pemulihan.html">
+    <div class="no">TOPIK 13</div>
+    <h3>Pemulihan Sistem Basis Data Terdistribusi</h3>
+    <p>Komitmen tiga fase, partisi jaringan, kuorum, dan CAP.</p>
+  </a>
+  <a class="tile" href="materi/14-query-optimizer.html">
+    <div class="no">TOPIK 14</div>
+    <h3>Query Optimizer dan DDBMS</h3>
+    <p>Dekomposisi kueri, lokalisasi data, join terdistribusi, dan optimasi global.</p>
+  </a>
+</div>
+
+<h2>Praktikum</h2>
+<p>Lima lembar praktikum dari folder mata kuliah, seluruhnya dapat dijalankan ulang di Lab Mesin SQL dan Lab Perancang ERD.</p>
+<div class="tabel-bungkus"><table>
+<thead><tr><th class="num">#</th><th>Praktikum</th><th>Isi</th><th>Jalankan di</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td><strong>Membuat ERD</strong></td><td>Kasus rental mobil Tono: empat entitas, tiga relasi, lengkap dengan kunci utama dan kunci asing.</td><td><a href="lab/erd.html">Lab Perancang ERD</a></td></tr>
+<tr><td class="num">2</td><td><strong>SQL dan DML</strong></td><td>Enam tabel basis data rumah sakit: pasien, dokter, administrator, pasien_dokter, dokter_admin, daftar.</td><td><a href="lab/sql.html">Lab Mesin SQL</a></td></tr>
+<tr><td class="num">3</td><td><strong>Fungsi Agregasi</strong></td><td>AVG, COUNT, MAX, MIN, SUM beserta seluruh operator klausa WHERE.</td><td><a href="lab/sql.html">Lab Mesin SQL</a></td></tr>
+<tr><td class="num">4</td><td><strong>Query dari Relasi Tabel</strong></td><td>Kueri lintas tabel mhs, mata_kuliah, dan nilai lewat kunci penghubung.</td><td><a href="lab/sql.html">Lab Mesin SQL</a></td></tr>
+<tr><td class="num">5</td><td><strong>Relasi Tabel dengan JOIN</strong></td><td>Inner join, left join, right join, full outer join, dan union.</td><td><a href="lab/sql.html">Lab Mesin SQL</a></td></tr>
+</tbody></table></div>
+
+<h2>Cara kerjanya</h2>
+<div class="grid tiga">
+  <div class="kartu">
+    <h3>Mesin relasional sendiri</h3>
+    <p>Aljabar relasional lengkap, parser SQL, perencana kueri, dan seluruh algoritma terdistribusi ditulis dari nol dalam JavaScript tanpa satu pun dependensi. Berkas yang sama dipakai uji di Node dan halaman di peramban.</p>
+  </div>
+  <div class="kartu">
+    <h3>Diverifikasi silang</h3>
+    <p>39 kueri acuan dijalankan di mesin ini <i>dan</i> di SQLite lewat Python, lalu hasilnya dibandingkan baris demi baris. Kalau berbeda, build gagal.</p>
+  </div>
+  <div class="kartu">
+    <h3>Bermuara ke Oracle</h3>
+    <p>Rancangan yang Anda susun di lab diterjemahkan menjadi DDL Oracle sungguhan: PARTITION BY LIST, PARTITION BY REFERENCE, database link, materialized view, dan diagnosa <code>DBA_2PC_PENDING</code>.</p>
+  </div>
+</div>
+
+<div class="catatan">
+  <p><b>Batas yang jujur.</b> Skrip Oracle di repositori ini belum pernah dijalankan pada instans Oracle sungguhan — tidak ada Oracle di lingkungan pembuatannya. Yang diuji otomatis adalah pembangkitnya. Jalankan sendiri di Oracle XE untuk membuktikan bagian yang tidak bisa diuji tanpa basis data.</p>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

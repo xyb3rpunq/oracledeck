@@ -1,0 +1,19 @@
+{
+  "name": "oracledeck",
+  "version": "1.0.0",
+  "description": "ORACLEDECK - Laboratorium Sistem Basis Data Terdistribusi. Mesin relasional nol-dependensi + generator situs statis.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node tests/run.js",
+    "oracle": "node tools/gen_oracle.js",
+    "build": "node tools/build.js",
+    "cek": "node tools/cek_situs.js",
+    "verify": "python tools/verify_sqlite.py",
+    "all": "node tests/run.js && python tools/verify_sqlite.py && node tools/gen_oracle.js && node tools/build.js && node tools/cek_situs.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

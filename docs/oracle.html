@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skrip Oracle · ORACLEDECK</title>
+<meta name="description" content="Dua belas skrip Oracle: partisi, database link, materialized view, dan diagnosa two-phase commit.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/oracle.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Skrip Oracle · ORACLEDECK">
+<meta property="og:description" content="Dua belas skrip Oracle: partisi, database link, materialized view, dan diagnosa two-phase commit.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/oracle.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="index.html">Beranda</a>
+      <a href="materi/index.html">Materi</a>
+      <a href="lab/index.html">Laboratorium</a>
+      <a href="oracle.html" class="aktif">Oracle</a>
+      <a href="audit.html">Audit</a>
+      <a href="glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<p class="kicker">Oracle</p>
+<h1>Dari rancangan ke Oracle</h1>
+<p class="lede">Dua belas skrip yang menerjemahkan seluruh konsep kuliah menjadi objek Oracle sungguhan. Semuanya dihasilkan dari mesin yang sama dengan yang dipakai lab, sehingga tidak mungkin menyimpang dari rancangan yang ditampilkan.</p>
+
+<h2>Pemetaan konsep ke fitur Oracle</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th>Konsep kuliah</th><th>Fitur Oracle</th><th>Catatan</th></tr></thead>
+<tbody>
+<tr><td>Fragmentasi horizontal primer</td><td class="mono">PARTITION BY LIST / RANGE / HASH</td><td>Partisi DEFAULT menjamin kelengkapan</td></tr>
+<tr><td>Fragmentasi horizontal turunan</td><td class="mono">PARTITION BY REFERENCE</td><td>Khas Oracle; baris anak selalu separtisi dengan induknya</td></tr>
+<tr><td>Fragmentasi vertikal</td><td class="mono">Tabel terpisah + VIEW perekat</td><td>Kunci wajib ada di setiap tabel agar lossless-join</td></tr>
+<tr><td>Alokasi fragmen ke situs</td><td class="mono">TABLESPACE per partisi</td><td>Satu tablespace per situs</td></tr>
+<tr><td>Replikasi</td><td class="mono">MATERIALIZED VIEW + MV LOG</td><td>ON COMMIT = sinkron, ON DEMAND = asinkron</td></tr>
+<tr><td>Transparansi lokasi</td><td class="mono">DATABASE LINK + SYNONYM</td><td>Pindah situs cukup ubah sinonim</td></tr>
+<tr><td>Program lokalisasi horizontal</td><td class="mono">VIEW ... UNION ALL</td><td>Oracle memangkas cabang lewat predicate pushdown</td></tr>
+<tr><td>Reduksi lokalisasi</td><td class="mono">Partition pruning (PSTART/PSTOP)</td><td>Terbaca langsung pada rencana eksekusi</td></tr>
+<tr><td>Komitmen dua fase</td><td class="mono">COMMIT otomatis lintas link</td><td>Tidak ada perintah khusus — cukup COMMIT</td></tr>
+<tr><td>Transaksi menggantung</td><td class="mono">DBA_2PC_PENDING</td><td>STATE = prepared berarti terblokir</td></tr>
+<tr><td>Deteksi deadlock</td><td class="mono">ORA-00060 + trace file</td><td>Oracle mendeteksi sendiri dan mengorbankan satu sesi</td></tr>
+<tr><td>Join terdistribusi</td><td class="mono">Operasi REMOTE pada rencana</td><td>Kolom OTHER berisi SQL yang benar-benar dikirim</td></tr>
+</tbody></table></div>
+
+<div class="catatan peringatan">
+  <p><b>Belum dijalankan pada Oracle sungguhan.</b> Repositori ini dibangun tanpa akses ke instans Oracle. Yang diuji otomatis adalah <i>pembangkit</i> skripnya — bentuk DDL, nama objek, dan klausa partisi diperiksa oleh 40+ uji di <code>tests/oracle-emit.test.js</code>. Sintaks yang hanya bisa dibuktikan oleh parser Oracle belum diverifikasi. Jalankan sendiri di Oracle XE atau <code>gvenzl/oracle-free</code> untuk membuktikannya.</p>
+</div>
+
+<h2>Dua belas skrip</h2>
+
+<details>
+  <summary>01_tablespace_dan_user.sql <span class="lencana netral">42 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 1 - Wadah fisik: satu tablespace per situs</span>
+<span class="sql-c">-- Alokasi fragmen ke situs diwujudkan sebagai penempatan partisi ke tablespace.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Jalankan sebagai SYS atau pengguna dengan hak DBA.</span>
+<span class="sql-c">-- Pada Oracle XE 21c: sqlplus sys/oracle@//localhost:1521/XEPDB1 as sysdba</span>
+
+<span class="sql-k">ALTER</span> <span class="sql-k">SESSION</span> <span class="sql-k">SET</span> <span class="sql-k">CONTAINER</span> = XEPDB1;
+
+<span class="sql-c">-- Situs S1 - Jakarta</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLESPACE</span> TS_S1
+  <span class="sql-k">DATAFILE</span> <span class="sql-s">'s1_rs01.dbf'</span> <span class="sql-k">SIZE</span> 100M <span class="sql-k">AUTOEXTEND</span> <span class="sql-k">ON</span> <span class="sql-k">NEXT</span> 10M <span class="sql-k">MAXSIZE</span> 2G
+  <span class="sql-k">EXTENT</span> <span class="sql-k">MANAGEMENT</span> <span class="sql-k">LOCAL</span> <span class="sql-k">SEGMENT</span> <span class="sql-k">SPACE</span> <span class="sql-k">MANAGEMENT</span> <span class="sql-k">AUTO</span>;
+
+<span class="sql-c">-- Situs S2 - Bandung</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLESPACE</span> TS_S2
+  <span class="sql-k">DATAFILE</span> <span class="sql-s">'s2_rs01.dbf'</span> <span class="sql-k">SIZE</span> 100M <span class="sql-k">AUTOEXTEND</span> <span class="sql-k">ON</span> <span class="sql-k">NEXT</span> 10M <span class="sql-k">MAXSIZE</span> 2G
+  <span class="sql-k">EXTENT</span> <span class="sql-k">MANAGEMENT</span> <span class="sql-k">LOCAL</span> <span class="sql-k">SEGMENT</span> <span class="sql-k">SPACE</span> <span class="sql-k">MANAGEMENT</span> <span class="sql-k">AUTO</span>;
+
+<span class="sql-c">-- Situs S3 - Surabaya</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLESPACE</span> TS_S3
+  <span class="sql-k">DATAFILE</span> <span class="sql-s">'s3_rs01.dbf'</span> <span class="sql-k">SIZE</span> 100M <span class="sql-k">AUTOEXTEND</span> <span class="sql-k">ON</span> <span class="sql-k">NEXT</span> 10M <span class="sql-k">MAXSIZE</span> 2G
+  <span class="sql-k">EXTENT</span> <span class="sql-k">MANAGEMENT</span> <span class="sql-k">LOCAL</span> <span class="sql-k">SEGMENT</span> <span class="sql-k">SPACE</span> <span class="sql-k">MANAGEMENT</span> <span class="sql-k">AUTO</span>;
+
+<span class="sql-c">-- Pemilik skema aplikasi</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">USER</span> RS_APP <span class="sql-k">IDENTIFIED</span> <span class="sql-k">BY</span> &quot;&amp;sandi_rs_app&quot;
+  <span class="sql-k">DEFAULT</span> <span class="sql-k">TABLESPACE</span> TS_S1
+  <span class="sql-k">QUOTA</span> <span class="sql-k">UNLIMITED</span> <span class="sql-k">ON</span> TS_S1 <span class="sql-k">QUOTA</span> <span class="sql-k">UNLIMITED</span> <span class="sql-k">ON</span> TS_S2 <span class="sql-k">QUOTA</span> <span class="sql-k">UNLIMITED</span> <span class="sql-k">ON</span> TS_S3;
+
+<span class="sql-k">GRANT</span> <span class="sql-k">CREATE</span> <span class="sql-k">SESSION</span>, <span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span>, <span class="sql-k">CREATE</span> <span class="sql-k">VIEW</span>, <span class="sql-k">CREATE</span> <span class="sql-k">SYNONYM</span>,
+      <span class="sql-k">CREATE</span> <span class="sql-k">DATABASE</span> <span class="sql-k">LINK</span>, <span class="sql-k">CREATE</span> <span class="sql-k">MATERIALIZED</span> <span class="sql-k">VIEW</span> <span class="sql-k">TO</span> RS_APP;
+
+<span class="sql-c">-- Hak yang diperlukan untuk memeriksa transaksi terdistribusi:</span>
+<span class="sql-k">GRANT</span> <span class="sql-k">SELECT</span> <span class="sql-k">ON</span> dba_2pc_pending <span class="sql-k">TO</span> RS_APP;
+<span class="sql-k">GRANT</span> <span class="sql-k">SELECT</span> <span class="sql-k">ON</span> dba_2pc_neighbors <span class="sql-k">TO</span> RS_APP;
+<span class="sql-k">GRANT</span> SELECT_CATALOG_ROLE <span class="sql-k">TO</span> RS_APP;
+
+<span class="sql-c">-- Periksa hasilnya:</span>
+<span class="sql-k">SELECT</span> tablespace_name, status, contents <span class="sql-k">FROM</span> dba_tablespaces <span class="sql-k">WHERE</span> tablespace_name <span class="sql-k">LIKE</span> <span class="sql-s">'TS_%'</span>;
+</code></pre>
+</details>
+
+<details>
+  <summary>02_skema_global.sql <span class="lencana netral">87 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 2 - Skema konseptual global (GCS)</span>
+<span class="sql-c">-- Enam tabel Praktikum 2, ditulis ulang dengan tipe data Oracle yang benar.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Jalankan sebagai RS_APP.</span>
+
+<span class="sql-c">-- Catatan perbaikan terhadap skema praktikum asli:</span>
+<span class="sql-c">--   * no_hp dibuat VARCHAR2, bukan NUMBER: nol di depan tidak boleh hilang.</span>
+<span class="sql-c">--   * kolom kota ditambahkan sebagai kunci fragmentasi horizontal.</span>
+<span class="sql-c">--   * biaya dan tanggal_daftar ditambahkan agar laporan bisa diuji.</span>
+<span class="sql-c">--   * setiap tabel diberi PRIMARY KEY dan FOREIGN KEY eksplisit.</span>
+
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> PASIEN (
+  ID_PASIEN              <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  NAMA_PASIEN            <span class="sql-k">VARCHAR2</span>(<span class="sql-n">60</span>),
+  ALAMAT_PASIEN          <span class="sql-k">VARCHAR2</span>(<span class="sql-n">150</span>),
+  JENIS_KELAMIN          <span class="sql-k">CHAR</span>(<span class="sql-n">1</span>),
+  PENYAKIT               <span class="sql-k">VARCHAR2</span>(<span class="sql-n">100</span>),
+  NO_HP                  <span class="sql-k">VARCHAR2</span>(<span class="sql-n">20</span>),
+  KOTA                   <span class="sql-k">VARCHAR2</span>(<span class="sql-n">40</span>),
+  <span class="sql-k">CONSTRAINT</span> PK_PASIEN <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (ID_PASIEN),
+  <span class="sql-k">CONSTRAINT</span> CK_PASIEN_JK <span class="sql-k">CHECK</span> (JENIS_KELAMIN <span class="sql-k">IN</span> (<span class="sql-s">'L'</span>,<span class="sql-s">'P'</span>))
+);
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> DOKTER (
+  ID_DOKTER              <span class="sql-k">NUMBER</span>(<span class="sql-n">4</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  NAMA_DOKTER            <span class="sql-k">VARCHAR2</span>(<span class="sql-n">60</span>),
+  ALAMAT_DOKTER          <span class="sql-k">VARCHAR2</span>(<span class="sql-n">150</span>),
+  TANGGAL_LAHIR          <span class="sql-k">DATE</span>,
+  NO_HP                  <span class="sql-k">VARCHAR2</span>(<span class="sql-n">20</span>),
+  SPESIALIS              <span class="sql-k">VARCHAR2</span>(<span class="sql-n">40</span>),
+  WAKTU_KERJA            <span class="sql-k">VARCHAR2</span>(<span class="sql-n">60</span>),
+  KOTA                   <span class="sql-k">VARCHAR2</span>(<span class="sql-n">40</span>),
+  <span class="sql-k">CONSTRAINT</span> PK_DOKTER <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (ID_DOKTER)
+);
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> ADMINISTRATOR (
+  ID_ADMIN               <span class="sql-k">NUMBER</span>(<span class="sql-n">4</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  NAMA_ADMIN             <span class="sql-k">VARCHAR2</span>(<span class="sql-n">60</span>),
+  WAKTU_JAGA             <span class="sql-k">VARCHAR2</span>(<span class="sql-n">30</span>),
+  KOTA                   <span class="sql-k">VARCHAR2</span>(<span class="sql-n">40</span>),
+  <span class="sql-k">CONSTRAINT</span> PK_ADMINISTRATOR <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (ID_ADMIN)
+);
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> PASIEN_DOKTER (
+  ID                     <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  ID_DOKTER              <span class="sql-k">NUMBER</span>(<span class="sql-n">4</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  ID_PASIEN              <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  WAKTU_PERIKSA          <span class="sql-k">DATE</span>,
+  RESEP                  <span class="sql-k">VARCHAR2</span>(<span class="sql-n">150</span>),
+  BIAYA                  <span class="sql-k">NUMBER</span>(<span class="sql-n">12</span>,<span class="sql-n">2</span>),
+  <span class="sql-k">CONSTRAINT</span> PK_PASIEN_DOKTER <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (ID),
+  <span class="sql-k">CONSTRAINT</span> FK_PASIEN_DOKTER_DOKTER <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (ID_DOKTER)
+    <span class="sql-k">REFERENCES</span> DOKTER (ID_DOKTER) <span class="sql-k">ON</span> <span class="sql-k">DELETE</span> <span class="sql-k">CASCADE</span>,
+  <span class="sql-k">CONSTRAINT</span> FK_PASIEN_DOKTER_PASIEN <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (ID_PASIEN)
+    <span class="sql-k">REFERENCES</span> PASIEN (ID_PASIEN) <span class="sql-k">ON</span> <span class="sql-k">DELETE</span> <span class="sql-k">CASCADE</span>
+);
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> DOKTER_ADMIN (
+  ID_DATA                <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  ID_DOKTER              <span class="sql-k">NUMBER</span>(<span class="sql-n">4</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  ID_ADMIN               <span class="sql-k">NUMBER</span>(<span class="sql-n">4</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  <span class="sql-k">CONSTRAINT</span> PK_DOKTER_ADMIN <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (ID_DATA),
+  <span class="sql-k">CONSTRAINT</span> FK_DOKTER_ADMIN_DOKTER <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (ID_DOKTER)
+    <span class="sql-k">REFERENCES</span> DOKTER (ID_DOKTER) <span class="sql-k">ON</span> <span class="sql-k">DELETE</span> <span class="sql-k">CASCADE</span>,
+  <span class="sql-k">CONSTRAINT</span> FK_DOKTER_ADMIN_ADMINISTRATOR <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (ID_ADMIN)
+    <span class="sql-k">REFERENCES</span> ADMINISTRATOR (ID_ADMIN) <span class="sql-k">ON</span> <span class="sql-k">DELETE</span> <span class="sql-k">CASCADE</span>
+);
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> DAFTAR (
+  ID_DAFTAR              <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  ID_PASIEN              <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  ID_ADMIN               <span class="sql-k">NUMBER</span>(<span class="sql-n">4</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  TANGGAL_DAFTAR         <span class="sql-k">DATE</span>,
+  <span class="sql-k">CONSTRAINT</span> PK_DAFTAR <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (ID_DAFTAR),
+  <span class="sql-k">CONSTRAINT</span> FK_DAFTAR_PASIEN <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (ID_PASIEN)
+    <span class="sql-k">REFERENCES</span> PASIEN (ID_PASIEN) <span class="sql-k">ON</span> <span class="sql-k">DELETE</span> <span class="sql-k">CASCADE</span>,
+  <span class="sql-k">CONSTRAINT</span> FK_DAFTAR_ADMINISTRATOR <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (ID_ADMIN)
+    <span class="sql-k">REFERENCES</span> ADMINISTRATOR (ID_ADMIN) <span class="sql-k">ON</span> <span class="sql-k">DELETE</span> <span class="sql-k">CASCADE</span>
+);
+
+<span class="sql-c">-- Indeks penunjang join yang paling sering dipakai laporan:</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">INDEX</span> IX_PD_PASIEN <span class="sql-k">ON</span> PASIEN_DOKTER (ID_PASIEN);
+<span class="sql-k">CREATE</span> <span class="sql-k">INDEX</span> IX_PD_DOKTER <span class="sql-k">ON</span> PASIEN_DOKTER (ID_DOKTER);
+<span class="sql-k">CREATE</span> <span class="sql-k">INDEX</span> IX_DAFTAR_PASIEN <span class="sql-k">ON</span> DAFTAR (ID_PASIEN);
+
+<span class="sql-c">-- Verifikasi:</span>
+<span class="sql-k">SELECT</span> table_name, num_rows <span class="sql-k">FROM</span> user_tables <span class="sql-k">ORDER BY</span> table_name;
+<span class="sql-k">SELECT</span> constraint_name, constraint_type, table_name <span class="sql-k">FROM</span> user_constraints <span class="sql-k">WHERE</span> constraint_type <span class="sql-k">IN</span> (<span class="sql-s">'P'</span>,<span class="sql-s">'R'</span>) <span class="sql-k">ORDER BY</span> table_name;
+</code></pre>
+</details>
+
+<details>
+  <summary>03_fragmentasi_horizontal.sql <span class="lencana netral">49 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 3 - Fragmentasi horizontal primer</span>
+<span class="sql-c">-- sigma_{kota = X}(PASIEN) diwujudkan sebagai PARTITION BY LIST.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Aturan kebenaran yang dijamin oleh partisi LIST + partisi DEFAULT:</span>
+<span class="sql-c">--   Kelengkapan  : partisi DEFAULT menampung nilai kota yang belum terdaftar</span>
+<span class="sql-c">--   Rekonstruksi : SELECT * FROM PASIEN otomatis menggabungkan seluruh partisi</span>
+<span class="sql-c">--   Kedisjoinan  : satu baris hanya bisa masuk ke satu partisi LIST</span>
+
+<span class="sql-c">-- Tabel pada 02_skema_global.sql dibuat ulang dalam bentuk terpartisi:</span>
+<span class="sql-k">DROP</span> <span class="sql-k">TABLE</span> PASIEN <span class="sql-k">CASCADE</span> <span class="sql-k">CONSTRAINTS</span>;
+
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> PASIEN (
+  ID_PASIEN              <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  NAMA_PASIEN            <span class="sql-k">VARCHAR2</span>(<span class="sql-n">60</span>),
+  ALAMAT_PASIEN          <span class="sql-k">VARCHAR2</span>(<span class="sql-n">150</span>),
+  JENIS_KELAMIN          <span class="sql-k">CHAR</span>(<span class="sql-n">1</span>),
+  PENYAKIT               <span class="sql-k">VARCHAR2</span>(<span class="sql-n">100</span>),
+  NO_HP                  <span class="sql-k">VARCHAR2</span>(<span class="sql-n">20</span>),
+  KOTA                   <span class="sql-k">VARCHAR2</span>(<span class="sql-n">40</span>),
+  <span class="sql-k">CONSTRAINT</span> PK_PASIEN <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (ID_PASIEN),
+  <span class="sql-k">CONSTRAINT</span> CK_PASIEN_JK <span class="sql-k">CHECK</span> (JENIS_KELAMIN <span class="sql-k">IN</span> (<span class="sql-s">'L'</span>,<span class="sql-s">'P'</span>))
+)
+<span class="sql-k">PARTITION</span> <span class="sql-k">BY</span> <span class="sql-k">LIST</span> (KOTA) (
+  <span class="sql-k">PARTITION</span> P_JAKARTA <span class="sql-k">VALUES</span> (<span class="sql-s">'Jakarta'</span>) <span class="sql-k">TABLESPACE</span> TS_S1,
+  <span class="sql-k">PARTITION</span> P_BANDUNG <span class="sql-k">VALUES</span> (<span class="sql-s">'Bandung'</span>) <span class="sql-k">TABLESPACE</span> TS_S2,
+  <span class="sql-k">PARTITION</span> P_SURABAYA <span class="sql-k">VALUES</span> (<span class="sql-s">'Surabaya'</span>) <span class="sql-k">TABLESPACE</span> TS_S3,
+  <span class="sql-k">PARTITION</span> P_PASIEN_LAIN <span class="sql-k">VALUES</span> (<span class="sql-k">DEFAULT</span>)
+);
+
+<span class="sql-c">-- Indeks LOCAL: satu segmen indeks per partisi. Operasi partisi (DROP/EXCHANGE)</span>
+<span class="sql-c">-- tidak membuat indeks partisi lain invalid. Pilihan default untuk fragmentasi.</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">INDEX</span> IX_PASIEN_NAMA <span class="sql-k">ON</span> PASIEN (NAMA_PASIEN) <span class="sql-k">LOCAL</span>;
+
+<span class="sql-c">-- Indeks GLOBAL: satu pohon indeks untuk seluruh tabel. Lebih cepat untuk</span>
+<span class="sql-c">-- pencarian lintas partisi, tetapi operasi partisi membuatnya UNUSABLE</span>
+<span class="sql-c">-- kecuali dipakai UPDATE INDEXES.</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">INDEX</span> IX_PASIEN_HP <span class="sql-k">ON</span> PASIEN (NO_HP) <span class="sql-k">GLOBAL</span> <span class="sql-k">PARTITION</span> <span class="sql-k">BY</span> <span class="sql-k">HASH</span> (NO_HP) <span class="sql-k">PARTITIONS</span> <span class="sql-n">4</span>;
+
+<span class="sql-c">-- Berapa baris di tiap fragmen:</span>
+<span class="sql-k">SELECT</span> partition_name, num_rows <span class="sql-k">FROM</span> user_tab_partitions <span class="sql-k">WHERE</span> table_name = <span class="sql-s">'PASIEN'</span>;
+
+<span class="sql-c">-- Setara dengan &quot;AT SITE&quot; pada Modul 6 - akses satu fragmen secara langsung:</span>
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">FROM</span> PASIEN <span class="sql-k">PARTITION</span> (P_JAKARTA);
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">FROM</span> PASIEN <span class="sql-k">PARTITION</span> (P_BANDUNG);
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">FROM</span> PASIEN <span class="sql-k">PARTITION</span> (P_SURABAYA);
+</code></pre>
+</details>
+
+<details>
+  <summary>04_fragmentasi_turunan.sql <span class="lencana netral">36 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 4 - Fragmentasi horizontal turunan (derived)</span>
+<span class="sql-c">-- PASIEN_DOKTER mengikuti fragmentasi PASIEN lewat PARTITION BY REFERENCE.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Tanpa ini, setiap join PASIEN x PASIEN_DOKTER harus melintasi jaringan.</span>
+<span class="sql-c">-- Dengan reference partitioning, baris anak SELALU berada di partisi yang sama</span>
+<span class="sql-c">-- dengan induknya, sehingga join menjadi partition-wise join yang lokal.</span>
+
+<span class="sql-k">DROP</span> <span class="sql-k">TABLE</span> PASIEN_DOKTER <span class="sql-k">CASCADE</span> <span class="sql-k">CONSTRAINTS</span>;
+
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> PASIEN_DOKTER (
+  ID                     <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>)  <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  ID_DOKTER              <span class="sql-k">NUMBER</span>(<span class="sql-n">4</span>)  <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  ID_PASIEN              <span class="sql-k">NUMBER</span>(<span class="sql-n">8</span>)  <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  WAKTU_PERIKSA          <span class="sql-k">DATE</span>,
+  RESEP                  <span class="sql-k">VARCHAR2</span>(<span class="sql-n">120</span>),
+  BIAYA                  <span class="sql-k">NUMBER</span>(<span class="sql-n">12</span>,<span class="sql-n">2</span>),
+  <span class="sql-k">CONSTRAINT</span> PK_PASIEN_DOKTER <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (ID),
+  <span class="sql-k">CONSTRAINT</span> FK_PD_PASIEN <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (ID_PASIEN) <span class="sql-k">REFERENCES</span> PASIEN (ID_PASIEN),
+  <span class="sql-k">CONSTRAINT</span> FK_PD_DOKTER <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (ID_DOKTER) <span class="sql-k">REFERENCES</span> DOKTER (ID_DOKTER)
+)
+<span class="sql-k">PARTITION</span> <span class="sql-k">BY</span> <span class="sql-k">REFERENCE</span> (FK_PD_PASIEN);
+
+<span class="sql-c">-- Syarat reference partitioning: kolom foreign key WAJIB NOT NULL.</span>
+<span class="sql-c">-- Partisi anak otomatis mewarisi nama partisi induknya:</span>
+<span class="sql-k">SELECT</span> partition_name <span class="sql-k">FROM</span> user_tab_partitions <span class="sql-k">WHERE</span> table_name = <span class="sql-s">'PASIEN_DOKTER'</span>;
+
+<span class="sql-c">-- Bukti join menjadi lokal (cari baris PARTITION JOIN pada rencana):</span>
+<span class="sql-k">EXPLAIN</span> <span class="sql-k">PLAN</span> <span class="sql-k">FOR</span>
+<span class="sql-k">SELECT</span> p.NAMA_PASIEN, pd.RESEP
+  <span class="sql-k">FROM</span> PASIEN p <span class="sql-k">JOIN</span> PASIEN_DOKTER pd <span class="sql-k">ON</span> p.ID_PASIEN = pd.ID_PASIEN
+ <span class="sql-k">WHERE</span> p.KOTA = <span class="sql-s">'Jakarta'</span>;
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> <span class="sql-k">TABLE</span>(<span class="sql-f">DBMS_XPLAN</span>.DISPLAY(<span class="sql-k">NULL</span>, <span class="sql-k">NULL</span>, <span class="sql-s">'BASIC +<span class="sql-k">PARTITION</span>'</span>));
+</code></pre>
+</details>
+
+<details>
+  <summary>05_fragmentasi_vertikal.sql <span class="lencana netral">58 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 5 - Fragmentasi vertikal</span>
+<span class="sql-c">-- Contoh S1/S2 pada Modul 6: data gaji dipisahkan dari data identitas.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Alasan bisnis: kolom gaji hanya boleh dibaca bagian SDM, sedangkan nama</span>
+<span class="sql-c">-- dan cabang dibaca semua orang. Memisahkannya secara vertikal membuat</span>
+<span class="sql-c">-- hak akses bisa diberikan per tabel, bukan per kolom.</span>
+
+<span class="sql-c">-- Syarat lossless-join: SETIAP fragmen wajib memuat kunci (STAFFNO).</span>
+<span class="sql-c">-- Tanpa itu, S1 JOIN S2 tidak akan mengembalikan relasi aslinya.</span>
+
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> S1_STAFF (
+  STAFFNO                <span class="sql-k">VARCHAR2</span>(<span class="sql-n">10</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  POSITION               <span class="sql-k">VARCHAR2</span>(<span class="sql-n">20</span>),
+  SEX                    <span class="sql-k">VARCHAR2</span>(<span class="sql-n">1</span>),
+  DOB                    <span class="sql-k">DATE</span>,
+  SALARY                 <span class="sql-k">NUMBER</span>(<span class="sql-n">5</span>),
+  <span class="sql-k">CONSTRAINT</span> PK_S1_STAFF <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (STAFFNO)
+)
+<span class="sql-k">TABLESPACE</span> TS_S3;
+
+<span class="sql-k">CREATE</span> <span class="sql-k">TABLE</span> S2_STAFF (
+  STAFFNO                <span class="sql-k">VARCHAR2</span>(<span class="sql-n">10</span>) <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>,
+  FNAME                  <span class="sql-k">VARCHAR2</span>(<span class="sql-n">10</span>),
+  LNAME                  <span class="sql-k">VARCHAR2</span>(<span class="sql-n">20</span>),
+  BRANCHNO               <span class="sql-k">VARCHAR2</span>(<span class="sql-n">2</span>),
+  <span class="sql-k">CONSTRAINT</span> PK_S2_STAFF <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span> (STAFFNO),
+  <span class="sql-k">CONSTRAINT</span> FK_S2_STAFF_S1_STAFF <span class="sql-k">FOREIGN</span> <span class="sql-k">KEY</span> (STAFFNO)
+    <span class="sql-k">REFERENCES</span> S1_STAFF (STAFFNO) <span class="sql-k">ON</span> <span class="sql-k">DELETE</span> <span class="sql-k">CASCADE</span>
+)
+<span class="sql-k">TABLESPACE</span> TS_S1;
+
+<span class="sql-c">-- VIEW perekat: mengembalikan relasi global dari fragmen-fragmen vertikal.</span>
+<span class="sql-c">-- Inilah &quot;program lokalisasi&quot; untuk fragmentasi vertikal: R = F1 JOIN F2 ... atas kunci.</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">OR</span> REPLACE <span class="sql-k">VIEW</span> STAFF <span class="sql-k">AS</span>
+<span class="sql-k">SELECT</span> S1_STAFF.STAFFNO,
+       S1_STAFF.POSITION,
+       S1_STAFF.SEX,
+       S1_STAFF.DOB,
+       S1_STAFF.SALARY,
+       S2_STAFF.FNAME,
+       S2_STAFF.LNAME,
+       S2_STAFF.BRANCHNO
+  <span class="sql-k">FROM</span> S1_STAFF
+  <span class="sql-k">JOIN</span> S2_STAFF <span class="sql-k">ON</span> S1_STAFF.STAFFNO = S2_STAFF.STAFFNO;
+
+<span class="sql-c">-- Uji rekonstruksi: jumlah baris VIEW harus sama dengan jumlah baris asli.</span>
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris_s1 <span class="sql-k">FROM</span> S1_STAFF;
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris_s2 <span class="sql-k">FROM</span> S2_STAFF;
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris_rekonstruksi <span class="sql-k">FROM</span> STAFF;
+
+<span class="sql-c">-- Reduksi fragmentasi vertikal: kueri di bawah hanya menyentuh S2_STAFF</span>
+<span class="sql-c">-- karena tidak ada satu pun atribut S1_STAFF yang diminta.</span>
+<span class="sql-k">EXPLAIN</span> <span class="sql-k">PLAN</span> <span class="sql-k">FOR</span> <span class="sql-k">SELECT</span> FNAME, LNAME <span class="sql-k">FROM</span> STAFF;
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> <span class="sql-k">TABLE</span>(<span class="sql-f">DBMS_XPLAN</span>.DISPLAY(<span class="sql-k">NULL</span>, <span class="sql-k">NULL</span>, <span class="sql-s">'BASIC'</span>));
+</code></pre>
+</details>
+
+<details>
+  <summary>06_database_link.sql <span class="lencana netral">45 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 6 - Database link antar situs</span>
+<span class="sql-c">-- Tanpa link, Oracle tidak punya jalan untuk menjalankan kueri terdistribusi.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Database link: jalur akses ke basis data pada situs lain.</span>
+<span class="sql-c">-- Tanpa link ini, tidak ada kueri terdistribusi yang bisa dijalankan Oracle.</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">DATABASE</span> <span class="sql-k">LINK</span> SITUS_BANDUNG
+  <span class="sql-k">CONNECT</span> <span class="sql-k">TO</span> RS_APP <span class="sql-k">IDENTIFIED</span> <span class="sql-k">BY</span> &quot;&amp;sandi_situs&quot;
+  <span class="sql-k">USING</span> <span class="sql-s">'//bandung-db:<span class="sql-n">1521</span>/XEPDB1'</span>;
+
+<span class="sql-c">-- Uji sambungan:</span>
+<span class="sql-k">SELECT</span> <span class="sql-f">SYSDATE</span> <span class="sql-k">FROM</span> dual@SITUS_BANDUNG;
+<span class="sql-c">-- Database link: jalur akses ke basis data pada situs lain.</span>
+<span class="sql-c">-- Tanpa link ini, tidak ada kueri terdistribusi yang bisa dijalankan Oracle.</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">DATABASE</span> <span class="sql-k">LINK</span> SITUS_SURABAYA
+  <span class="sql-k">CONNECT</span> <span class="sql-k">TO</span> RS_APP <span class="sql-k">IDENTIFIED</span> <span class="sql-k">BY</span> &quot;&amp;sandi_situs&quot;
+  <span class="sql-k">USING</span> <span class="sql-s">'//surabaya-db:<span class="sql-n">1521</span>/XEPDB1'</span>;
+
+<span class="sql-c">-- Uji sambungan:</span>
+<span class="sql-k">SELECT</span> <span class="sql-f">SYSDATE</span> <span class="sql-k">FROM</span> dual@SITUS_SURABAYA;
+
+<span class="sql-c">-- Transparansi lokasi tingkat DDBMS: aplikasi cukup menyebut nama objek,</span>
+<span class="sql-c">-- letak fisiknya disembunyikan oleh sinonim. Pindah situs = ubah sinonim,</span>
+<span class="sql-c">-- aplikasi tidak perlu disentuh sama sekali.</span>
+
+<span class="sql-k">CREATE</span> <span class="sql-k">OR</span> REPLACE <span class="sql-k">SYNONYM</span> PASIEN_BANDUNG <span class="sql-k">FOR</span> PASIEN@SITUS_BANDUNG;
+<span class="sql-k">CREATE</span> <span class="sql-k">OR</span> REPLACE <span class="sql-k">SYNONYM</span> PASIEN_SURABAYA <span class="sql-k">FOR</span> PASIEN@SITUS_SURABAYA;
+
+<span class="sql-c">-- Program lokalisasi fragmentasi horizontal: R = F1 UNION ALL F2 UNION ALL ...</span>
+<span class="sql-c">-- Oracle memangkas cabang yang predikatnya bertentangan dengan WHERE kueri</span>
+<span class="sql-c">-- (partition pruning / predicate pushdown) — inilah reduksi yang dibahas di Modul 7.</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">OR</span> REPLACE <span class="sql-k">VIEW</span> V_PASIEN_NASIONAL <span class="sql-k">AS</span>
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> PASIEN <span class="sql-k">WHERE</span> KOTA = <span class="sql-s">'Jakarta'</span>
+<span class="sql-k">UNION</span> <span class="sql-k">ALL</span>
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> PASIEN@SITUS_BANDUNG <span class="sql-k">WHERE</span> KOTA = <span class="sql-s">'Bandung'</span>
+<span class="sql-k">UNION</span> <span class="sql-k">ALL</span>
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> PASIEN@SITUS_SURABAYA <span class="sql-k">WHERE</span> KOTA = <span class="sql-s">'Surabaya'</span>
+;
+
+<span class="sql-c">-- Periksa link yang ada dan sesi terdistribusi yang sedang terbuka:</span>
+<span class="sql-k">SELECT</span> db_link, username, host <span class="sql-k">FROM</span> user_db_links;
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> v$dblink;
+</code></pre>
+</details>
+
+<details>
+  <summary>07_replikasi_materialized_view.sql <span class="lencana netral">54 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 7 - Replikasi dengan materialized view</span>
+<span class="sql-c">-- DOKTER dibaca semua situs tetapi jarang berubah - kandidat replikasi penuh.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Keputusan ini bukan selera: lab Alokasi &amp; Replikasi menghitung bahwa</span>
+<span class="sql-c">-- mereplikasi DOKTER ke tiga situs menurunkan biaya total, sedangkan</span>
+<span class="sql-c">-- mereplikasi PASIEN justru menaikkannya karena PASIEN sering di-update.</span>
+
+<span class="sql-c">-- MV log di situs sumber: mencatat perubahan agar refresh cepat (FAST) mungkin.</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">MATERIALIZED</span> <span class="sql-k">VIEW</span> LOG <span class="sql-k">ON</span> DOKTER@SITUS_JAKARTA
+  <span class="sql-k">WITH</span> <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span>, ROWID, SEQUENCE INCLUDING NEW <span class="sql-k">VALUES</span>;
+
+<span class="sql-c">-- Replika (salinan) di situs tujuan.</span>
+<span class="sql-k">CREATE</span> <span class="sql-k">MATERIALIZED</span> <span class="sql-k">VIEW</span> MV_DOKTER
+  <span class="sql-k">TABLESPACE</span> TS_S2
+  <span class="sql-k">BUILD</span> <span class="sql-k">IMMEDIATE</span>
+  <span class="sql-k">REFRESH</span> <span class="sql-k">FAST</span> START <span class="sql-k">WITH</span> <span class="sql-f">SYSDATE</span> <span class="sql-k">NEXT</span> <span class="sql-f">SYSDATE</span> + <span class="sql-n">15</span>/<span class="sql-n">1440</span>
+  <span class="sql-k">WITH</span> <span class="sql-k">PRIMARY</span> <span class="sql-k">KEY</span>
+  <span class="sql-k">ENABLE</span> <span class="sql-k">QUERY</span> <span class="sql-k">REWRITE</span>
+<span class="sql-k">AS</span> <span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> DOKTER@SITUS_JAKARTA;
+
+<span class="sql-c">-- Segarkan manual:</span>
+<span class="sql-k">EXEC</span> <span class="sql-f">DBMS_MVIEW</span>.<span class="sql-k">REFRESH</span>(<span class="sql-s">'MV_DOKTER'</span>, <span class="sql-s">'F'</span>);
+
+<span class="sql-c">-- Periksa apakah FAST REFRESH memang bisa dipakai:</span>
+<span class="sql-k">EXEC</span> <span class="sql-f">DBMS_MVIEW</span>.EXPLAIN_MVIEW(<span class="sql-s">'MV_DOKTER'</span>);
+<span class="sql-k">SELECT</span> capability_name, possible, msgtxt <span class="sql-k">FROM</span> mv_capabilities_table
+ <span class="sql-k">WHERE</span> capability_name <span class="sql-k">LIKE</span> <span class="sql-s">'REFRESH_FAST%'</span>;
+
+<span class="sql-c">-- Pilihan jadwal penyegaran dan konsekuensinya:</span>
+<span class="sql-c">--   ON COMMIT   -&gt; RPO 0, tetapi setiap COMMIT di sumber ikut menunggu (sinkron)</span>
+<span class="sql-c">--   ON DEMAND   -&gt; RPO sebesar jeda penyegaran, COMMIT tetap cepat (asinkron)</span>
+<span class="sql-c">--   START WITH  -&gt; penyegaran berkala; di atas dipakai 15 menit</span>
+
+<span class="sql-c">-- Refresh group menjaga konsistensi antar replika: seluruh MV di bawah ini</span>
+<span class="sql-c">-- disegarkan dalam SATU transaksi, jadi tidak ada keadaan setengah jadi.</span>
+<span class="sql-k">BEGIN</span>
+  <span class="sql-f">DBMS_REFRESH</span>.MAKE(
+    <span class="sql-k">name</span>        =&gt; <span class="sql-s">'RG_REFERENSI'</span>,
+    <span class="sql-k">list</span>        =&gt; <span class="sql-s">'MV_DOKTER'</span>,
+    next_date   =&gt; <span class="sql-f">SYSDATE</span>,
+    <span class="sql-k">interval</span>    =&gt; <span class="sql-s">'<span class="sql-f">SYSDATE</span> + <span class="sql-n">15</span>/<span class="sql-n">1440</span>'</span>,
+    implicit_destroy =&gt; FALSE);
+<span class="sql-k">END</span>;
+/
+
+<span class="sql-k">EXEC</span> <span class="sql-f">DBMS_REFRESH</span>.<span class="sql-k">REFRESH</span>(<span class="sql-s">'RG_REFERENSI'</span>);
+
+<span class="sql-c">-- Pantau apakah replika tertinggal:</span>
+<span class="sql-k">SELECT</span> mview_name, last_refresh_type, last_refresh_date, staleness <span class="sql-k">FROM</span> user_mviews;
+<span class="sql-k">SELECT</span> <span class="sql-k">name</span>, status, next_date <span class="sql-k">FROM</span> user_refresh;
+</code></pre>
+</details>
+
+<details>
+  <summary>08_transaksi_terdistribusi.sql <span class="lencana netral">39 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 8 - Transaksi terdistribusi dan two-phase commit</span>
+<span class="sql-c">-- Oracle menjalankan 2PC otomatis; yang perlu dipahami adalah kapan ia memblokir.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Transaksi terdistribusi. Oracle menjalankan two-phase commit SECARA OTOMATIS</span>
+<span class="sql-c">-- begitu satu transaksi menyentuh lebih dari satu basis data lewat database link.</span>
+<span class="sql-c">-- Tidak ada perintah khusus: cukup COMMIT.</span>
+
+<span class="sql-k">SET</span> <span class="sql-k">TRANSACTION</span> <span class="sql-k">NAME</span> <span class="sql-s">'RUJUK_PASIEN_LINTAS_KOTA'</span>;
+
+<span class="sql-c">-- situs Jakarta (lokal)</span>
+<span class="sql-k">UPDATE</span> PASIEN <span class="sql-k">SET</span> KOTA = <span class="sql-s">'Bandung'</span> <span class="sql-k">WHERE</span> ID_PASIEN = <span class="sql-n">1</span>;
+
+<span class="sql-c">-- situs Bandung (jauh)</span>
+<span class="sql-k">INSERT</span> <span class="sql-k">INTO</span> DAFTAR@SITUS_BANDUNG (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">99</span>, <span class="sql-n">1</span>, <span class="sql-n">3</span>, <span class="sql-f">SYSDATE</span>);
+
+<span class="sql-c">-- Satu COMMIT ini memicu PREPARE ke 2 situs, lalu COMMIT global.</span>
+<span class="sql-k">COMMIT</span>;
+
+<span class="sql-c">-- Menunjuk situs commit point (paling tepercaya / paling jarang mati):</span>
+<span class="sql-c">-- ALTER SESSION SET COMMIT_POINT_STRENGTH = 200;  (parameter tingkat instans)</span>
+
+<span class="sql-c">-- Urutan yang sebenarnya terjadi di balik satu COMMIT itu:</span>
+<span class="sql-c">--   fase 1  koordinator mengirim PREPARE ke semua situs</span>
+<span class="sql-c">--   fase 1  tiap situs menulis catatan READY lalu menjawab VOTE-COMMIT</span>
+<span class="sql-c">--   fase 2  koordinator menulis keputusan lalu menyebarkan GLOBAL-COMMIT</span>
+<span class="sql-c">--   fase 2  tiap situs commit dan mengirim ACK</span>
+
+<span class="sql-c">-- Situs commit point ditentukan oleh COMMIT_POINT_STRENGTH tertinggi.</span>
+<span class="sql-c">-- Pilih situs yang paling jarang mati sebagai commit point:</span>
+<span class="sql-k">SELECT</span> <span class="sql-k">name</span>, value <span class="sql-k">FROM</span> v$parameter <span class="sql-k">WHERE</span> <span class="sql-k">name</span> = <span class="sql-s">'commit_point_strength'</span>;
+<span class="sql-c">-- ALTER SYSTEM SET COMMIT_POINT_STRENGTH = 200 SCOPE = SPFILE;</span>
+
+<span class="sql-c">-- Simulasi transaksi menggantung (jalankan di sesi terpisah, lalu matikan</span>
+<span class="sql-c">-- jaringan ke situs jauh sebelum COMMIT selesai):</span>
+<span class="sql-k">ALTER</span> <span class="sql-k">SESSION</span> <span class="sql-k">SET</span> DISTRIBUTED_LOCK_TIMEOUT = <span class="sql-n">10</span>;
+</code></pre>
+</details>
+
+<details>
+  <summary>09_transparansi_lima_tingkat.sql <span class="lencana netral">64 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 9 - Satu kueri, lima tingkat transparansi</span>
+<span class="sql-c">-- Kueri yang sama ditulis ulang sesuai tangga transparansi pada Modul 6.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- ----------------------------------------------------------------------</span>
+<span class="sql-c">-- TINGKAT 1: Transparansi fragmentasi</span>
+<span class="sql-c">-- Tingkat tertinggi. Akses memakai skema global; nama fragmen maupun situs tidak pernah muncul.</span>
+<span class="sql-c">-- Fragmen disebut: 0 | Situs disebut: 0 | Panjang SQL: 67 karakter</span>
+
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT
+<span class="sql-k">FROM</span> PASIEN
+<span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>;
+
+<span class="sql-c">-- ----------------------------------------------------------------------</span>
+<span class="sql-c">-- TINGKAT 2: Transparansi lokasi</span>
+<span class="sql-c">-- Tingkat menengah. Pengguna tahu data difragmentasi dan harus menyebut nama fragmen, tetapi tidak perlu tahu fragmen itu disimpan di situs mana.</span>
+<span class="sql-c">-- Fragmen disebut: 3 | Situs disebut: 0 | Panjang SQL: 238 karakter</span>
+
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_JAKARTA <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>
+<span class="sql-k">UNION</span>
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_BANDUNG <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>
+<span class="sql-k">UNION</span>
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_SURABAYA <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>;
+
+<span class="sql-c">-- ----------------------------------------------------------------------</span>
+<span class="sql-c">-- TINGKAT 3: Transparansi replikasi</span>
+<span class="sql-c">-- Pengguna tidak tahu ada berapa salinan fragmen, apalagi salinan mana yang dipakai. Sistem yang memilih. Bisa ada tanpa transparansi lokasi.</span>
+<span class="sql-c">-- Fragmen disebut: 3 | Situs disebut: 0 | Panjang SQL: 238 karakter</span>
+<span class="sql-c">-- Tidak ada fragmen yang direplikasi pada rancangan ini.</span>
+
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_JAKARTA <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>
+<span class="sql-k">UNION</span>
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_BANDUNG <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>
+<span class="sql-k">UNION</span>
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_SURABAYA <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>;
+
+<span class="sql-c">-- ----------------------------------------------------------------------</span>
+<span class="sql-c">-- TINGKAT 4: Transparansi pemetaan lokal</span>
+<span class="sql-c">-- Tingkat paling rendah. Pengguna wajib menyebut nama fragmen sekaligus lokasi penyimpanannya.</span>
+<span class="sql-c">-- Fragmen disebut: 3 | Situs disebut: 3 | Panjang SQL: 271 karakter</span>
+
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_JAKARTA <span class="sql-k">AT</span> <span class="sql-k">SITE</span> S1 <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>
+<span class="sql-k">UNION</span>
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_BANDUNG <span class="sql-k">AT</span> <span class="sql-k">SITE</span> S2 <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>
+<span class="sql-k">UNION</span>
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_SURABAYA <span class="sql-k">AT</span> <span class="sql-k">SITE</span> S3 <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>;
+
+<span class="sql-c">-- ----------------------------------------------------------------------</span>
+<span class="sql-c">-- TINGKAT 5: Tanpa transparansi (rute eksplisit)</span>
+<span class="sql-c">-- Aplikasi menuliskan sendiri rute akses lintas basis data. Di Oracle bentuknya nama_tabel@database_link.</span>
+<span class="sql-c">-- Fragmen disebut: 3 | Situs disebut: 3 | Panjang SQL: 282 karakter</span>
+<span class="sql-c">-- PERINGATAN: Perubahan letak fisik data memaksa seluruh aplikasi diubah — inilah biaya yang ditanggung saat transparansi dilepas.</span>
+
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_JAKARTA@SITES1_LINK <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>
+<span class="sql-k">UNION</span> <span class="sql-k">ALL</span>
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_BANDUNG@SITES2_LINK <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>
+<span class="sql-k">UNION</span> <span class="sql-k">ALL</span>
+<span class="sql-k">SELECT</span> NAMA_PASIEN, PENYAKIT <span class="sql-k">FROM</span> PASIEN_SURABAYA@SITES3_LINK <span class="sql-k">WHERE</span> JENIS_KELAMIN = <span class="sql-s">'P'</span>;
+
+<span class="sql-c">-- Kesimpulan: makin rendah transparansinya, makin panjang SQL yang harus</span>
+<span class="sql-c">-- ditulis aplikasi, dan makin banyak yang harus diubah saat data dipindahkan.</span>
+</code></pre>
+</details>
+
+<details>
+  <summary>10_diagnosa_2pc_dan_deadlock.sql <span class="lencana netral">50 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 10 - Diagnosa transaksi menggantung dan deadlock</span>
+<span class="sql-c">-- Yang dilakukan DBA ketika 2PC benar-benar memblokir di produksi.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Transaksi terdistribusi yang menggantung (in-doubt):</span>
+<span class="sql-k">SELECT</span> local_tran_id, global_tran_id, state, mixed, advice, host, <span class="sql-k">commit</span>#
+  <span class="sql-k">FROM</span> dba_2pc_pending
+ <span class="sql-k">ORDER BY</span> fail_time;
+
+<span class="sql-c">-- Sisi mana yang belum menjawab:</span>
+<span class="sql-k">SELECT</span> local_tran_id, in_out, <span class="sql-k">database</span>, dbuser_owner, interface, dbid
+  <span class="sql-k">FROM</span> dba_2pc_neighbors;
+
+<span class="sql-c">-- Kunci yang tertahan gara-gara transaksi in-doubt:</span>
+<span class="sql-k">SELECT</span> s.sid, s.serial#, s.username, l.type, l.id1, l.id2, l.lmode, l.request
+  <span class="sql-k">FROM</span> v$lock l <span class="sql-k">JOIN</span> v$<span class="sql-k">session</span> s <span class="sql-k">ON</span> s.sid = l.sid
+ <span class="sql-k">WHERE</span> l.type <span class="sql-k">IN</span> (<span class="sql-s">'TX'</span>,<span class="sql-s">'TM'</span>) <span class="sql-k">AND</span> l.request &gt; <span class="sql-n">0</span>;
+
+<span class="sql-c">-- Deadlock: Oracle mendeteksi sendiri dan melempar ORA-00060 ke salah satu sesi.</span>
+<span class="sql-c">-- Rinciannya ada di trace file yang ditunjuk:</span>
+<span class="sql-k">SELECT</span> value <span class="sql-k">FROM</span> v$diag_info <span class="sql-k">WHERE</span> <span class="sql-k">name</span> = <span class="sql-s">'<span class="sql-k">Default</span> Trace File'</span>;
+
+<span class="sql-c">-- Paksa keputusan HANYA bila keputusan koordinator sudah dipastikan:</span>
+<span class="sql-c">-- COMMIT FORCE '&lt;local_tran_id&gt;';</span>
+<span class="sql-c">-- ROLLBACK FORCE '&lt;local_tran_id&gt;';</span>
+<span class="sql-c">-- EXEC DBMS_TRANSACTION.PURGE_LOST_DB_ENTRY('&lt;local_tran_id&gt;');</span>
+
+<span class="sql-c">-- Arti kolom STATE pada dba_2pc_pending:</span>
+<span class="sql-c">--   collecting  : koordinator masih mengumpulkan suara</span>
+<span class="sql-c">--   prepared    : situs ini sudah READY dan MENUNGGU keputusan - inilah keadaan terblokir</span>
+<span class="sql-c">--   committed   : sudah commit, tinggal menunggu pembersihan</span>
+<span class="sql-c">--   forced commit / forced abort : keputusan dipaksa manual oleh DBA</span>
+
+<span class="sql-c">-- Kolom MIXED = yes berarti bencana: sebagian situs commit, sebagian rollback.</span>
+<span class="sql-c">-- Itu terjadi bila COMMIT FORCE dipakai dengan keputusan yang salah.</span>
+
+<span class="sql-c">-- Deadlock terdistribusi: Oracle mendeteksi sendiri dan mengorbankan satu sesi</span>
+<span class="sql-c">-- dengan ORA-00060. Yang perlu dibaca adalah trace file-nya:</span>
+<span class="sql-k">SELECT</span> value <span class="sql-k">AS</span> trace_file <span class="sql-k">FROM</span> v$diag_info <span class="sql-k">WHERE</span> <span class="sql-k">name</span> = <span class="sql-s">'<span class="sql-k">Default</span> Trace File'</span>;
+
+<span class="sql-c">-- Siapa menunggu siapa (wait-for graph versi Oracle):</span>
+<span class="sql-k">SELECT</span> s.sid, s.username, s.blocking_session, s.event, s.seconds_in_wait
+  <span class="sql-k">FROM</span> v$<span class="sql-k">session</span> s
+ <span class="sql-k">WHERE</span> s.blocking_session <span class="sql-k">IS</span> <span class="sql-k">NOT</span> <span class="sql-k">NULL</span>;
+
+<span class="sql-c">-- Batas waktu menunggu kunci terdistribusi:</span>
+<span class="sql-k">SELECT</span> <span class="sql-k">name</span>, value <span class="sql-k">FROM</span> v$parameter <span class="sql-k">WHERE</span> <span class="sql-k">name</span> = <span class="sql-s">'distributed_lock_timeout'</span>;
+</code></pre>
+</details>
+
+<details>
+  <summary>11_rencana_eksekusi.sql <span class="lencana netral">45 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 11 - Membaca rencana eksekusi kueri terdistribusi</span>
+<span class="sql-c">-- Bukti bahwa reduksi lokalisasi benar-benar terjadi di mesin, bukan di teori.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-c">-- Reduksi fragmentasi horizontal versi Oracle: kueri di bawah HANYA menyentuh</span>
+<span class="sql-c">-- satu partisi. Kolom PSTART/PSTOP pada rencana eksekusi membuktikannya.</span>
+<span class="sql-k">EXPLAIN</span> <span class="sql-k">PLAN</span> <span class="sql-k">FOR</span>
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> PASIEN <span class="sql-k">WHERE</span> KOTA = <span class="sql-s">'Jakarta'</span>;
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> <span class="sql-k">TABLE</span>(<span class="sql-f">DBMS_XPLAN</span>.DISPLAY(<span class="sql-k">NULL</span>, <span class="sql-k">NULL</span>, <span class="sql-s">'BASIC +<span class="sql-k">PARTITION</span>'</span>));
+
+<span class="sql-c">-- Bandingkan dengan kueri tanpa predikat partisi (menyentuh SELURUH partisi):</span>
+<span class="sql-k">EXPLAIN</span> <span class="sql-k">PLAN</span> <span class="sql-k">FOR</span> <span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> PASIEN;
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> <span class="sql-k">TABLE</span>(<span class="sql-f">DBMS_XPLAN</span>.DISPLAY(<span class="sql-k">NULL</span>, <span class="sql-k">NULL</span>, <span class="sql-s">'BASIC +<span class="sql-k">PARTITION</span>'</span>));
+
+<span class="sql-c">-- Akses langsung ke satu partisi (setara &quot;AT SITE&quot; pada Modul 6):</span>
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> PASIEN <span class="sql-k">PARTITION</span> (P_JAKARTA);
+
+<span class="sql-k">EXPLAIN</span> <span class="sql-k">PLAN</span> <span class="sql-k">SET</span> STATEMENT_ID = <span class="sql-s">'join_lokal'</span> <span class="sql-k">FOR</span>
+<span class="sql-k">SELECT</span> p.NAMA_PASIEN, d.NAMA_DOKTER <span class="sql-k">FROM</span> PASIEN p <span class="sql-k">JOIN</span> PASIEN_DOKTER pd <span class="sql-k">ON</span> p.ID_PASIEN = pd.ID_PASIEN <span class="sql-k">JOIN</span> DOKTER d <span class="sql-k">ON</span> pd.ID_DOKTER = d.ID_DOKTER <span class="sql-k">WHERE</span> p.KOTA = <span class="sql-s">'Jakarta'</span>
+;
+
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> <span class="sql-k">TABLE</span>(<span class="sql-f">DBMS_XPLAN</span>.DISPLAY(<span class="sql-k">NULL</span>, <span class="sql-s">'join_lokal'</span>, <span class="sql-s">'<span class="sql-k">ALL</span> +<span class="sql-k">PARTITION</span> +REMOTE'</span>));
+
+<span class="sql-c">-- Kolom yang perlu dibaca:</span>
+<span class="sql-c">--   PSTART/PSTOP  -&gt; partisi mana yang benar-benar disentuh (bukti partition pruning)</span>
+<span class="sql-c">--   OPERATION REMOTE -&gt; bagian kueri yang dikirim ke situs lain</span>
+<span class="sql-c">--   Other-nya berisi SQL yang sesungguhnya dijalankan di situs jauh</span>
+
+<span class="sql-c">-- Rencana yang BENAR-BENAR dipakai (bukan perkiraan):</span>
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> <span class="sql-k">TABLE</span>(<span class="sql-f">DBMS_XPLAN</span>.DISPLAY_CURSOR(<span class="sql-k">NULL</span>, <span class="sql-k">NULL</span>, <span class="sql-s">'ALLSTATS LAST +<span class="sql-k">PARTITION</span>'</span>));
+
+<span class="sql-c">-- Kueri lintas situs - perhatikan baris REMOTE pada rencana:</span>
+<span class="sql-k">EXPLAIN</span> <span class="sql-k">PLAN</span> <span class="sql-k">FOR</span>
+<span class="sql-k">SELECT</span> <span class="sql-f">COUNT</span>(*) <span class="sql-k">FROM</span> PASIEN@SITUS_BANDUNG;
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> <span class="sql-k">TABLE</span>(<span class="sql-f">DBMS_XPLAN</span>.DISPLAY(<span class="sql-k">NULL</span>, <span class="sql-k">NULL</span>, <span class="sql-s">'<span class="sql-k">ALL</span> +REMOTE'</span>));
+
+<span class="sql-c">-- Kolom OTHER pada rencana berisi SQL yang benar-benar dikirim ke situs jauh.</span>
+<span class="sql-c">-- Di situlah terlihat apakah Oracle mengirim seluruh tabel atau hanya</span>
+<span class="sql-c">-- hasil yang sudah tersaring - persis perbandingan strategi join pada lab.</span>
+
+<span class="sql-c">-- Statistik agar pengoptimal punya dasar angka:</span>
+<span class="sql-k">EXEC</span> <span class="sql-f">DBMS_STATS</span>.GATHER_SCHEMA_STATS(<span class="sql-s">'RS_APP'</span>, <span class="sql-k">cascade</span> =&gt; TRUE);
+</code></pre>
+</details>
+
+<details>
+  <summary>12_data_contoh.sql <span class="lencana netral">98 baris</span></summary>
+  <pre><code><span class="sql-c">-- ==========================================================================</span>
+<span class="sql-c">-- Langkah 12 - Data contoh</span>
+<span class="sql-c">-- Dataset yang sama persis dengan yang dipakai lab di situs.</span>
+<span class="sql-c">-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.</span>
+<span class="sql-c">-- ==========================================================================</span>
+
+<span class="sql-k">SET</span> DEFINE OFF;
+
+<span class="sql-c">-- pasien (12 baris)</span>
+<span class="sql-k">INSERT</span> <span class="sql-k">ALL</span>
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">1</span>, <span class="sql-s">'Budi Santoso'</span>, <span class="sql-s">'Jl. Merdeka <span class="sql-n">12</span>'</span>, <span class="sql-s">'L'</span>, <span class="sql-s">'Demam Berdarah'</span>, <span class="sql-s">'<span class="sql-n">081234567001</span>'</span>, <span class="sql-s">'Jakarta'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">2</span>, <span class="sql-s">'Siti Aminah'</span>, <span class="sql-s">'Jl. Kenanga <span class="sql-n">5</span>'</span>, <span class="sql-s">'P'</span>, <span class="sql-s">'Tifus'</span>, <span class="sql-s">'<span class="sql-n">081234567002</span>'</span>, <span class="sql-s">'Jakarta'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">3</span>, <span class="sql-s">'Andi Wijaya'</span>, <span class="sql-s">'Jl. Melati <span class="sql-n">9</span>'</span>, <span class="sql-s">'L'</span>, <span class="sql-s">'Asma'</span>, <span class="sql-s">'<span class="sql-n">081234567003</span>'</span>, <span class="sql-s">'Bandung'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">4</span>, <span class="sql-s">'Rina Marlina'</span>, <span class="sql-s">'Jl. Anggrek <span class="sql-n">21</span>'</span>, <span class="sql-s">'P'</span>, <span class="sql-s">'Anemia'</span>, <span class="sql-s">'<span class="sql-n">081234567004</span>'</span>, <span class="sql-s">'Bandung'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">5</span>, <span class="sql-s">'Joko Susilo'</span>, <span class="sql-s">'Jl. Mawar <span class="sql-n">3</span>'</span>, <span class="sql-s">'L'</span>, <span class="sql-s">'Diabetes'</span>, <span class="sql-s">'<span class="sql-n">081234567005</span>'</span>, <span class="sql-s">'Surabaya'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">6</span>, <span class="sql-s">'Dewi Lestari'</span>, <span class="sql-s">'Jl. Dahlia <span class="sql-n">7</span>'</span>, <span class="sql-s">'P'</span>, <span class="sql-s">'Hipertensi'</span>, <span class="sql-s">'<span class="sql-n">081234567006</span>'</span>, <span class="sql-s">'Surabaya'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">7</span>, <span class="sql-s">'Agus Setiawan'</span>, <span class="sql-s">'Jl. Cempaka <span class="sql-n">14</span>'</span>, <span class="sql-s">'L'</span>, <span class="sql-s">'Demam Berdarah'</span>, <span class="sql-s">'<span class="sql-n">081234567007</span>'</span>, <span class="sql-s">'Jakarta'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">8</span>, <span class="sql-s">'Nurul Hidayah'</span>, <span class="sql-s">'Jl. Flamboyan <span class="sql-n">2</span>'</span>, <span class="sql-s">'P'</span>, <span class="sql-s">'Migrain'</span>, <span class="sql-s">'<span class="sql-n">081234567008</span>'</span>, <span class="sql-s">'Bandung'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">9</span>, <span class="sql-s">'Hendra Gunawan'</span>, <span class="sql-s">'Jl. Teratai <span class="sql-n">18</span>'</span>, <span class="sql-s">'L'</span>, <span class="sql-s">'Patah Tulang'</span>, <span class="sql-s">'<span class="sql-n">081234567009</span>'</span>, <span class="sql-s">'Surabaya'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">10</span>, <span class="sql-s">'Maya Anggraini'</span>, <span class="sql-s">'Jl. Sakura <span class="sql-n">30</span>'</span>, <span class="sql-s">'P'</span>, <span class="sql-s">'Tifus'</span>, <span class="sql-s">'<span class="sql-n">081234567010</span>'</span>, <span class="sql-s">'Jakarta'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">11</span>, <span class="sql-s">'Rudi Hartono'</span>, <span class="sql-s">'Jl. Kamboja <span class="sql-n">11</span>'</span>, <span class="sql-s">'L'</span>, <span class="sql-s">'Asma'</span>, <span class="sql-s">'<span class="sql-n">081234567011</span>'</span>, <span class="sql-s">'Bandung'</span>)
+  <span class="sql-k">INTO</span> PASIEN (ID_PASIEN, NAMA_PASIEN, ALAMAT_PASIEN, JENIS_KELAMIN, PENYAKIT, NO_HP, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">12</span>, <span class="sql-s">'Lina Wahyuni'</span>, <span class="sql-s">'Jl. Bougenville <span class="sql-n">6</span>'</span>, <span class="sql-s">'P'</span>, <span class="sql-s">'Anemia'</span>, <span class="sql-s">'<span class="sql-n">081234567012</span>'</span>, <span class="sql-s">'Surabaya'</span>)
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> dual;
+
+<span class="sql-c">-- dokter (6 baris)</span>
+<span class="sql-k">INSERT</span> <span class="sql-k">ALL</span>
+  <span class="sql-k">INTO</span> DOKTER (ID_DOKTER, NAMA_DOKTER, ALAMAT_DOKTER, TANGGAL_LAHIR, NO_HP, SPESIALIS, WAKTU_KERJA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">1</span>, <span class="sql-s">'dr. Surya Atmaja'</span>, <span class="sql-s">'Jl. Diponegoro <span class="sql-n">1</span>'</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">1975</span>-<span class="sql-n">04</span>-<span class="sql-n">12</span>'</span>, <span class="sql-s">'<span class="sql-n">082100000001</span>'</span>, <span class="sql-s">'Penyakit Dalam'</span>, <span class="sql-s">'Senin-Rabu'</span>, <span class="sql-s">'Jakarta'</span>)
+  <span class="sql-k">INTO</span> DOKTER (ID_DOKTER, NAMA_DOKTER, ALAMAT_DOKTER, TANGGAL_LAHIR, NO_HP, SPESIALIS, WAKTU_KERJA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">2</span>, <span class="sql-s">'dr. Anita Kusuma'</span>, <span class="sql-s">'Jl. Sudirman <span class="sql-n">44</span>'</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">1982</span>-<span class="sql-n">08</span>-<span class="sql-n">30</span>'</span>, <span class="sql-s">'<span class="sql-n">082100000002</span>'</span>, <span class="sql-s">'Anak'</span>, <span class="sql-s">'Selasa-Kamis'</span>, <span class="sql-s">'Jakarta'</span>)
+  <span class="sql-k">INTO</span> DOKTER (ID_DOKTER, NAMA_DOKTER, ALAMAT_DOKTER, TANGGAL_LAHIR, NO_HP, SPESIALIS, WAKTU_KERJA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">3</span>, <span class="sql-s">'dr. Bambang Riyadi'</span>, <span class="sql-s">'Jl. Asia Afrika <span class="sql-n">8</span>'</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">1969</span>-<span class="sql-n">01</span>-<span class="sql-n">05</span>'</span>, <span class="sql-s">'<span class="sql-n">082100000003</span>'</span>, <span class="sql-s">'Bedah'</span>, <span class="sql-s">'Rabu-Jumat'</span>, <span class="sql-s">'Bandung'</span>)
+  <span class="sql-k">INTO</span> DOKTER (ID_DOKTER, NAMA_DOKTER, ALAMAT_DOKTER, TANGGAL_LAHIR, NO_HP, SPESIALIS, WAKTU_KERJA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">4</span>, <span class="sql-s">'dr. Citra Dewanti'</span>, <span class="sql-s">'Jl. Braga <span class="sql-n">19</span>'</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">1988</span>-<span class="sql-n">11</span>-<span class="sql-n">21</span>'</span>, <span class="sql-s">'<span class="sql-n">082100000004</span>'</span>, <span class="sql-s">'Saraf'</span>, <span class="sql-s">'Senin-Kamis'</span>, <span class="sql-s">'Bandung'</span>)
+  <span class="sql-k">INTO</span> DOKTER (ID_DOKTER, NAMA_DOKTER, ALAMAT_DOKTER, TANGGAL_LAHIR, NO_HP, SPESIALIS, WAKTU_KERJA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">5</span>, <span class="sql-s">'dr. Eko Prabowo'</span>, <span class="sql-s">'Jl. Tunjungan <span class="sql-n">2</span>'</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">1979</span>-<span class="sql-n">06</span>-<span class="sql-n">17</span>'</span>, <span class="sql-s">'<span class="sql-n">082100000005</span>'</span>, <span class="sql-s">'Jantung'</span>, <span class="sql-s">'Selasa-Sabtu'</span>, <span class="sql-s">'Surabaya'</span>)
+  <span class="sql-k">INTO</span> DOKTER (ID_DOKTER, NAMA_DOKTER, ALAMAT_DOKTER, TANGGAL_LAHIR, NO_HP, SPESIALIS, WAKTU_KERJA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">6</span>, <span class="sql-s">'dr. Farah Nadia'</span>, <span class="sql-s">'Jl. Pemuda <span class="sql-n">27</span>'</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">1985</span>-<span class="sql-n">02</span>-<span class="sql-n">09</span>'</span>, <span class="sql-s">'<span class="sql-n">082100000006</span>'</span>, <span class="sql-s">'Paru'</span>, <span class="sql-s">'Senin-Jumat'</span>, <span class="sql-s">'Surabaya'</span>)
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> dual;
+
+<span class="sql-c">-- administrator (4 baris)</span>
+<span class="sql-k">INSERT</span> <span class="sql-k">ALL</span>
+  <span class="sql-k">INTO</span> ADMINISTRATOR (ID_ADMIN, NAMA_ADMIN, WAKTU_JAGA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">1</span>, <span class="sql-s">'Ratna Sari'</span>, <span class="sql-s">'Pagi'</span>, <span class="sql-s">'Jakarta'</span>)
+  <span class="sql-k">INTO</span> ADMINISTRATOR (ID_ADMIN, NAMA_ADMIN, WAKTU_JAGA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">2</span>, <span class="sql-s">'Dimas Prakoso'</span>, <span class="sql-s">'Siang'</span>, <span class="sql-s">'Jakarta'</span>)
+  <span class="sql-k">INTO</span> ADMINISTRATOR (ID_ADMIN, NAMA_ADMIN, WAKTU_JAGA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">3</span>, <span class="sql-s">'Yuni Astuti'</span>, <span class="sql-s">'Malam'</span>, <span class="sql-s">'Bandung'</span>)
+  <span class="sql-k">INTO</span> ADMINISTRATOR (ID_ADMIN, NAMA_ADMIN, WAKTU_JAGA, KOTA) <span class="sql-k">VALUES</span> (<span class="sql-n">4</span>, <span class="sql-s">'Tono Saputra'</span>, <span class="sql-s">'Pagi'</span>, <span class="sql-s">'Surabaya'</span>)
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> dual;
+
+<span class="sql-c">-- pasien_dokter (14 baris)</span>
+<span class="sql-k">INSERT</span> <span class="sql-k">ALL</span>
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">1</span>, <span class="sql-n">1</span>, <span class="sql-n">1</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">01</span>'</span>, <span class="sql-s">'Paracetamol 500mg'</span>, <span class="sql-n">250000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">2</span>, <span class="sql-n">1</span>, <span class="sql-n">2</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">02</span>'</span>, <span class="sql-s">'Amoxicillin 500mg'</span>, <span class="sql-n">275000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">3</span>, <span class="sql-n">2</span>, <span class="sql-n">7</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">02</span>'</span>, <span class="sql-s">'Oralit + Vitamin'</span>, <span class="sql-n">180000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">4</span>, <span class="sql-n">2</span>, <span class="sql-n">10</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">03</span>'</span>, <span class="sql-s">'Ciprofloxacin'</span>, <span class="sql-n">320000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">5</span>, <span class="sql-n">3</span>, <span class="sql-n">3</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">04</span>'</span>, <span class="sql-s">'Salbutamol inhaler'</span>, <span class="sql-n">410000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">6</span>, <span class="sql-n">4</span>, <span class="sql-n">8</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">04</span>'</span>, <span class="sql-s">'Sumatriptan'</span>, <span class="sql-n">390000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">7</span>, <span class="sql-n">3</span>, <span class="sql-n">11</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">05</span>'</span>, <span class="sql-s">'Salbutamol inhaler'</span>, <span class="sql-n">410000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">8</span>, <span class="sql-n">4</span>, <span class="sql-n">4</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">05</span>'</span>, <span class="sql-s">'Sulfas ferrosus'</span>, <span class="sql-n">210000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">9</span>, <span class="sql-n">5</span>, <span class="sql-n">5</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">08</span>'</span>, <span class="sql-s">'Metformin 850mg'</span>, <span class="sql-n">450000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">10</span>, <span class="sql-n">5</span>, <span class="sql-n">6</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">08</span>'</span>, <span class="sql-s">'Amlodipin 10mg'</span>, <span class="sql-n">380000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">11</span>, <span class="sql-n">6</span>, <span class="sql-n">12</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">09</span>'</span>, <span class="sql-s">'Sulfas ferrosus'</span>, <span class="sql-n">215000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">12</span>, <span class="sql-n">3</span>, <span class="sql-n">9</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">10</span>'</span>, <span class="sql-s">'Gips + Analgesik'</span>, <span class="sql-n">850000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">13</span>, <span class="sql-n">1</span>, <span class="sql-n">1</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">12</span>'</span>, <span class="sql-s">'Kontrol - Paracetamol'</span>, <span class="sql-n">150000</span>)
+  <span class="sql-k">INTO</span> PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, WAKTU_PERIKSA, RESEP, BIAYA) <span class="sql-k">VALUES</span> (<span class="sql-n">14</span>, <span class="sql-n">5</span>, <span class="sql-n">5</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">15</span>'</span>, <span class="sql-s">'Kontrol - Metformin'</span>, <span class="sql-n">175000</span>)
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> dual;
+
+<span class="sql-c">-- dokter_admin (8 baris)</span>
+<span class="sql-k">INSERT</span> <span class="sql-k">ALL</span>
+  <span class="sql-k">INTO</span> DOKTER_ADMIN (ID_DATA, ID_DOKTER, ID_ADMIN) <span class="sql-k">VALUES</span> (<span class="sql-n">1</span>, <span class="sql-n">1</span>, <span class="sql-n">1</span>)
+  <span class="sql-k">INTO</span> DOKTER_ADMIN (ID_DATA, ID_DOKTER, ID_ADMIN) <span class="sql-k">VALUES</span> (<span class="sql-n">2</span>, <span class="sql-n">2</span>, <span class="sql-n">1</span>)
+  <span class="sql-k">INTO</span> DOKTER_ADMIN (ID_DATA, ID_DOKTER, ID_ADMIN) <span class="sql-k">VALUES</span> (<span class="sql-n">3</span>, <span class="sql-n">1</span>, <span class="sql-n">2</span>)
+  <span class="sql-k">INTO</span> DOKTER_ADMIN (ID_DATA, ID_DOKTER, ID_ADMIN) <span class="sql-k">VALUES</span> (<span class="sql-n">4</span>, <span class="sql-n">2</span>, <span class="sql-n">2</span>)
+  <span class="sql-k">INTO</span> DOKTER_ADMIN (ID_DATA, ID_DOKTER, ID_ADMIN) <span class="sql-k">VALUES</span> (<span class="sql-n">5</span>, <span class="sql-n">3</span>, <span class="sql-n">3</span>)
+  <span class="sql-k">INTO</span> DOKTER_ADMIN (ID_DATA, ID_DOKTER, ID_ADMIN) <span class="sql-k">VALUES</span> (<span class="sql-n">6</span>, <span class="sql-n">4</span>, <span class="sql-n">3</span>)
+  <span class="sql-k">INTO</span> DOKTER_ADMIN (ID_DATA, ID_DOKTER, ID_ADMIN) <span class="sql-k">VALUES</span> (<span class="sql-n">7</span>, <span class="sql-n">5</span>, <span class="sql-n">4</span>)
+  <span class="sql-k">INTO</span> DOKTER_ADMIN (ID_DATA, ID_DOKTER, ID_ADMIN) <span class="sql-k">VALUES</span> (<span class="sql-n">8</span>, <span class="sql-n">6</span>, <span class="sql-n">4</span>)
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> dual;
+
+<span class="sql-c">-- daftar (12 baris)</span>
+<span class="sql-k">INSERT</span> <span class="sql-k">ALL</span>
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">1</span>, <span class="sql-n">1</span>, <span class="sql-n">1</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">01</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">2</span>, <span class="sql-n">2</span>, <span class="sql-n">1</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">02</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">3</span>, <span class="sql-n">7</span>, <span class="sql-n">2</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">02</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">4</span>, <span class="sql-n">10</span>, <span class="sql-n">2</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">03</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">5</span>, <span class="sql-n">3</span>, <span class="sql-n">3</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">04</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">6</span>, <span class="sql-n">8</span>, <span class="sql-n">3</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">04</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">7</span>, <span class="sql-n">11</span>, <span class="sql-n">3</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">05</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">8</span>, <span class="sql-n">4</span>, <span class="sql-n">3</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">05</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">9</span>, <span class="sql-n">5</span>, <span class="sql-n">4</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">08</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">10</span>, <span class="sql-n">6</span>, <span class="sql-n">4</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">08</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">11</span>, <span class="sql-n">12</span>, <span class="sql-n">4</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">09</span>'</span>)
+  <span class="sql-k">INTO</span> DAFTAR (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) <span class="sql-k">VALUES</span> (<span class="sql-n">12</span>, <span class="sql-n">9</span>, <span class="sql-n">3</span>, <span class="sql-k">DATE</span> <span class="sql-s">'<span class="sql-n">2025</span>-<span class="sql-n">09</span>-<span class="sql-n">10</span>'</span>)
+<span class="sql-k">SELECT</span> * <span class="sql-k">FROM</span> dual;
+
+<span class="sql-k">COMMIT</span>;
+
+<span class="sql-c">-- Verifikasi jumlah baris:</span>
+<span class="sql-k">SELECT</span> <span class="sql-s">'pasien'</span> <span class="sql-k">AS</span> tabel, <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris <span class="sql-k">FROM</span> PASIEN;
+<span class="sql-k">SELECT</span> <span class="sql-s">'dokter'</span> <span class="sql-k">AS</span> tabel, <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris <span class="sql-k">FROM</span> DOKTER;
+<span class="sql-k">SELECT</span> <span class="sql-s">'administrator'</span> <span class="sql-k">AS</span> tabel, <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris <span class="sql-k">FROM</span> ADMINISTRATOR;
+<span class="sql-k">SELECT</span> <span class="sql-s">'pasien_dokter'</span> <span class="sql-k">AS</span> tabel, <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris <span class="sql-k">FROM</span> PASIEN_DOKTER;
+<span class="sql-k">SELECT</span> <span class="sql-s">'dokter_admin'</span> <span class="sql-k">AS</span> tabel, <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris <span class="sql-k">FROM</span> DOKTER_ADMIN;
+<span class="sql-k">SELECT</span> <span class="sql-s">'daftar'</span> <span class="sql-k">AS</span> tabel, <span class="sql-f">COUNT</span>(*) <span class="sql-k">AS</span> baris <span class="sql-k">FROM</span> DAFTAR;
+</code></pre>
+</details>
+
+<h2>Menjalankan cepat</h2>
+<pre><code>docker run -d --name oracle-free -p 1521:1521 -e ORACLE_PASSWORD=oracle \
+  gvenzl/oracle-free:23-slim
+
+sqlplus sys/oracle@//localhost:1521/FREEPDB1 as sysdba
+SQL&gt; @01_tablespace_dan_user.sql
+SQL&gt; CONNECT RS_APP/sandi@//localhost:1521/FREEPDB1
+SQL&gt; @02_skema_global.sql
+SQL&gt; @12_data_contoh.sql</code></pre>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

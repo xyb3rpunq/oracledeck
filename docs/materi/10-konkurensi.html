@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10. Pemrosesan Konkuren dan Kendali · ORACLEDECK</title>
+<meta name="description" content="Keterserialan, protokol locking dua fase, timestamp ordering, dan kendali konkurensi terdistribusi.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/10-konkurensi.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="10. Pemrosesan Konkuren dan Kendali · ORACLEDECK">
+<meta property="og:description" content="Keterserialan, protokol locking dua fase, timestamp ordering, dan kendali konkurensi terdistribusi.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/10-konkurensi.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#masalah-yang-harus-dicegah">Masalah yang harus dicegah</a></li><li><a href="#keterserialan-konflik">Keterserialan konflik</a></li><li><a href="#two-phase-locking">Two-Phase Locking</a></li><li><a href="#timestamp-ordering">Timestamp Ordering</a></li><li><a href="#replikasi-memperumit-konkurensi">Replikasi memperumit konkurensi</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 10</p>
+    <h1>Pemrosesan Konkuren dan Kendali</h1>
+    <p class="lede">Keterserialan, protokol locking dua fase, timestamp ordering, dan kendali konkurensi terdistribusi.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami pemrosesan konkuren dan implementasinya dalam pengendalian proses pada basis data terdistribusi.</p></div>
+
+<h2 id="masalah-yang-harus-dicegah">Masalah yang harus dicegah</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Masalah</th><th>Contoh jadwal</th><th>Akibat</th></tr></thead><tbody><tr><td>Lost update</td><td>r1[x] r2[x] w1[x] w2[x]</td><td>Pembaruan T1 tertimpa T2 dan hilang tanpa jejak</td></tr><tr><td>Dirty read</td><td>w1[x] r2[x] a1</td><td>T2 membaca nilai yang kemudian dibatalkan</td></tr><tr><td>Unrepeatable read</td><td>r1[x] w2[x] c2 r1[x]</td><td>T1 membaca nilai berbeda untuk item yang sama</td></tr><tr><td>Phantom</td><td>σ1[p] i2[p] σ1[p]</td><td>Baris baru muncul di antara dua pembacaan dengan predikat sama</td></tr></tbody></table></div>
+
+<h2 id="keterserialan-konflik">Keterserialan konflik</h2>
+<p>Sebuah jadwal disebut <i>conflict-serializable</i> bila graf presedensinya asiklik. Sisi Ti → Tj dibuat bila operasi Ti mendahului operasi Tj yang berkonflik — yaitu pada item data yang sama, dari transaksi berbeda, dan minimal salah satunya operasi tulis.</p>
+<div class="catatan info"><p>Lab Konkurensi membangun graf presedensi dari jadwal yang Anda ketik, mencari siklusnya, dan bila asiklik menunjukkan urutan serial yang setara.</p></div>
+
+<h2 id="two-phase-locking">Two-Phase Locking</h2>
+<p>Harga 2PL adalah deadlock. Peningkatan kunci S ke X saat transaksi lain juga memegang S menghasilkan deadlock peningkatan yang paling sering terjadi di praktik.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Varian</th><th>Aturan</th><th>Menjamin</th></tr></thead><tbody><tr><td>2PL dasar</td><td>Setelah melepas satu kunci, transaksi tidak boleh meminta kunci baru</td><td>Serializable, tetapi cascading abort masih mungkin</td></tr><tr><td>2PL ketat (strict)</td><td>Semua kunci tulis dipegang sampai commit/abort</td><td>Serializable + cascadeless</td></tr><tr><td>2PL tegas (rigorous)</td><td>Semua kunci, baca maupun tulis, dipegang sampai commit/abort</td><td>Serializable + strict; urutan commit = urutan serial</td></tr></tbody></table></div>
+
+<h2 id="timestamp-ordering">Timestamp Ordering</h2>
+<p>Setiap transaksi diberi cap waktu saat mulai. Operasi yang melanggar urutan cap waktu ditolak dan transaksinya di-rollback — tidak ada penantian, sehingga tidak ada deadlock.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Operasi</th><th>Syarat</th><th>Bila dilanggar</th></tr></thead><tbody><tr><td>read(x) oleh T</td><td>TS(T) ≥ WTS(x)</td><td>Rollback T — hendak membaca nilai yang sudah ditimpa transaksi lebih muda</td></tr><tr><td>write(x) oleh T</td><td>TS(T) ≥ RTS(x)</td><td>Rollback T — nilainya sudah dibaca transaksi lebih muda</td></tr><tr><td>write(x) oleh T</td><td>TS(T) ≥ WTS(x)</td><td>Abaikan tulisan (aturan tulis Thomas) — tulisan usang aman dibuang</td></tr></tbody></table></div>
+<div class="catatan info"><p>Pada sistem terdistribusi, cap waktu harus unik lintas situs. Solusinya cap waktu majemuk &lt;jam lokal, id situs&gt;, sehingga dua situs tidak pernah menghasilkan cap waktu yang sama.</p></div>
+
+<h2 id="replikasi-memperumit-konkurensi">Replikasi memperumit konkurensi</h2>
+<p>Jika salinan data yang direplikasi diperbarui, perubahan itu harus segera disebarkan ke semua salinan. Bila salah satu situs pemegang salinan tidak terjangkau, transaksi tertunda sampai situs itu pulih. Semakin banyak salinan, semakin besar kemungkinan transaksi konkuren gagal.</p>
+<ul><li><b>Sinkron (eager)</b> — semua salinan diperbarui dalam satu transaksi. Konsisten, tetapi rapuh dan lambat.</li><li><b>Asinkron (lazy)</b> — salinan diperbarui setelah transaksi asli commit. Cepat, tetapi ada jendela ketidakkonsistenan mulai dari beberapa detik sampai beberapa jam.</li></ul>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/konkurensi.html"><div class="no">LAB 10</div><h3>Kendali Konkurensi</h3><p>Graf presedensi, 2PL, timestamp ordering, dan sifat pemulihan sebuah jadwal.</p></a>
+  <a class="tile" href="../lab/deadlock.html"><div class="no">LAB 11</div><h3>Manajemen Deadlock</h3><p>Deteksi terpusat, path pushing, edge chasing, deadlock semu, dan pencegahan cap waktu.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 1 (RPS pekan 10); Modul 6 bagian Transparansi Konkurensi</p>
+    <div class="nav-bawah">
+      <div><a href="09-transaksi.html">&larr; Manajemen Transaksi Terdistribusi</a></div>
+      <div><a href="11-deadlock.html">Manajemen Deadlock &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

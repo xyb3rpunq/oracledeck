@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11. Manajemen Deadlock · ORACLEDECK</title>
+<meta name="description" content="Wait-for graph, deteksi terpusat dan terdistribusi, deadlock semu, pencegahan, dan pemilihan korban.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/11-deadlock.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="11. Manajemen Deadlock · ORACLEDECK">
+<meta property="og:description" content="Wait-for graph, deteksi terpusat dan terdistribusi, deadlock semu, pencegahan, dan pemilihan korban.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/11-deadlock.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#empat-syarat-coffman">Empat syarat Coffman</a></li><li><a href="#tiga-metode-deteksi">Tiga metode deteksi</a></li><li><a href="#deadlock-semu-phantom-deadlock">Deadlock semu (phantom deadlock)</a></li><li><a href="#pencegahan-berbasis-cap-waktu">Pencegahan berbasis cap waktu</a></li><li><a href="#pemilihan-korban">Pemilihan korban</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 11</p>
+    <h1>Manajemen Deadlock</h1>
+    <p class="lede">Wait-for graph, deteksi terpusat dan terdistribusi, deadlock semu, pencegahan, dan pemilihan korban.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami kejadian deadlock dan dapat mengenalinya dalam pemrosesan data terdistribusi.</p></div>
+
+<h2 id="empat-syarat-coffman">Empat syarat Coffman</h2>
+<p>Mencegah salah satu syarat berarti mencegah deadlock. Skema wait-die dan wound-wait menyerang syarat keempat.</p>
+<ul><li><b>Mutual exclusion</b> — sumber daya hanya bisa dipegang satu transaksi</li><li><b>Hold and wait</b> — transaksi memegang sumber daya sambil menunggu yang lain</li><li><b>No preemption</b> — sumber daya tidak bisa direbut paksa</li><li><b>Circular wait</b> — ada rantai penantian yang melingkar</li></ul>
+
+<h2 id="tiga-metode-deteksi">Tiga metode deteksi</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Metode</th><th>Cara kerja</th><th>Kelebihan</th><th>Kekurangan</th></tr></thead><tbody><tr><td>Terpusat</td><td>Satu situs mengumpulkan WFG lokal semua situs dan menyatukannya</td><td>Pasti menemukan semua siklus, sederhana</td><td>Titik kegagalan tunggal, bottleneck, deadlock semu</td></tr><tr><td>Path pushing</td><td>Tiap situs mendorong jalur tunggu yang melibatkan transaksi luar ke situs berikutnya</td><td>Tanpa koordinator; pesan sebanding panjang siklus</td><td>Informasi antar situs tidak serentak</td></tr><tr><td>Edge chasing</td><td>Transaksi menunggu mengirim probe (i, j, k); deadlock bila probe kembali ke pengirim</td><td>Beban pesan paling ringan</td><td>Tiap transaksi menunggu harus memulai probe sendiri</td></tr></tbody></table></div>
+
+<h2 id="deadlock-semu-phantom-deadlock">Deadlock semu (phantom deadlock)</h2>
+<p>WFG dari situs A dan situs B tidak pernah diambil pada saat yang benar-benar sama. Sisi yang sebenarnya sudah dilepas masih tercatat, dan siklus palsu terbentuk. Detektor lalu mengorbankan satu transaksi yang sesungguhnya tidak buntu.</p>
+<div class="catatan peringatan"><p>Ini bukan bug yang bisa diperbaiki, melainkan konsekuensi langsung dari tidak adanya waktu global pada sistem terdistribusi. Yang bisa dilakukan hanya mengurangi frekuensinya — misalnya dengan memperpendek jeda pengumpulan WFG.</p></div>
+
+<h2 id="pencegahan-berbasis-cap-waktu">Pencegahan berbasis cap waktu</h2>
+<p>Pada kedua skema, arah sisi tunggu selalu searah cap waktu, sehingga siklus mustahil terbentuk. Transaksi yang di-restart mempertahankan cap waktu lamanya agar tidak kelaparan selamanya.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Skema</th><th>Peminta lebih tua</th><th>Peminta lebih muda</th><th>Sifat</th></tr></thead><tbody><tr><td>Wait-Die</td><td>Menunggu</td><td>Mati lalu restart dengan cap waktu lama</td><td>Non-preemptive</td></tr><tr><td>Wound-Wait</td><td>Melukai pemegang (pemegang di-rollback)</td><td>Menunggu</td><td>Preemptive</td></tr></tbody></table></div>
+
+<h2 id="pemilihan-korban">Pemilihan korban</h2>
+<ul><li><b>Termuda</b> — paling sedikit kerja yang terbuang</li><li><b>Kunci paling sedikit</b> — paling murah dibatalkan</li><li><b>Kerja paling sedikit</b> — meminimalkan pengulangan</li><li><b>Prioritas terendah</b> — transaksi bisnis paling tidak kritis dikorbankan lebih dulu</li></ul>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/deadlock.html"><div class="no">LAB 11</div><h3>Manajemen Deadlock</h3><p>Deteksi terpusat, path pushing, edge chasing, deadlock semu, dan pencegahan cap waktu.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 1 (RPS pekan 11)</p>
+    <div class="nav-bawah">
+      <div><a href="10-konkurensi.html">&larr; Pemrosesan Konkuren dan Kendali</a></div>
+      <div><a href="12-kegagalan.html">Kegagalan pada Sistem Basis Data Terdistribusi &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

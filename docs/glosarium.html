@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glosarium · ORACLEDECK</title>
+<meta name="description" content="102 istilah basis data terdistribusi dengan penjelasan berbahasa Indonesia.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/glosarium.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Glosarium · ORACLEDECK">
+<meta property="og:description" content="102 istilah basis data terdistribusi dengan penjelasan berbahasa Indonesia.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/glosarium.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="index.html">Beranda</a>
+      <a href="materi/index.html">Materi</a>
+      <a href="lab/index.html">Laboratorium</a>
+      <a href="oracle.html">Oracle</a>
+      <a href="audit.html">Audit</a>
+      <a href="glosarium.html" class="aktif">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<p class="kicker">Glosarium</p>
+<h1>102 istilah basis data terdistribusi</h1>
+<p class="lede">Setiap istilah ditulis ulang dalam bahasa Indonesia yang jelas, bukan disalin dari modul. Istilah teknis yang memang tidak punya padanan mapan dibiarkan dalam bentuk aslinya.</p>
+<p class="pita"><span><a href="#h-A">A</a></span><span><a href="#h-B">B</a></span><span><a href="#h-C">C</a></span><span><a href="#h-D">D</a></span><span><a href="#h-E">E</a></span><span><a href="#h-F">F</a></span><span><a href="#h-G">G</a></span><span><a href="#h-H">H</a></span><span><a href="#h-K">K</a></span><span><a href="#h-L">L</a></span><span><a href="#h-M">M</a></span><span><a href="#h-N">N</a></span><span><a href="#h-O">O</a></span><span><a href="#h-P">P</a></span><span><a href="#h-R">R</a></span><span><a href="#h-S">S</a></span><span><a href="#h-T">T</a></span><span><a href="#h-W">W</a></span></p>
+
+<h2 id="h-A">A</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Agent</strong><br><span class="kecil">agent</span></td><td>Wakil sebuah subtransaksi di situs tempat datanya berada. Satu transaksi global melahirkan satu agent per situs yang harus diakses.</td><td class="kecil"><a href="materi/09-transaksi.html">9</a></td></tr>
+<tr><td><strong>Alokasi</strong><br><span class="kecil">allocation</span></td><td>Keputusan menempatkan fragmen pada situs tertentu, termasuk berapa salinan yang dibuat. Masukannya empat kelompok informasi: basis data, aplikasi, situs, dan jaringan.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Aljabar relasional</strong><br><span class="kecil">relational algebra</span></td><td>Bahasa prosedural berisi operator σ (selection), π (projection), × (product), ⋈ (join), ∪, ∩, dan −. Kueri SQL diterjemahkan ke bentuk ini sebelum dioptimasi.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>ANSI/SPARC</strong></td><td>Kerangka tiga skema — eksternal, konseptual, internal — yang diadaptasi untuk basis data terdistribusi menjadi GES, GCS, dan GIS.</td><td class="kecil"><a href="materi/03-arsitektur.html">3</a></td></tr>
+<tr><td><strong>AP</strong></td><td>Pilihan pada teorema CAP yang mempertahankan ketersediaan saat partisi jaringan, dengan mengorbankan konsistensi sesaat.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+<tr><td><strong>Atomicity</strong></td><td>Sifat transaksi yang menjamin semua operasi berhasil atau tidak satu pun berlaku. Pada sistem terdistribusi ditegakkan oleh protokol komitmen atomik.</td><td class="kecil"><a href="materi/09-transaksi.html">9</a>, <a href="materi/12-kegagalan.html">12</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-B">B</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Basis data terdistribusi</strong><br><span class="kecil">distributed database</span></td><td>Kumpulan data yang secara logis saling berhubungan dan digunakan bersama, tetapi secara fisik tersebar di beberapa situs pada jaringan komputer.</td><td class="kecil"><a href="materi/01-pengantar.html">1</a></td></tr>
+<tr><td><strong>Basis data terpusat</strong><br><span class="kecil">centralized database</span></td><td>Basis data yang seluruh datanya disimpan dan dipelihara di satu lokasi fisik.</td><td class="kecil"><a href="materi/01-pengantar.html">1</a></td></tr>
+<tr><td><strong>BCNF</strong><br><span class="kecil">Boyce-Codd Normal Form</span></td><td>Bentuk normal yang menuntut setiap ruas kiri ketergantungan fungsional non-trivial merupakan superkey. Lebih ketat dari 3NF.</td><td class="kecil"><a href="materi/04-perancangan.html">4</a></td></tr>
+<tr><td><strong>Bloom filter</strong></td><td>Struktur data probabilistik berbasis bit untuk menguji keanggotaan. Tidak pernah menghasilkan negatif palsu, tetapi bisa positif palsu.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Bloom join</strong></td><td>Strategi join terdistribusi yang mengirim penapis Bloom, bukan daftar nilai join. Jauh lebih ringkas daripada semijoin; positif palsunya tersaring saat join akhir.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Bottom-up</strong></td><td>Pendekatan perancangan yang berangkat dari basis data lokal yang sudah ada, lalu mengintegrasikannya menjadi skema global. Lazim pada sistem heterogen.</td><td class="kecil"><a href="materi/04-perancangan.html">4</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-C">C</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>CA</strong></td><td>Pilihan CAP yang mengorbankan toleransi partisi. Hanya masuk akal untuk sistem satu situs.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+<tr><td><strong>Candidate key</strong><br><span class="kecil">candidate key</span></td><td>Himpunan atribut minimal yang penutupannya mencakup seluruh atribut relasi. Satu relasi bisa punya lebih dari satu.</td><td class="kecil"><a href="materi/04-perancangan.html">4</a></td></tr>
+<tr><td><strong>CAP</strong></td><td>Teorema yang menyatakan sistem terdistribusi hanya dapat menjamin dua dari tiga sifat: Consistency, Availability, dan Partition tolerance.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+<tr><td><strong>Cascadeless</strong></td><td>Sifat jadwal yang tidak pernah membaca data dari transaksi yang belum commit, sehingga pembatalan satu transaksi tidak merembet ke transaksi lain.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Cascading abort</strong></td><td>Pembatalan berantai: satu transaksi dibatalkan, dan semua transaksi yang membaca datanya ikut harus dibatalkan.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Client-server</strong></td><td>Arsitektur dua lapis: aplikasi di sisi klien, mesin basis data di sisi server. Mengurangi beban pemrosesan terpusat, tetapi skalabilitasnya terbatas.</td><td class="kecil"><a href="materi/03-arsitektur.html">3</a></td></tr>
+<tr><td><strong>CNF</strong><br><span class="kecil">conjunctive normal form</span></td><td>Bentuk normal konjungtif — konjungsi dari disjungsi, (a ∨ b) ∧ (c ∨ d). Bentuk baku langkah normalisasi dekomposisi kueri.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Commit point strength</strong></td><td>Parameter Oracle yang menentukan situs mana yang menjadi commit point pada transaksi terdistribusi. Situs dengan nilai tertinggi yang dipilih.</td><td class="kecil"><a href="materi/12-kegagalan.html">12</a></td></tr>
+<tr><td><strong>CP</strong></td><td>Pilihan CAP yang mempertahankan konsistensi saat partisi jaringan, dengan mengorbankan ketersediaan di sisi minoritas.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-D">D</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Database link</strong></td><td>Objek Oracle yang mendefinisikan jalur koneksi satu arah ke basis data lain. Tanpa link tidak ada kueri terdistribusi yang bisa dijalankan.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>DBA_2PC_PENDING</strong></td><td>Tampilan kamus data Oracle yang memuat transaksi terdistribusi yang menggantung. STATE bernilai prepared berarti situs itu terblokir.</td><td class="kecil"><a href="materi/12-kegagalan.html">12</a></td></tr>
+<tr><td><strong>DDBMS</strong><br><span class="kecil">distributed DBMS</span></td><td>Perangkat lunak yang mengelola basis data terdistribusi dan membuat pendistribusian data terlihat transparan bagi pengguna.</td><td class="kecil"><a href="materi/01-pengantar.html">1</a></td></tr>
+<tr><td><strong>Deadlock</strong></td><td>Keadaan saat sekumpulan transaksi saling menunggu sumber daya yang dipegang anggota lain, sehingga tidak satu pun dapat maju.</td><td class="kecil"><a href="materi/11-deadlock.html">11</a></td></tr>
+<tr><td><strong>Deadlock semu</strong><br><span class="kecil">phantom deadlock</span></td><td>Siklus palsu pada wait-for graph global yang muncul karena WFG tiap situs tidak diambil pada saat yang benar-benar sama.</td><td class="kecil"><a href="materi/11-deadlock.html">11</a></td></tr>
+<tr><td><strong>Dekomposisi kueri</strong><br><span class="kecil">query decomposition</span></td><td>Fase pertama pemrosesan kueri: mengubah kueri kalkulus relasional menjadi kueri aljabar relasional lewat normalisasi, analisis, eliminasi redundansi, dan penulisan ulang.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Dirty read</strong></td><td>Membaca nilai yang ditulis transaksi lain yang belum commit. Nilai itu bisa dibatalkan sesudahnya.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>DNF</strong><br><span class="kecil">disjunctive normal form</span></td><td>Bentuk normal disjungtif — disjungsi dari konjungsi, (a ∧ b) ∨ (c ∧ d). Dipakai untuk menurunkan predikat minterm pada fragmentasi.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>DQP</strong><br><span class="kecil">distributed query processor</span></td><td>Komponen yang memetakan permintaan data menjadi urutan operasi pada basis data lokal, sambil memutuskan fragmen, salinan, dan situs mana yang dipakai.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>DRDA</strong></td><td>Arsitektur basis data relasional terdistribusi IBM yang mengklasifikasikan transaksi menjadi empat tingkat, dari Remote Request sampai Distributed Request.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-E">E</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Edge chasing</strong></td><td>Metode deteksi deadlock terdistribusi yang mengirim probe (i, j, k) mengikuti sisi tunggu. Deadlock dinyatakan bila probe kembali ke inisiatornya.</td><td class="kecil"><a href="materi/11-deadlock.html">11</a></td></tr>
+<tr><td><strong>Eliminasi redundansi</strong></td><td>Langkah ketiga dekomposisi kueri: menyederhanakan kualifikasi memakai hukum idempoten seperti p ∧ p ≡ p dan p ∧ (p ∨ q) ≡ p.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>ERD</strong><br><span class="kecil">entity relationship diagram</span></td><td>Diagram konseptual berisi entitas, atribut, kunci, dan relasi beserta kardinalitasnya. Titik awal perancangan basis data.</td><td class="kecil"><a href="materi/04-perancangan.html">4</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-F">F</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Fragmentasi</strong><br><span class="kecil">fragmentation</span></td><td>Pemecahan relasi menjadi bagian-bagian lebih kecil yang dapat ditempatkan di situs berbeda.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Fragmentasi campuran</strong><br><span class="kecil">hybrid fragmentation</span></td><td>Fragmentasi vertikal yang dilanjutkan horizontal, atau sebaliknya. Contoh S1/S21/S22/S23 pada Modul 6.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Fragmentasi horizontal</strong></td><td>Pemecahan relasi berdasarkan baris memakai operator selection. Gabungan seluruh fragmennya harus sama dengan relasi asal.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Fragmentasi turunan</strong><br><span class="kecil">derived fragmentation</span></td><td>Fragmentasi relasi anak yang mengikuti fragmentasi relasi induk lewat semijoin, agar join antar keduanya tetap lokal.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Fragmentasi vertikal</strong></td><td>Pemecahan relasi berdasarkan kolom memakai operator projection. Setiap fragmen wajib memuat kunci agar rekonstruksinya lossless.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-G">G</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Gateway</strong></td><td>Perangkat penerjemah bahasa dan model data antar DBMS berbeda. Keterbatasannya: tidak mendukung manajemen transaksi, hanya penerjemahan kueri.</td><td class="kecil"><a href="materi/01-pengantar.html">1</a></td></tr>
+<tr><td><strong>GCS</strong><br><span class="kecil">global conceptual schema</span></td><td>Skema konseptual global — penghubung antara gambaran pengguna dan gambaran terdistribusi sistem. Fondasi seluruh transparansi distribusi.</td><td class="kecil"><a href="materi/03-arsitektur.html">3</a></td></tr>
+<tr><td><strong>Graf presedensi</strong><br><span class="kecil">precedence graph</span></td><td>Graf berarah dengan simpul transaksi dan sisi Ti → Tj bila operasi Ti mendahului operasi Tj yang berkonflik. Jadwal serializable bila grafnya asiklik.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Graf kueri</strong><br><span class="kecil">query graph</span></td><td>Graf dengan simpul relasi dan sisi predikat join. Graf yang tidak terhubung menandakan kueri salah semantik — hasilnya perkalian kartesian.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-H">H</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Heterogen</strong></td><td>Sistem terdistribusi yang situs-situsnya memakai produk DBMS, bahkan model data, yang berbeda-beda.</td><td class="kecil"><a href="materi/01-pengantar.html">1</a></td></tr>
+<tr><td><strong>Homogen</strong></td><td>Sistem terdistribusi yang seluruh situsnya memakai produk DBMS yang sama. Lebih mudah dirancang dan dikelola.</td><td class="kecil"><a href="materi/01-pengantar.html">1</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-K">K</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Kalkulus relasional</strong></td><td>Bahasa deklaratif yang menyatakan apa yang diinginkan tanpa menyebut caranya. SQL adalah kalkulus relasional tupel.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Kedisjoinan</strong><br><span class="kecil">disjointness</span></td><td>Aturan kebenaran fragmentasi: fragmen horizontal tidak boleh tumpang tindih, dan pada fragmen vertikal hanya atribut kunci yang boleh berulang.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Kelengkapan</strong><br><span class="kecil">completeness</span></td><td>Aturan kebenaran fragmentasi: setiap item data pada relasi asal harus ada di minimal satu fragmen.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Kuorum</strong><br><span class="kecil">quorum</span></td><td>Jumlah minimum salinan yang harus setuju agar operasi sah. Konsistensi kuat dijamin bila kuorum baca + kuorum tulis lebih besar dari jumlah salinan.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-L">L</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Lokalisasi data</strong><br><span class="kecil">data localization</span></td><td>Lapisan pemrosesan kueri yang menerjemahkan kueri atas relasi global menjadi kueri atas fragmen fisik, lalu mereduksinya.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Lossless-join</strong></td><td>Sifat dekomposisi yang menjamin relasi asal dapat dibentuk kembali secara utuh lewat join, tanpa baris palsu maupun baris hilang.</td><td class="kecil"><a href="materi/04-perancangan.html">4</a>, <a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Lost update</strong></td><td>Pembaruan satu transaksi tertimpa transaksi lain sehingga hilang tanpa jejak. Gejala klasik jadwal yang tidak serializable.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-M">M</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Materialized view</strong></td><td>Objek Oracle yang menyimpan hasil kueri secara fisik dan disegarkan berkala. Mekanisme replikasi utama pada Oracle.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Minimal cover</strong></td><td>Himpunan ketergantungan fungsional terkecil yang setara dengan himpunan aslinya. Dasar algoritma sintesis 3NF.</td><td class="kecil"><a href="materi/04-perancangan.html">4</a></td></tr>
+<tr><td><strong>Minterm</strong></td><td>Konjungsi predikat sederhana beserta negasinya, dipakai untuk menurunkan fragmen horizontal yang pasti disjoint dan lengkap.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Mixed outcome</strong></td><td>Keadaan saat sebagian situs commit dan sebagian rollback pada satu transaksi global. Terjadi bila COMMIT FORCE dipakai dengan keputusan yang salah.</td><td class="kecil"><a href="materi/12-kegagalan.html">12</a></td></tr>
+<tr><td><strong>MTBF</strong><br><span class="kecil">mean time between failures</span></td><td>Rata-rata waktu antara dua kegagalan. Bersama MTTR menentukan ketersediaan situs.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+<tr><td><strong>MTTR</strong><br><span class="kecil">mean time to repair</span></td><td>Rata-rata waktu perbaikan setelah kegagalan. Semakin kecil, semakin tinggi ketersediaan.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-N">N</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>N-tier</strong></td><td>Arsitektur dengan tiga lapis atau lebih, masing-masing dapat berjalan di platform berbeda dan diperbarui secara independen.</td><td class="kecil"><a href="materi/03-arsitektur.html">3</a></td></tr>
+<tr><td><strong>Normalisasi</strong></td><td>Proses menata relasi agar bebas dari redundansi dan anomali, bertahap dari 1NF sampai BCNF.</td><td class="kecil"><a href="materi/04-perancangan.html">4</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-O">O</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Otonomi lokal</strong></td><td>Prinsip bahwa setiap situs mengelola datanya sendiri dan operasinya tidak bergantung pada situs lain.</td><td class="kecil"><a href="materi/08-prinsip.html">8</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-P">P</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>PACELC</strong></td><td>Perluasan CAP: bila ada Partisi pilih A atau C; Else (jaringan sehat) pilih L (latensi) atau C (konsistensi).</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+<tr><td><strong>Partisi jaringan</strong><br><span class="kecil">network partition</span></td><td>Kegagalan yang membelah jaringan menjadi kelompok-kelompok yang saling tidak terlihat, padahal situs di dalamnya masih hidup.</td><td class="kecil"><a href="materi/12-kegagalan.html">12</a>, <a href="materi/13-pemulihan.html">13</a></td></tr>
+<tr><td><strong>Partition pruning</strong></td><td>Kemampuan Oracle membuang partisi yang tidak mungkin memuat hasil. Wujud nyata reduksi lokalisasi, terbaca pada kolom PSTART/PSTOP.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Path pushing</strong></td><td>Metode deteksi deadlock terdistribusi yang mendorong jalur tunggu berisi transaksi luar ke situs berikutnya sampai siklus ditemukan.</td><td class="kecil"><a href="materi/11-deadlock.html">11</a></td></tr>
+<tr><td><strong>Pemrosesan terdistribusi</strong></td><td>Mengakses basis data tersentralisasi dari komputer jauh lewat jaringan. Berbeda dari basis data terdistribusi — datanya tetap satu tempat.</td><td class="kecil"><a href="materi/01-pengantar.html">1</a></td></tr>
+<tr><td><strong>Pohon operator</strong><br><span class="kecil">operator tree</span></td><td>Representasi grafis kueri aljabar relasional: daun berisi relasi tersimpan, simpul non-daun berisi operator, akar berisi jawaban.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>PRE-COMMIT</strong></td><td>Keadaan tambahan pada 3PC yang hanya bertetangga dengan COMMIT. Kehadirannya membuat peserta selalu bisa memutuskan sendiri saat koordinator jatuh.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+<tr><td><strong>Printname</strong></td><td>Nama objek yang dipakai pengguna pada sistem R*, dibedakan dari system-wide name yang merupakan identifier internal permanen.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>Program lokalisasi</strong></td><td>Ekspresi aljabar yang membentuk kembali relasi global dari fragmennya: UNION untuk horizontal, JOIN untuk vertikal.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-R">R</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>READY</strong></td><td>Keadaan peserta 2PC setelah menulis catatan ready dan mengirim suara. Sejak saat itu ia menyerahkan hak memutuskan kepada koordinator.</td><td class="kecil"><a href="materi/12-kegagalan.html">12</a></td></tr>
+<tr><td><strong>Recoverable</strong></td><td>Sifat jadwal yang menjamin setiap transaksi commit setelah transaksi yang datanya ia baca ikut commit.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Reduksi</strong><br><span class="kecil">reduction</span></td><td>Penyederhanaan kueri hasil lokalisasi dengan membuang fragmen yang predikatnya bertentangan dengan predikat kueri.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Reference partitioning</strong></td><td>Fitur Oracle yang membuat tabel anak mewarisi skema partisi induknya lewat foreign key. Wujud Oracle dari fragmentasi turunan.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Rekonstruksi</strong><br><span class="kecil">reconstruction</span></td><td>Aturan kebenaran fragmentasi: harus ada operator relasional yang mengembalikan relasi asal dari fragmen-fragmennya.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>Replikasi</strong><br><span class="kecil">replication</span></td><td>Menyimpan lebih dari satu salinan fragmen di situs berbeda. Menaikkan ketersediaan baca, menaikkan biaya tulis.</td><td class="kecil"><a href="materi/05-fragmentasi-alokasi-replikasi.html">5</a></td></tr>
+<tr><td><strong>RPO</strong><br><span class="kecil">recovery point objective</span></td><td>Jumlah data yang boleh hilang saat bencana, diukur sebagai rentang waktu. Replikasi sinkron memberi RPO nol.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+<tr><td><strong>RTO</strong><br><span class="kecil">recovery time objective</span></td><td>Lama waktu yang dibolehkan sampai layanan pulih setelah kegagalan.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-S">S</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Semijoin</strong></td><td>Operator R ⋉ S yang menghasilkan baris R yang punya pasangan di S. Inti strategi join terdistribusi hemat jaringan.</td><td class="kecil"><a href="materi/14-query-optimizer.html">14</a></td></tr>
+<tr><td><strong>Serializable</strong></td><td>Sifat jadwal konkuren yang hasilnya setara dengan suatu urutan serial transaksi yang sama.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Sinonim</strong><br><span class="kecil">synonym</span></td><td>Alias objek basis data pada Oracle. Sarana utama mewujudkan transparansi lokasi: pindah situs cukup mengubah sinonimnya.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>Situs</strong><br><span class="kecil">site, node</span></td><td>Satu komputer pada sistem terdistribusi yang menjalankan DBMS dan menyimpan sebagian basis data.</td><td class="kecil"><a href="materi/03-arsitektur.html">3</a></td></tr>
+<tr><td><strong>Stand-alone</strong></td><td>Arsitektur dengan DBMS, basis data, dan aplikasi pada satu komputer yang dipakai satu pengguna.</td><td class="kecil"><a href="materi/03-arsitektur.html">3</a></td></tr>
+<tr><td><strong>Strict</strong></td><td>Sifat jadwal yang tidak membaca maupun menimpa data yang penulisnya belum commit. Lebih ketat dari cascadeless.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Subtransaksi</strong></td><td>Bagian transaksi global yang dijalankan pada satu situs. Diwakili oleh sebuah agent.</td><td class="kecil"><a href="materi/09-transaksi.html">9</a></td></tr>
+<tr><td><strong>System-wide name</strong></td><td>Identifier internal objek pada sistem R* yang dijamin tidak pernah berubah, terdiri dari Creator ID, Creator site ID, Local name, dan Birth-site ID.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-T">T</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Thomas write rule</strong></td><td>Aturan pada timestamp ordering yang mengabaikan tulisan usang tanpa melakukan rollback, karena hasilnya pasti tertimpa.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Timestamp ordering</strong></td><td>Protokol kendali konkurensi yang mengurutkan operasi menurut cap waktu transaksi. Tidak pernah menunggu sehingga bebas deadlock.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Top-down</strong></td><td>Pendekatan perancangan dari skema konseptual global menuju fragmentasi, alokasi, lalu skema lokal. Lazim pada sistem homogen baru.</td><td class="kecil"><a href="materi/04-perancangan.html">4</a></td></tr>
+<tr><td><strong>Transaksi global</strong></td><td>Transaksi yang mengakses data pada lebih dari satu situs.</td><td class="kecil"><a href="materi/03-arsitektur.html">3</a></td></tr>
+<tr><td><strong>Transaksi lokal</strong></td><td>Transaksi yang hanya mengakses data pada situs tempat ia dijalankan.</td><td class="kecil"><a href="materi/03-arsitektur.html">3</a></td></tr>
+<tr><td><strong>Transparansi</strong><br><span class="kecil">transparency</span></td><td>Penyembunyian rincian implementasi dari pengguna, sehingga basis data terdistribusi terasa seperti basis data tunggal.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>Transparansi fragmentasi</strong></td><td>Tingkat transparansi tertinggi: pengguna tidak perlu tahu data dipecah maupun di mana fragmennya disimpan.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>Transparansi lokasi</strong></td><td>Pengguna tahu data difragmentasi dan menyebut nama fragmen, tetapi tidak perlu tahu lokasi penyimpanannya.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>Transparansi pemetaan lokal</strong></td><td>Tingkat transparansi terendah: pengguna wajib menyebut nama fragmen sekaligus situs penyimpanannya.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>Transparansi replikasi</strong></td><td>Pengguna tidak tahu ada berapa salinan data maupun salinan mana yang dipakai sistem.</td><td class="kecil"><a href="materi/06-transparansi.html">6</a></td></tr>
+<tr><td><strong>Two-phase commit</strong><br><span class="kecil">2PC</span></td><td>Protokol komitmen atomik dua fase: voting lalu keputusan. Sederhana, tetapi memblokir bila koordinator jatuh setelah peserta masuk READY.</td><td class="kecil"><a href="materi/12-kegagalan.html">12</a></td></tr>
+<tr><td><strong>Two-phase locking</strong><br><span class="kecil">2PL</span></td><td>Protokol kendali konkurensi dengan fase tumbuh dan fase menyusut. Menjamin keterserialan, tetapi membuka pintu deadlock.</td><td class="kecil"><a href="materi/10-konkurensi.html">10</a></td></tr>
+<tr><td><strong>Three-phase commit</strong><br><span class="kecil">3PC</span></td><td>Protokol komitmen tiga fase yang menyisipkan keadaan PRE-COMMIT sehingga tidak memblokir saat koordinator jatuh.</td><td class="kecil"><a href="materi/13-pemulihan.html">13</a></td></tr>
+</tbody></table></div>
+
+<h2 id="h-W">W</h2>
+<div class="tabel-bungkus"><table>
+<thead><tr><th style="width:22%">Istilah</th><th>Arti</th><th style="width:16%">Topik</th></tr></thead>
+<tbody>
+<tr><td><strong>Wait-die</strong></td><td>Skema pencegahan deadlock non-preemptive: transaksi tua boleh menunggu, transaksi muda yang meminta langsung dimatikan.</td><td class="kecil"><a href="materi/11-deadlock.html">11</a></td></tr>
+<tr><td><strong>Wait-for graph</strong><br><span class="kecil">WFG</span></td><td>Graf berarah dengan simpul transaksi dan sisi Ti → Tj bila Ti menunggu sumber daya yang dipegang Tj. Deadlock berarti ada siklus.</td><td class="kecil"><a href="materi/11-deadlock.html">11</a></td></tr>
+<tr><td><strong>Wound-wait</strong></td><td>Skema pencegahan deadlock preemptive: transaksi tua melukai pemegang yang lebih muda, transaksi muda menunggu.</td><td class="kecil"><a href="materi/11-deadlock.html">11</a></td></tr>
+</tbody></table></div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>12. Kegagalan pada Sistem Basis Data Terdistribusi · ORACLEDECK</title>
+<meta name="description" content="Jenis kegagalan, pengaruhnya terhadap pemulihan, dan protokol komitmen dua fase.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/12-kegagalan.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="12. Kegagalan pada Sistem Basis Data Terdistribusi · ORACLEDECK">
+<meta property="og:description" content="Jenis kegagalan, pengaruhnya terhadap pemulihan, dan protokol komitmen dua fase.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/12-kegagalan.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#jenis-kegagalan">Jenis kegagalan</a></li><li><a href="#protokol-komitmen-dua-fase">Protokol komitmen dua fase</a></li><li><a href="#protokol-terminasi-kooperatif">Protokol terminasi kooperatif</a></li><li><a href="#yang-terjadi-di-oracle">Yang terjadi di Oracle</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 12</p>
+    <h1>Kegagalan pada Sistem Basis Data Terdistribusi</h1>
+    <p class="lede">Jenis kegagalan, pengaruhnya terhadap pemulihan, dan protokol komitmen dua fase.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami kejadian kegagalan di lingkungan pemrosesan data terdistribusi.</p></div>
+
+<h2 id="jenis-kegagalan">Jenis kegagalan</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Jenis</th><th>Ada di sistem terpusat?</th><th>Dampak khas pada DDBMS</th></tr></thead><tbody><tr><td>Kegagalan transaksi</td><td>Ya</td><td>Rollback lokal; subtransaksi lain harus ikut dibatalkan</td></tr><tr><td>Sistem crash</td><td>Ya</td><td>Log dipakai untuk redo/undo saat situs pulih</td></tr><tr><td>Kesalahan media</td><td>Ya</td><td>Pemulihan dari backup dan arsip log</td></tr><tr><td>Kehilangan pesan</td><td>Tidak</td><td>Koordinator timeout dan menganggapnya suara abort</td></tr><tr><td>Kegagalan jalur komunikasi</td><td>Tidak</td><td>Situs tidak terjangkau meski hidup</td></tr><tr><td>Kegagalan situs</td><td>Tidak</td><td>Subtransaksi menggantung di situs itu</td></tr><tr><td>Partisi jaringan</td><td>Tidak</td><td>Sistem terbelah menjadi dua kelompok yang saling tak terlihat</td></tr></tbody></table></div>
+
+<h2 id="protokol-komitmen-dua-fase">Protokol komitmen dua fase</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Fase</th><th>Koordinator</th><th>Peserta</th></tr></thead><tbody><tr><td>1 — Voting</td><td>Tulis <code>begin_commit</code>, kirim PREPARE ke semua peserta</td><td>Tulis catatan <code>ready</code>, balas VOTE-COMMIT atau VOTE-ABORT</td></tr><tr><td>2 — Decision</td><td>Tulis keputusan, kirim GLOBAL-COMMIT / GLOBAL-ABORT</td><td>Terapkan keputusan, kirim ACK, tulis <code>end_of_transaction</code></td></tr></tbody></table></div>
+<div class="catatan bahaya"><p>Begitu peserta menulis catatan <b>ready</b>, ia menyerahkan hak memutuskan kepada koordinator. Jika koordinator jatuh tepat setelah itu, peserta <b>tidak boleh</b> commit maupun abort sendiri — ia terblokir, dan kunci yang dipegangnya ikut menahan transaksi lain.</p></div>
+
+<h2 id="protokol-terminasi-kooperatif">Protokol terminasi kooperatif</h2>
+<p>Peserta yang menggantung boleh bertanya ke peserta lain. Bila ada peserta yang sudah tahu keputusan, keputusan itu disalin. Bila semua peserta sama-sama berada di keadaan READY, tidak ada informasi baru dan semuanya tetap terblokir — inilah batas kemampuan 2PC.</p>
+
+<h2 id="yang-terjadi-di-oracle">Yang terjadi di Oracle</h2>
+<p>Oracle menjalankan 2PC secara otomatis begitu satu transaksi menyentuh lebih dari satu basis data lewat database link. Tidak ada perintah khusus — cukup <code>COMMIT</code>. Transaksi yang menggantung muncul di <code>DBA_2PC_PENDING</code> dengan STATE bernilai <code>prepared</code>.</p>
+<pre><code><span class="sql-k">SELECT</span> local_tran_id, global_tran_id, state, mixed, host
+  <span class="sql-k">FROM</span> dba_2pc_pending
+ <span class="sql-k">ORDER BY</span> fail_time;
+
+<span class="sql-c">-- Hanya setelah keputusan koordinator dipastikan:</span>
+<span class="sql-k">COMMIT</span> <span class="sql-k">FORCE</span> <span class="sql-s">'<span class="sql-n">1.15</span>.<span class="sql-n">1234</span>'</span>;
+<span class="sql-c">-- atau ROLLBACK FORCE '1.15.1234';</span>
+<span class="sql-k">EXEC</span> <span class="sql-f">DBMS_TRANSACTION</span>.PURGE_LOST_DB_ENTRY(<span class="sql-s">'<span class="sql-n">1.15</span>.<span class="sql-n">1234</span>'</span>);</code></pre>
+<div class="catatan bahaya"><p>Memaksa keputusan yang berbeda dari keputusan koordinator menghasilkan <b>mixed outcome</b> — kolom MIXED bernilai yes, sebagian situs commit dan sebagian rollback. Basis data kehilangan konsistensi global dan harus diperbaiki manual.</p></div>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/duafase.html"><div class="no">LAB 12</div><h3>Simulator 2PC & 3PC</h3><p>Injeksi kegagalan koordinator, peserta, dan partisi jaringan — lalu lihat siapa yang terblokir.</p></a>
+  <a class="tile" href="../lab/kependudukan.html"><div class="no">LAB 16</div><h3>Studi Kasus Kependudukan</h3><p>Skripsi Oracle XE + MySQL lewat ODBC: NIK ganda yang lolos UNIQUE lokal, dan mengapa gateway tidak bisa 2PC.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 1 (RPS pekan 12); Modul 6 bagian Transparansi Kegagalan</p>
+    <div class="nav-bawah">
+      <div><a href="11-deadlock.html">&larr; Manajemen Deadlock</a></div>
+      <div><a href="13-pemulihan.html">Pemulihan Sistem Basis Data Terdistribusi &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

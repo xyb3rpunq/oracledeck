@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01. Pengantar Basis Data Terdistribusi · ORACLEDECK</title>
+<meta name="description" content="Beda basis data terpusat dan terdistribusi, klasifikasi model data, serta untung-rugi DDBS.">
+<meta name="author" content="Daniel Hutajulu">
+<link rel="canonical" href="https://xyb3rpunq.github.io/oracledeck/materi/01-pengantar.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="01. Pengantar Basis Data Terdistribusi · ORACLEDECK">
+<meta property="og:description" content="Beda basis data terpusat dan terdistribusi, klasifikasi model data, serta untung-rugi DDBS.">
+<meta property="og:url" content="https://xyb3rpunq.github.io/oracledeck/materi/01-pengantar.html">
+<meta property="og:site_name" content="ORACLEDECK">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0e13">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e13'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2 4 3.6 9 3.6s9-1.6 9-3.6V10' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3Cpath d='M7 16c0 2 4 3.6 9 3.6s9-1.6 9-3.6' fill='none' stroke='%23f04438' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=76a896ebe2">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span>ORACLE<b>DECK</b></a>
+    <nav class="top">
+      <a href="../index.html">Beranda</a>
+      <a href="../materi/index.html" class="aktif">Materi</a>
+      <a href="../lab/index.html">Laboratorium</a>
+      <a href="../oracle.html">Oracle</a>
+      <a href="../audit.html">Audit</a>
+      <a href="../glosarium.html">Glosarium</a>
+      <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main><div class="wrap">
+
+<div class="dua-kolom">
+  <aside class="toc">
+    <h4>Isi topik</h4>
+    <ol><li><a href="#kebutuhan-sistem-basis-data">Kebutuhan sistem basis data</a></li><li><a href="#terpusat-vs-terdistribusi">Terpusat vs terdistribusi</a></li><li><a href="#klasifikasi-model-basis-data">Klasifikasi model basis data</a></li><li><a href="#karakteristik-ddbs">Karakteristik DDBS</a></li><li><a href="#tujuh-kelebihan-ddbs">Tujuh kelebihan DDBS</a></li><li><a href="#empat-kelemahan-ddbs">Empat kelemahan DDBS</a></li><li><a href="#homogen-dan-heterogen">Homogen dan heterogen</a></li></ol>
+  </aside>
+  <article>
+    <p class="kicker">Topik 01</p>
+    <h1>Pengantar Basis Data Terdistribusi</h1>
+    <p class="lede">Beda basis data terpusat dan terdistribusi, klasifikasi model data, serta untung-rugi DDBS.</p>
+    <div class="catatan baik"><p><b>Kemampuan akhir yang diharapkan.</b> Memahami dan mengenali konteks basis data objek terdistribusi, dan dapat membedakannya dengan basis data terpusat.</p></div>
+
+<h2 id="kebutuhan-sistem-basis-data">Kebutuhan sistem basis data</h2>
+<p>Sistem basis data adalah kumpulan file atau tabel yang saling berhubungan dan memungkinkan beberapa pengguna mengakses serta memanipulasi data yang sama. Dorongannya satu: menyatukan data operasional agar pengaksesannya terkontrol.</p>
+<ul><li>Mengklasifikasikan data agar mudah dipahami pengguna</li><li>Menghindari duplikasi data</li><li>Memudahkan penyimpanan dan pengaksesan data</li><li>Mendukung kinerja aplikasi dalam menyimpan data</li><li>Menjamin kualitas data dan informasi</li></ul>
+
+<h2 id="terpusat-vs-terdistribusi">Terpusat vs terdistribusi</h2>
+<p>Basis data terpusat menyimpan seluruh data di satu tempat — mainframe atau server tunggal. Basis data terdistribusi menyimpan data di perangkat yang berada di lokasi fisik berbeda, tetapi secara logis tetap satu basis data.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Aspek</th><th>Terpusat</th><th>Terdistribusi</th></tr></thead><tbody><tr><td>Lokasi penyimpanan</td><td>Satu lokasi, terhubung ke server</td><td>Beberapa lokasi geografis, dikelola DBMS pusat</td></tr><tr><td>Pemeliharaan</td><td>Lebih mudah — semua di satu tempat</td><td>Butuh kerja dan perangkat lunak tambahan</td></tr><tr><td>Integritas data</td><td>Lebih mudah dipertahankan</td><td>Lebih sulit; replikasi harus dijaga</td></tr><tr><td>Beban akses</td><td>Semua permintaan ke satu entitas → risiko macet</td><td>Paralel antar server → beban seimbang</td></tr><tr><td>Biaya</td><td>Lebih murah</td><td>Biaya pemeliharaan dan kompleksitas naik</td></tr><tr><td>Rancangan</td><td>Lebih sederhana</td><td>Lebih kompleks</td></tr></tbody></table></div>
+
+<h2 id="klasifikasi-model-basis-data">Klasifikasi model basis data</h2>
+<p>Model basis data non-spasial secara umum terbagi empat: flat-file, hierarki, jaringan, dan relasional. Basis data terdistribusi sendiri terbagi menjadi BDT terpartisi dan BDT terreplikasi.</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Model</th><th>Ciri</th><th>Kelebihan</th><th>Kekurangan</th></tr></thead><tbody><tr><td>Flat-file</td><td>Satu field per baris, posisi kolom menentukan makna</td><td>Sangat sederhana</td><td>Logika baca-tulis harus ditulis manual</td></tr><tr><td>Hierarki</td><td>Hubungan parent–child, satu induk per anak</td><td>Retrieve cepat, integritas mudah diatur</td><td>Redundansi data, pengguna harus paham susunannya</td></tr><tr><td>Jaringan</td><td>Anak boleh punya banyak induk</td><td>Query kompleks lebih mudah, akses cepat</td><td>Struktur sulit dimodifikasi</td></tr><tr><td>Relasional</td><td>Tabel, tupel, atribut, kunci utama dan asing</td><td>Cepat, akurat, mudah diubah</td><td>Pengguna harus paham relasi antar tabel dan SQL</td></tr></tbody></table></div>
+
+<h2 id="karakteristik-ddbs">Karakteristik DDBS</h2>
+<p>Satu basis data logis dibagi menjadi beberapa fragmen; tiap fragmen disimpan di satu atau lebih komputer di bawah kendali DBMS yang terpisah, dihubungkan jaringan komunikasi.</p>
+<ul><li>Kumpulan data logis yang digunakan bersama-sama</li><li>Data dibagi menjadi beberapa fragmen</li><li>Fragmen mungkin mempunyai salinan (replika)</li><li>Fragmen atau replikanya dialokasikan ke situs yang memakainya</li><li>Setiap situs terhubung jaringan komunikasi</li><li>Data di tiap situs di bawah pengawasan DBMS masing-masing</li><li>DBMS tiap situs dapat menangani aplikasi lokal secara otonom</li><li>Setiap DBMS berpartisipasi pada paling tidak satu aplikasi global</li></ul>
+<div class="catatan peringatan"><p><b>Pemrosesan terdistribusi bukan basis data terdistribusi.</b> Pemrosesan terdistribusi adalah mengakses basis data <i>tersentralisasi</i> dari komputer jauh lewat jaringan. Basis datanya tetap satu dan tetap di satu tempat.</p></div>
+
+<h2 id="tujuh-kelebihan-ddbs">Tujuh kelebihan DDBS</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Kelebihan</th><th>Isi</th></tr></thead><tbody><tr><td>1. Merefleksikan struktur organisasi</td><td>Organisasi yang bercabang secara alami punya data yang tersebar mengikuti cabangnya.</td></tr><tr><td>2. Penggunaan bersama & otonomi lokal</td><td>Data ditempatkan dekat penggunanya; DBA lokal mengatur DBMS lokal secara otonom.</td></tr><tr><td>3. Ketersediaan meningkat</td><td>Kegagalan satu situs tidak mematikan seluruh operasional DBMS.</td></tr><tr><td>4. Keandalan meningkat</td><td>Fragmen direplikasi; bila satu salinan tak terjangkau, salinan lain dipakai.</td></tr><tr><td>5. Kinerja meningkat</td><td>Data berada dekat pengguna; setiap situs hanya menangani sebagian beban.</td></tr><tr><td>6. Ekonomi</td><td>Grosch's Law: beberapa komputer kecil lebih murah daripada satu superkomputer berdaya setara.</td></tr><tr><td>7. Perkembangan modular</td><td>Situs baru ditambahkan tanpa mengganggu situs yang sudah ada.</td></tr></tbody></table></div>
+
+<h2 id="empat-kelemahan-ddbs">Empat kelemahan DDBS</h2>
+<div class="tabel-bungkus"><table><thead><tr><th>Kelemahan</th><th>Isi</th></tr></thead><tbody><tr><td>Kompleksitas</td><td>DBA harus menyediakan akses cepat, andal, dan mutakhir sekaligus atas data yang direplikasi.</td></tr><tr><td>Biaya</td><td>Biaya jaringan, biaya komunikasi berjalan, dan biaya tenaga ahli pengelola.</td></tr><tr><td>Keamanan</td><td>Bukan hanya replikasi data yang harus dikontrol, jaringannya juga.</td></tr><tr><td>Kontrol integritas</td><td>Menegakkan batasan integritas kerap memerlukan akses ke data dalam jumlah besar di banyak situs.</td></tr></tbody></table></div>
+
+<h2 id="homogen-dan-heterogen">Homogen dan heterogen</h2>
+<p>Pada sistem homogen semua situs memakai produk DBMS yang sama. Pada sistem heterogen produk dan bahkan model datanya berbeda — relasional, jaringan, hierarki, atau berorientasi objek dalam satu sistem.</p>
+<ul><li>Perbedaan perangkat keras saja: yang diubah kode dan panjang kata</li><li>Perbedaan produk DBMS: perlu pemetaan struktur data antar model (mis. SELECT → FIND/GET)</li><li>Perbedaan keduanya: kedua jenis konversi diperlukan sekaligus</li></ul>
+<p>Untuk menjembatani perbedaan dipakai <b>gateway</b>, yang mengonversi bahasa dan model data ke bahasa relasional. Keterbatasannya nyata: gateway <i>tidak</i> mendukung manajemen transaksi — ia hanya penerjemah kueri, sehingga kontrol konkurensi dan pemulihan lintas DBMS tidak terkoordinasi.</p>
+
+
+
+<h2 id="lab">Jalankan sendiri</h2>
+<div class="grid dua">
+  <a class="tile" href="../lab/ketersediaan.html"><div class="no">LAB 13</div><h3>Ketersediaan & CAP</h3><p>MTBF/MTTR, ketersediaan replika, kuorum R+W>N, CAP dan PACELC, RTO dan RPO.</p></a>
+  <a class="tile" href="../lab/kependudukan.html"><div class="no">LAB 16</div><h3>Studi Kasus Kependudukan</h3><p>Skripsi Oracle XE + MySQL lewat ODBC: NIK ganda yang lolos UNIQUE lokal, dan mengapa gateway tidak bisa 2PC.</p></a>
+</div>
+
+    <p class="kecil" style="margin-top:28px">Sumber: Modul 1 — CTI313 Pengantar Basis Data Terdistribusi (Ir. Nixon Erzed, MT)</p>
+    <div class="nav-bawah">
+      <div><a href="index.html">&larr; Daftar materi</a></div>
+      <div><a href="02-sistem-komputer-modern.html">Sistem Komputer Modern dan Tren Layanan &rarr;</a></div>
+    </div>
+  </article>
+</div>
+
+</div></main>
+<footer class="site"><div class="wrap">
+  <div><strong>ORACLEDECK</strong> — Laboratorium Sistem Basis Data Terdistribusi</div>
+  <div>CTI313 — Sistem Basis Data Terdistribusi · Universitas Esa Unggul</div>
+  <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
+  <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
+</div></footer>
+
+</body>
+</html>

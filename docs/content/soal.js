@@ -1,0 +1,53 @@
+// soal.js — bank soal praktikum yang dinilai otomatis.
+// Sumber: dokumen "Kerjakan soal ini" (12 soal Praktikum 3), lembar Praktek-4-QUERY,
+// lembar Praktek-5-JOIN, dan daftar DML pada Praktikum 2.
+// Kunci jawaban tidak ditampilkan sebelum diminta — penilai membandingkan HASIL kueri.
+
+export const BANK_SOAL = [
+  // ---------------------------------------------------------------- Praktikum 3
+  { id: 'p3-01', praktikum: 3, judul: 'Mata kuliah semester 1', soal: 'Tampilkan seluruh data mata kuliah yang dilaksanakan pada semester 1.', kunci: 'SELECT * FROM matakuliah WHERE sem = 1', petunjuk: 'Klausa WHERE dengan operator sama dengan.' },
+  { id: 'p3-02', praktikum: 3, judul: 'Selain semester 1', soal: 'Tampilkan data mata kuliah yang dilaksanakan pada semester selain semester 1.', kunci: 'SELECT * FROM matakuliah WHERE sem <> 1', petunjuk: 'Operator "tidak sama dengan" ditulis <> atau !=.' },
+  { id: 'p3-03', praktikum: 3, judul: 'SKS sama dengan 3', soal: 'Tampilkan data mata kuliah yang memiliki SKS sama dengan 3.', kunci: 'SELECT * FROM matakuliah WHERE sks = 3', petunjuk: 'Filter pada kolom sks.' },
+  { id: 'p3-04', praktikum: 3, judul: 'SKS selain 3', soal: 'Tampilkan data mata kuliah yang SKS-nya tidak sama dengan 3.', kunci: 'SELECT * FROM matakuliah WHERE sks <> 3', petunjuk: 'Kebalikan dari soal sebelumnya.' },
+  { id: 'p3-05', praktikum: 3, judul: 'COUNT seluruh record', soal: 'Hitung jumlah seluruh mata kuliah.', kunci: 'SELECT COUNT(*) FROM matakuliah', petunjuk: 'COUNT(*) menghitung baris, termasuk yang berisi NULL.' },
+  { id: 'p3-06', praktikum: 3, judul: 'COUNT dengan kondisi', soal: 'Hitung jumlah mata kuliah yang dilaksanakan pada semester 1.', kunci: 'SELECT COUNT(*) FROM matakuliah WHERE sem = 1', petunjuk: 'WHERE dijalankan sebelum COUNT.' },
+  { id: 'p3-07', praktikum: 3, judul: 'MIN', soal: 'Tampilkan SKS terkecil dari seluruh mata kuliah.', kunci: 'SELECT MIN(sks) FROM matakuliah', petunjuk: 'Fungsi agregasi MIN.' },
+  { id: 'p3-08', praktikum: 3, judul: 'MAX', soal: 'Tampilkan SKS terbesar dari seluruh mata kuliah.', kunci: 'SELECT MAX(sks) FROM matakuliah', petunjuk: 'Fungsi agregasi MAX.' },
+  { id: 'p3-09', praktikum: 3, judul: 'AVG', soal: 'Tampilkan rata-rata SKS seluruh mata kuliah.', kunci: 'SELECT AVG(sks) FROM matakuliah', petunjuk: 'Fungsi agregasi AVG.' },
+  { id: 'p3-10', praktikum: 3, judul: 'SUM', soal: 'Tampilkan total SKS seluruh mata kuliah.', kunci: 'SELECT SUM(sks) FROM matakuliah', petunjuk: 'Fungsi agregasi SUM.' },
+  { id: 'p3-11', praktikum: 3, judul: 'MIN, MAX, dan AVG sekaligus', soal: 'Dalam satu kueri, tampilkan SKS terkecil, terbesar, dan rata-ratanya — dalam urutan itu.', kunci: 'SELECT MIN(sks) AS minsks, MAX(sks) AS maxsks, AVG(sks) AS avgsks FROM matakuliah', petunjuk: 'Beberapa fungsi agregasi boleh berada dalam satu SELECT. Nama alias bebas.' },
+  { id: 'p3-12', praktikum: 3, judul: 'Rekap lengkap', soal: 'Tampilkan jumlah mata kuliah, total SKS, rata-rata SKS, SKS minimum, dan SKS maksimum — dalam urutan itu.', kunci: 'SELECT COUNT(*) AS jumlah_matakuliah, SUM(sks) AS total_sks, AVG(sks) AS rata_rata_sks, MIN(sks) AS sks_minimum, MAX(sks) AS sks_maksimum FROM matakuliah', petunjuk: 'Urutan kolom dinilai; nama alias tidak.' },
+  { id: 'p3-13', praktikum: 3, judul: 'LIKE dan AND', soal: 'Tampilkan mata kuliah yang namanya mengandung kata "informatika" dan ber-SKS 3.', kunci: "SELECT * FROM matakuliah WHERE nama_kul LIKE '%informatika%' AND sks = 3", petunjuk: 'Tanda % mewakili nol atau lebih karakter apa pun.' },
+
+  // ---------------------------------------------------------------- Praktikum 4
+  { id: 'p4-01', praktikum: 4, judul: 'Nilai mata kuliah IT0401', soal: 'Tampilkan hanya nama mahasiswa dan nilai untuk mata kuliah dengan kode IT0401.', kunci: "SELECT mhs.nama_mhs, nilai.nilai FROM mhs, nilai WHERE mhs.nim = nilai.nim AND nilai.kode_kul = 'IT0401'", petunjuk: 'Hubungkan mhs dan nilai lewat nim, lalu saring kode_kul.' },
+  { id: 'p4-02', praktikum: 4, judul: 'Nama mata kuliah dan nilainya', soal: 'Tampilkan hanya nama mata kuliah berikut nilainya.', kunci: 'SELECT mata_kuliah.nama_kul, nilai.nilai FROM mata_kuliah, nilai WHERE mata_kuliah.kode_kul = nilai.kode_kul', petunjuk: 'Relasi penghubungnya kode_kul.' },
+  { id: 'p4-03', praktikum: 4, judul: 'Tiga tabel', soal: 'Tampilkan nama mata kuliah, nama mahasiswa, dan nilai yang diperoleh — dalam urutan kolom itu.', kunci: 'SELECT k.nama_kul, m.nama_mhs, n.nilai FROM mhs m, nilai n, mata_kuliah k WHERE m.nim = n.nim AND n.kode_kul = k.kode_kul', petunjuk: 'Dua syarat penghubung: mhs–nilai dan nilai–mata_kuliah.' },
+  { id: 'p4-04', praktikum: 4, judul: 'Tiga tabel, urut nilai terkecil', soal: 'Sama dengan soal sebelumnya, tetapi diurutkan dari nilai terkecil.', kunci: 'SELECT k.nama_kul, m.nama_mhs, n.nilai FROM mhs m, nilai n, mata_kuliah k WHERE m.nim = n.nim AND n.kode_kul = k.kode_kul ORDER BY n.nilai ASC', petunjuk: 'Soal ini menilai urutan baris.' },
+
+  // ---------------------------------------------------------------- Praktikum 5
+  { id: 'p5-01', praktikum: 5, judul: 'Inner join gaya WHERE', soal: 'Tampilkan nama mahasiswa, kode mata kuliah, dan nilai memakai relasi atribut antar tabel (tanpa kata JOIN).', kunci: 'SELECT mhs.nama_mhs, nilai.kode_kul, nilai.nilai FROM mhs, nilai WHERE mhs.nim = nilai.nim', petunjuk: 'FROM dua tabel dipisah koma, syaratnya di WHERE.' },
+  { id: 'p5-02', praktikum: 5, judul: 'INNER JOIN', soal: 'Tampilkan hasil yang sama memakai INNER JOIN.', kunci: 'SELECT mhs.nama_mhs, nilai.kode_kul, nilai.nilai FROM mhs INNER JOIN nilai ON mhs.nim = nilai.nim', petunjuk: 'Hanya baris yang berpasangan yang muncul.' },
+  { id: 'p5-03', praktikum: 5, judul: 'LEFT JOIN', soal: 'Tampilkan semua data mahasiswa di tabel mhs berikut nilainya (nama mahasiswa, kode mata kuliah, nilai). Mahasiswa tanpa nilai tetap muncul.', kunci: 'SELECT mhs.nama_mhs, nilai.kode_kul, nilai.nilai FROM mhs LEFT JOIN nilai ON mhs.nim = nilai.nim', petunjuk: 'Kolom dari tabel kanan diisi NULL bila tidak berpasangan.' },
+  { id: 'p5-04', praktikum: 5, judul: 'RIGHT JOIN', soal: 'Tampilkan semua data nilai di tabel nilai berikut nama mahasiswanya (nama mahasiswa, nilai).', kunci: 'SELECT mhs.nama_mhs, nilai.nilai FROM mhs RIGHT JOIN nilai ON mhs.nim = nilai.nim', petunjuk: 'Seluruh baris tabel kanan dipertahankan.' },
+  { id: 'p5-05', praktikum: 5, judul: 'FULL OUTER JOIN', soal: 'Tampilkan nama mahasiswa dan nilai dari kedua tabel, termasuk yang tidak berpasangan di sisi mana pun.', kunci: 'SELECT mhs.nama_mhs, nilai.nilai FROM mhs FULL OUTER JOIN nilai ON mhs.nim = nilai.nim', petunjuk: 'Gabungan LEFT dan RIGHT JOIN.' },
+  { id: 'p5-06', praktikum: 5, judul: 'UNION', soal: 'Gabungkan daftar nim dari tabel mhs dan dari tabel nilai tanpa duplikat.', kunci: 'SELECT nim FROM mhs UNION SELECT nim FROM nilai', petunjuk: 'UNION membuang baris ganda; UNION ALL tidak.' },
+  { id: 'p5-07', praktikum: 5, judul: 'Mahasiswa tanpa nilai', soal: 'Tampilkan nama mahasiswa yang belum punya nilai sama sekali.', kunci: 'SELECT mhs.nama_mhs FROM mhs LEFT JOIN nilai ON mhs.nim = nilai.nim WHERE nilai.nilai IS NULL', petunjuk: 'LEFT JOIN lalu saring baris yang pasangannya NULL.' },
+
+  // ---------------------------------------------------------------- Praktikum 2
+  { id: 'p2-01', praktikum: 2, judul: 'SELECT bersyarat', soal: 'Tampilkan nama dan penyakit pasien perempuan.', kunci: "SELECT nama_pasien, penyakit FROM pasien WHERE jenis_kelamin = 'P'", petunjuk: 'Kolom jenis_kelamin berisi L atau P.' },
+  { id: 'p2-02', praktikum: 2, judul: 'SELECT join antar tabel', soal: 'Tampilkan nama pasien, nama dokter, dan resep dari setiap pemeriksaan.', kunci: 'SELECT p.nama_pasien, d.nama_dokter, pd.resep FROM pasien p JOIN pasien_dokter pd ON p.id_pasien = pd.id_pasien JOIN dokter d ON pd.id_dokter = d.id_dokter', petunjuk: 'pasien_dokter adalah tabel penghubung.' },
+  { id: 'p2-03', praktikum: 2, judul: 'Fungsi matematika', soal: 'Tampilkan id pemeriksaan dan biaya setelah diskon 10%.', kunci: 'SELECT id, biaya * 0.9 AS biaya_diskon FROM pasien_dokter', petunjuk: 'Aritmetika boleh dipakai di daftar SELECT.' },
+  { id: 'p2-04', praktikum: 2, judul: 'Fungsi string', soal: 'Tampilkan nama pasien dalam huruf besar beserta panjang namanya.', kunci: 'SELECT UPPER(nama_pasien), LENGTH(nama_pasien) FROM pasien', petunjuk: 'UPPER dan LENGTH.' },
+  { id: 'p2-05', praktikum: 2, judul: 'BETWEEN', soal: 'Tampilkan pemeriksaan dengan biaya antara 200.000 dan 400.000 (inklusif).', kunci: 'SELECT * FROM pasien_dokter WHERE biaya BETWEEN 200000 AND 400000', petunjuk: 'BETWEEN inklusif di kedua ujung.' },
+  { id: 'p2-06', praktikum: 2, judul: 'LIKE', soal: 'Tampilkan dokter yang namanya diawali "dr. A".', kunci: "SELECT * FROM dokter WHERE nama_dokter LIKE 'dr. A%'", petunjuk: 'Pola diawali: teks lalu %.' },
+  { id: 'p2-07', praktikum: 2, judul: 'ORDER BY', soal: 'Tampilkan nama pasien dan kota, diurutkan menurut kota lalu nama.', kunci: 'SELECT nama_pasien, kota FROM pasien ORDER BY kota, nama_pasien', petunjuk: 'Beberapa kunci urut dipisahkan koma. Urutan dinilai.' },
+  { id: 'p2-08', praktikum: 2, judul: 'GROUP BY', soal: 'Tampilkan setiap spesialis dokter beserta jumlah pemeriksaan yang ditanganinya.', kunci: 'SELECT d.spesialis, COUNT(*) FROM dokter d JOIN pasien_dokter pd ON d.id_dokter = pd.id_dokter GROUP BY d.spesialis', petunjuk: 'Join dulu, lalu kelompokkan.' },
+];
+
+export const JUDUL_PRAKTIKUM = {
+  2: 'Praktikum 2 — SQL & DML (rumah sakit)',
+  3: 'Praktikum 3 — Fungsi agregasi',
+  4: 'Praktikum 4 — Query dari relasi tabel',
+  5: 'Praktikum 5 — Relasi tabel dengan JOIN',
+};
