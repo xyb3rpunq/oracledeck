@@ -1,6 +1,6 @@
 // Lab 08 — Tangga Transparansi.
-import * as T from '../../engine/ddb/transparency.js?v=849b085103';
-import * as U from './ui.js?v=849b085103';
+import * as T from '../../engine/ddb/transparency.js?v=b04806ea2d';
+import * as U from './ui.js?v=b04806ea2d';
 
 const SKEMA_MODUL = [
   { nama: 'S1', tipe: 'vertikal', atribut: ['staffno', 'position', 'sex', 'dob', 'salary'], situs: '3', kunci: ['staffno'] },

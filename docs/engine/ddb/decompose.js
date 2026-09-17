@@ -7,7 +7,7 @@
 // Masukan berupa AST dari engine/core/sql.js sehingga langkah-langkah ini
 // bekerja atas SQL sungguhan, bukan contoh yang sudah disiapkan.
 
-import { parse, exprToString, SqlError } from '../core/sql.js?v=849b085103';
+import { parse, exprToString, SqlError } from '../core/sql.js?v=b04806ea2d';
 
 // ------------------------------------------------------------ 1) NORMALISASI
 

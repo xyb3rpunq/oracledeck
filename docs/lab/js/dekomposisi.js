@@ -1,8 +1,8 @@
 // Lab 06 — Dekomposisi Kueri: empat langkah Modul 7.
-import { RS_SCHEMA } from '../../engine/data/datasets.js?v=849b085103';
-import * as D from '../../engine/ddb/decompose.js?v=849b085103';
-import { treeToText } from '../../engine/ddb/localize.js?v=849b085103';
-import * as U from './ui.js?v=849b085103';
+import { RS_SCHEMA } from '../../engine/data/datasets.js?v=b04806ea2d';
+import * as D from '../../engine/ddb/decompose.js?v=b04806ea2d';
+import { treeToText } from '../../engine/ddb/localize.js?v=b04806ea2d';
+import * as U from './ui.js?v=b04806ea2d';
 
 const SKEMA = {
   ...RS_SCHEMA,

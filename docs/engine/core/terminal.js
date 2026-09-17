@@ -17,15 +17,15 @@
 // Kode galat mengikuti Oracle (ORA-xxxxx) agar bisa dicocokkan dengan dokumentasi resmi.
 // Nol dependensi; modul yang sama diuji di Node dan dijalankan di peramban.
 
-import { Relation } from './relation.js?v=849b085103';
-import { tokenize, parse, evalNode, planToText, exprToString, SqlError } from './sql.js?v=849b085103';
-import { executeScript } from './dml.js?v=849b085103';
+import { Relation } from './relation.js?v=b04806ea2d';
+import { tokenize, parse, evalNode, planToText, exprToString, SqlError } from './sql.js?v=b04806ea2d';
+import { executeScript } from './dml.js?v=b04806ea2d';
 import {
   akademik, rumahsakit, dreamhome, kependudukan,
   RS_KEYS, RS_KEYS_CASCADE, RS_TIPE, TIPE_LAIN,
-} from '../data/datasets.js?v=849b085103';
-import { inferType, ident, literal } from '../oracle/emit.js?v=849b085103';
-import { runTwoPhaseCommit } from '../ddb/twophase.js?v=849b085103';
+} from '../data/datasets.js?v=b04806ea2d';
+import { inferType, ident, literal } from '../oracle/emit.js?v=b04806ea2d';
+import { runTwoPhaseCommit } from '../ddb/twophase.js?v=b04806ea2d';
 
 // ------------------------------------------------------------------ utilitas
 
@@ -372,6 +372,32 @@ function dbUntuk(sesi, ast, jalur = new Set()) {
   return db;
 }
 
+/** Nama tabel dasar (kunci sesi.tabel) yang dibaca/ditulis sebuah AST, view diurai sampai dasarnya. */
+export function tabelDasar(sesi, ast) {
+  const out = new Set();
+  const kunjungi = (node, jalur) => {
+    for (const nama of namaDirujuk(node)) {
+      const v = cariView(sesi, nama);
+      if (v && !jalur.has(nama)) { kunjungi(v.ast, new Set([...jalur, nama])); continue; }
+      const t = cari(sesi.tabel, nama);
+      if (t) out.add(t);
+    }
+  };
+  kunjungi(ast, new Set());
+  return out;
+}
+
+/**
+ * Oracle menolak membaca maupun mengubah baris yang dikunci transaksi terdistribusi
+ * ragu-ragu (ORA-01591) — terbukti pada Oracle 26ai di oracle/14b. Mesin ini menguncinya
+ * per tabel, bukan per baris.
+ */
+function periksaKunciRagu(sesi, ast) {
+  if (!sesi.ragu) return;
+  const kena = [...tabelDasar(sesi, ast)].filter((t) => sesi.ragu.tabel.includes(t));
+  if (kena.length) throw new SqlError(`ORA-01591: kunci ditahan transaksi terdistribusi ragu-ragu ${sesi.ragu.id} pada ${kena.join(', ')}`);
+}
+
 /** Situs yang disentuh sebuah AST (view diurai sampai tabel dasarnya). */
 export function analisisAkses(sesi, ast) {
   const situs = new Map();
@@ -479,7 +505,8 @@ function lakukanCommit(sesi, { implisit = false } = {}) {
     blok.push({ jenis: '2pc', id, protokol: hasil.protokol, keputusan: hasil.keputusan, memblokir: hasil.memblokir, jejak: hasil.jejak, analisis: hasil.analisis, peserta: situs });
     sesi.gagal = null;
     if (hasil.memblokir) {
-      sesi.ragu = { id, situs, tabelSesudah: { ...sesi.tabel }, tabelSebelum: sesi.komit };
+      const terkunci = Object.keys(sesi.tabel).filter((k) => sesi.tabel[k] !== sesi.komit[k]);
+      sesi.ragu = { id, situs, tabel: terkunci, tabelSesudah: { ...sesi.tabel }, tabelSebelum: sesi.komit };
       sesi.tabel = { ...sesi.komit };
       sesi.savepoint = []; sesi.tertunda = 0; sesi.tulisSitus = new Set();
       blok.push({ jenis: 'galat', pesan: `ORA-02054: transaksi ${id} ragu-ragu (in-doubt) — koordinator jatuh setelah peserta PREPARED`, petunjuk: ["Peserta menahan kunci. Lihat SELECT * FROM dba_2pc_pending; lalu putuskan dengan COMMIT FORCE '" + id + "' atau ROLLBACK FORCE '" + id + "'."] });
@@ -552,6 +579,17 @@ function buatTabel(sesi, ast) {
     def.unik.push({ nama: u.nama, cols: u.cols });
   }
   for (const c of ast.cek) {
+    if (c.kolom) {
+      // CHECK yang ditulis menempel pada kolom hanya boleh menyebut kolom itu sendiri (Oracle ORA-02438)
+      const lain = [];
+      const telusuri = (e) => {
+        if (!e || typeof e !== 'object') return;
+        if (e.k === 'col' && kecil(e.name) !== kecil(c.kolom)) lain.push(e.name);
+        for (const v of Object.values(e)) if (v && typeof v === 'object') telusuri(v);
+      };
+      telusuri(c.expr);
+      if (lain.length) throw new SqlError(`ORA-02438: CHECK pada kolom ${c.kolom} tidak boleh menyebut kolom lain (${lain.join(', ')}) — tulis sebagai kendala tingkat tabel: CONSTRAINT nama CHECK (...)`);
+    }
     periksaKolomEkspresi(c.expr, def, `CHECK tabel ${ast.table}`);
     def.cek.push({ nama: c.nama, expr: c.expr });
   }
@@ -645,8 +683,9 @@ function hapusTabel(sesi, ast) {
 function potongTabel(sesi, ast) {
   const t = cari(sesi.tabel, ast.table);
   if (!t) throw new SqlError(`ORA-00942: tabel ${ast.table} tidak ada`);
-  const anak = Object.entries(sesi.kunci).filter(([n, d]) => n !== t && (d.fk || []).some((f) => kecil(f.ref) === kecil(t)));
-  if (anak.length) throw new SqlError(`ORA-02266: ${t} dirujuk kunci asing aktif dari ${anak.map(([n]) => n).join(', ')} — TRUNCATE ditolak`);
+  // Oracle 23ai menolak TRUNCATE hanya bila tabel anak yang merujuknya berisi baris
+  const anak = Object.entries(sesi.kunci).filter(([n, d]) => n !== t && sesi.tabel[n] && sesi.tabel[n].cardinality > 0 && (d.fk || []).some((f) => kecil(f.ref) === kecil(t)));
+  if (anak.length) throw new SqlError(`ORA-02266: ${t} dirujuk kunci asing aktif dari ${anak.map(([n]) => n).join(', ')} yang masih berisi baris — TRUNCATE ditolak`);
   const n = sesi.tabel[t].cardinality;
   sesi.tabel[t] = new Relation(sesi.tabel[t].name, sesi.tabel[t].attrs, []);
   sesi.komit[t] = sesi.tabel[t];
@@ -691,10 +730,7 @@ function jalankanDml(sesi, ast) {
     const s = saranNama(nama, Object.keys(sesi.tabel));
     throw new SqlError(`ORA-00942: tabel ${nama} tidak ada${s.length ? ` — maksud Anda ${s.join(', ')}?` : ''}`);
   }
-  const target = situsDari(t);
-  if (sesi.ragu && target && sesi.ragu.situs.includes(target)) {
-    throw new SqlError(`ORA-01591: kunci ditahan transaksi terdistribusi ragu-ragu ${sesi.ragu.id} di situs ${target}`);
-  }
+  periksaKunciRagu(sesi, ast);
   const db = dbUntuk(sesi, ast);
   // tabel dasar dipetakan dengan nama aslinya agar perubahan bisa ditulis balik
   for (const [k, v] of Object.entries(sesi.tabel)) { delete db[kecil(k)]; db[k] = v; }
@@ -745,6 +781,7 @@ function jalankanPerintah(sesi, ast, teks) {
   const selesai = (blok) => ({ ...blok, perintah: teks, ms: now() - t0 });
   switch (ast.type) {
     case 'select': case 'union': case 'setop': case 'with': {
+      periksaKunciRagu(sesi, ast);
       const db = dbUntuk(sesi, ast);
       const ctx = { db, steps: [], plan: null };
       const relation = evalNode(ast, ctx, {});
@@ -1021,6 +1058,7 @@ export function pratinjau(sesi, masukan) {
     if (!['select', 'union', 'setop', 'with'].includes(ast.type)) {
       return { jenis: 'info', pesan: `${ast.type.replace('_', ' ').toUpperCase()} mengubah sesi — pratinjau hanya menjalankan kueri baca. Tekan Ctrl+Enter untuk menjalankan.` };
     }
+    periksaKunciRagu(sesi, ast);
     const db = dbUntuk(sesi, ast);
     const ctx = { db, steps: [], plan: null };
     const rel = evalNode(ast, ctx, {});

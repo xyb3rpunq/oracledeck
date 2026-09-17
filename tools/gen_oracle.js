@@ -1,93 +1,148 @@
 // gen_oracle.js — hasilkan seluruh skrip Oracle di folder oracle/ dari mesin
-// yang sama yang dipakai situs. Dengan begitu skrip yang dijalankan mahasiswa
-// di Oracle XE tidak akan pernah menyimpang dari rancangan yang ditampilkan lab.
+// yang sama yang dipakai situs, sehingga skrip yang dijalankan mahasiswa tidak
+// pernah menyimpang dari rancangan yang ditampilkan lab.
+//
+// Topologi: tiga basis data sungguhan (pluggable database) yang saling terhubung
+// lewat database link — JAKARTA (pusat, PDB bawaan), BANDUNG, dan SURABAYA.
+//
+// Setiap skrip:
+//   - diawali "-- @jalankan situs=<...> sebagai=<sys|rs_app>" (dibaca tools/uji_oracle.mjs)
+//   - memeriksa hasilnya sendiri dengan baris "LULUS: ..." atau "GAGAL: ..."
+//   - mendaftarkan galat yang MEMANG diperagakan lewat "-- @galat-diharapkan ORA-xxxxx"
 //
 // Jalankan: node tools/gen_oracle.js
 
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { rumahsakit, RS_KEYS, RS_TIPE, DEFAULT_SITES, dreamhome } from '../engine/data/datasets.js';
+import { rumahsakit, RS_KEYS, RS_TIPE, DEFAULT_SITES, dreamhome, STAFF_ATTRS } from '../engine/data/datasets.js';
+import { Relation } from '../engine/core/relation.js';
 import * as O from '../engine/oracle/emit.js';
-import * as Fg from '../engine/ddb/fragment.js';
-import * as T from '../engine/ddb/transparency.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const OUT = join(here, '..', 'oracle');
 mkdirSync(OUT, { recursive: true });
+// skrip lama dihapus agar nomor urut yang berubah tidak meninggalkan berkas yatim
+for (const f of readdirSync(OUT)) if (/^\d{2}[a-z]?_.*\.sql$/.test(f)) unlinkSync(join(OUT, f));
 
 const db = rumahsakit();
-const KOTA = DEFAULT_SITES.map((s) => s.kota);
+const TIPE = RS_TIPE;
+const SITUS = DEFAULT_SITES.map((s) => ({ ...s, kode: s.kota.toUpperCase() }));
+const [JKT, BDG, SBY] = SITUS;
 const berkas = [];
 
-// Lebar kolom ditetapkan untuk pemakaian sungguhan, bukan diterka dari 12 baris
-// data contoh. Tipe terkaan hanya cocok untuk pratinjau di situs.
-// tipe kolom diambil dari engine/data/datasets.js agar sama dengan preset terminal SQL
-const TIPE = RS_TIPE;
-
 function tulis(nama, isi) {
-  writeFileSync(join(OUT, nama), `${isi.trimEnd()}\n`, 'utf8');
+  writeFileSync(join(OUT, nama), `${isi.filter((x) => x !== null && x !== undefined).join('\n').trimEnd()}\n`, 'utf8');
   berkas.push(nama);
-  process.stdout.write(`  ${nama}\n`);
 }
 
-const judul = (t, sub = '') => [
-  '-- ' + '='.repeat(74),
-  `-- ${t}`,
+const kepala = ({ judul, sub, situs, sebagai, galat = [], catatan = [] }) => [
+  `-- ${'='.repeat(74)}`,
+  `-- ${judul}`,
   sub ? `-- ${sub}` : null,
   '-- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.',
-  '-- ' + '='.repeat(74),
+  `-- ${'='.repeat(74)}`,
+  `-- @jalankan situs=${situs} sebagai=${sebagai}`,
+  galat.length ? `-- @galat-diharapkan ${galat.join(' ')}` : null,
+  `-- Sambungan: ${sebagai === 'sys' ? 'SYS AS SYSDBA' : 'RS_APP'} ke ${situs === 'cdb' ? 'CDB$ROOT' : `PDB situs ${situs.toUpperCase()}`}.`,
+  ...catatan.map((c) => `-- ${c}`),
   '',
 ].filter((x) => x !== null).join('\n');
 
-// --------------------------------------------------------------- 01 tablespace
+/** Pemeriksaan mandiri: mencetak LULUS/GAGAL agar runner dan mahasiswa sama-sama bisa membacanya. */
+const cek = (pesan, kondisi) => `SELECT CASE WHEN ${kondisi} THEN 'LULUS: ${pesan.replace(/'/g, "''")}' ELSE 'GAGAL: ${pesan.replace(/'/g, "''")}' END AS cek FROM dual;`;
+const hitung = (sql) => `(SELECT COUNT(*) FROM ${sql})`;
 
-tulis('01_tablespace_dan_user.sql', [
-  judul('Langkah 1 - Wadah fisik: satu tablespace per situs',
-    'Alokasi fragmen ke situs diwujudkan sebagai penempatan partisi ke tablespace.'),
-  '-- Jalankan sebagai SYS atau pengguna dengan hak DBA.',
-  '-- Pada Oracle XE 21c: sqlplus sys/oracle@//localhost:1521/XEPDB1 as sysdba',
-  '',
-  'ALTER SESSION SET CONTAINER = XEPDB1;',
-  '',
-  ...DEFAULT_SITES.map((s) => [
+const proyeksi = (rel, nama, kolom, filter = () => true) => new Relation(nama, kolom, rel.rows.filter((r) => filter(r)).map((r) => kolom.map((k) => r[rel.indexOf(k)])));
+const barisKota = (kota) => db.pasien.rows.filter((r) => r[db.pasien.indexOf('kota')] === kota).map((r) => r[0]);
+
+// ============================================================ 01 situs (PDB)
+
+tulis('01_situs_pdb.sql', [
+  kepala({
+    judul: 'Langkah 1 - Tiga situs = tiga basis data',
+    sub: 'Situs Jakarta memakai PDB bawaan; Bandung dan Surabaya dibuat sebagai PDB baru.',
+    situs: 'cdb',
+    sebagai: 'sys',
+    catatan: [
+      'Oracle Free 23ai: PDB bawaan FREEPDB1. Oracle XE 21c: XEPDB1 (XE mengizinkan 3 PDB).',
+      'Di produksi, tiap situs adalah server terpisah; PDB dipakai agar bisa diuji di satu laptop',
+      'dengan database link, 2PC, dan DBA_2PC_PENDING yang sungguhan.',
+    ],
+  }),
+  ...[BDG, SBY].map((s) => [
     `-- Situs ${s.id} - ${s.nama}`,
-    `CREATE TABLESPACE TS_${s.id}`,
-    `  DATAFILE '${s.id.toLowerCase()}_rs01.dbf' SIZE 100M AUTOEXTEND ON NEXT 10M MAXSIZE 2G`,
-    '  EXTENT MANAGEMENT LOCAL SEGMENT SPACE MANAGEMENT AUTO;',
+    `CREATE PLUGGABLE DATABASE ${s.kode} ADMIN USER PDB_ADMIN IDENTIFIED BY "&&sandi_rs_app"`,
+    `  FILE_NAME_CONVERT = ('/pdbseed/', '/${s.kode}/');`,
+    `ALTER PLUGGABLE DATABASE ${s.kode} OPEN;`,
+    `ALTER PLUGGABLE DATABASE ${s.kode} SAVE STATE;`,
     '',
   ].join('\n')),
-  '-- Pemilik skema aplikasi',
-  'CREATE USER RS_APP IDENTIFIED BY "&sandi_rs_app"',
-  `  DEFAULT TABLESPACE TS_${DEFAULT_SITES[0].id}`,
-  '  QUOTA UNLIMITED ON ' + DEFAULT_SITES.map((s) => `TS_${s.id}`).join(' QUOTA UNLIMITED ON ') + ';',
+  cek('PDB BANDUNG dan SURABAYA terbuka READ WRITE', `${hitung(`v$pdbs WHERE name IN ('${BDG.kode}', '${SBY.kode}') AND open_mode = 'READ WRITE'`)} = 2`),
+]);
+
+// ================================================= 02 pengguna per situs
+
+tulis('02_pengguna_situs.sql', [
+  kepala({
+    judul: 'Langkah 2 - Pemilik skema aplikasi di setiap situs',
+    sub: 'Dijalankan tiga kali: di JAKARTA, BANDUNG, dan SURABAYA.',
+    situs: 'jakarta,bandung,surabaya',
+    sebagai: 'sys',
+    catatan: ['Variabel &&situs diisi nama situs (JAKARTA/BANDUNG/SURABAYA), &&dir_data folder data Oracle.'],
+  }),
+  '-- Berkas data dikelola Oracle (OMF) agar nama berkas tidak perlu ditulis manual:',
+  "ALTER SYSTEM SET db_create_file_dest = '&&dir_data' SCOPE = BOTH;",
+  '',
+  'CREATE TABLESPACE TS_&&situs DATAFILE SIZE 50M AUTOEXTEND ON NEXT 10M MAXSIZE 1G;',
+  '',
+  'CREATE USER RS_APP IDENTIFIED BY "&&sandi_rs_app"',
+  '  DEFAULT TABLESPACE TS_&&situs QUOTA UNLIMITED ON TS_&&situs;',
   '',
   'GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE SYNONYM,',
-  '      CREATE DATABASE LINK, CREATE MATERIALIZED VIEW TO RS_APP;',
+  '      CREATE DATABASE LINK, CREATE MATERIALIZED VIEW, CREATE PROCEDURE TO RS_APP;',
   '',
-  '-- Hak yang diperlukan untuk memeriksa transaksi terdistribusi:',
+  '-- Hak untuk memeriksa dan menyelesaikan transaksi terdistribusi (Langkah 13):',
+  'GRANT SELECT_CATALOG_ROLE, FORCE ANY TRANSACTION TO RS_APP;',
   'GRANT SELECT ON dba_2pc_pending TO RS_APP;',
   'GRANT SELECT ON dba_2pc_neighbors TO RS_APP;',
-  'GRANT SELECT_CATALOG_ROLE TO RS_APP;',
+  'GRANT EXECUTE ON dbms_transaction TO RS_APP;',
   '',
-  '-- Periksa hasilnya:',
-  "SELECT tablespace_name, status, contents FROM dba_tablespaces WHERE tablespace_name LIKE 'TS_%';",
-].join('\n'));
+  cek('pengguna RS_APP dan tablespace situs siap', `${hitung("dba_users WHERE username = 'RS_APP'")} = 1 AND ${hitung("dba_tablespaces WHERE tablespace_name = 'TS_&&situs'")} = 1`),
+]);
 
-// ------------------------------------------------------------ 02 skema global
+// ============================================ 03 tablespace alokasi (pusat)
+
+tulis('03_tablespace_alokasi.sql', [
+  kepala({
+    judul: 'Langkah 3 - Alokasi di dalam satu basis data: satu tablespace per situs',
+    sub: 'Dipakai Langkah 6: partisi PASIEN ditaruh di tablespace situsnya.',
+    situs: 'jakarta',
+    sebagai: 'sys',
+  }),
+  ...[BDG, SBY].map((s) => `CREATE TABLESPACE TS_${s.kode} DATAFILE SIZE 20M AUTOEXTEND ON NEXT 10M MAXSIZE 1G;`),
+  '',
+  `ALTER USER RS_APP QUOTA UNLIMITED ON TS_${BDG.kode} QUOTA UNLIMITED ON TS_${SBY.kode};`,
+  '',
+  cek('tiga tablespace alokasi tersedia di situs pusat', `${hitung("dba_tablespaces WHERE tablespace_name IN ('TS_JAKARTA', 'TS_BANDUNG', 'TS_SURABAYA')")} = 3`),
+]);
+
+// ============================================================ 04 skema global
 
 const tabelUrut = ['pasien', 'dokter', 'administrator', 'pasien_dokter', 'dokter_admin', 'daftar'];
-tulis('02_skema_global.sql', [
-  judul('Langkah 2 - Skema konseptual global (GCS)',
-    'Enam tabel Praktikum 2, ditulis ulang dengan tipe data Oracle yang benar.'),
-  '-- Jalankan sebagai RS_APP.',
-  '',
-  '-- Catatan perbaikan terhadap skema praktikum asli:',
-  '--   * no_hp dibuat VARCHAR2, bukan NUMBER: nol di depan tidak boleh hilang.',
-  '--   * kolom kota ditambahkan sebagai kunci fragmentasi horizontal.',
-  '--   * biaya dan tanggal_daftar ditambahkan agar laporan bisa diuji.',
-  '--   * setiap tabel diberi PRIMARY KEY dan FOREIGN KEY eksplisit.',
-  '',
+tulis('04_skema_global.sql', [
+  kepala({
+    judul: 'Langkah 4 - Skema konseptual global (GCS)',
+    sub: 'Enam tabel Praktikum 2 dengan tipe data Oracle, PRIMARY KEY, FOREIGN KEY, dan CHECK.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    catatan: [
+      'Perbaikan terhadap skema praktikum asli:',
+      '  * no_hp VARCHAR2, bukan NUMBER: nol di depan tidak boleh hilang.',
+      '  * kolom kota sebagai kunci fragmentasi horizontal.',
+      '  * ON DELETE CASCADE sesuai lembar praktikum (Oracle tidak punya ON UPDATE CASCADE).',
+    ],
+  }),
   ...tabelUrut.map((t) => O.createTable(db[t], {
     tipe: TIPE,
     pk: RS_KEYS[t].pk,
@@ -96,357 +151,525 @@ tulis('02_skema_global.sql', [
     check: t === 'pasien' ? [{ nama: 'CK_PASIEN_JK', ekspresi: "JENIS_KELAMIN IN ('L','P')" }] : [],
   })),
   '',
-  '-- Indeks penunjang join yang paling sering dipakai laporan:',
+  '-- Indeks penunjang join:',
   'CREATE INDEX IX_PD_PASIEN ON PASIEN_DOKTER (ID_PASIEN);',
   'CREATE INDEX IX_PD_DOKTER ON PASIEN_DOKTER (ID_DOKTER);',
   'CREATE INDEX IX_DAFTAR_PASIEN ON DAFTAR (ID_PASIEN);',
   '',
-  '-- Verifikasi:',
-  "SELECT table_name, num_rows FROM user_tables ORDER BY table_name;",
-  "SELECT constraint_name, constraint_type, table_name FROM user_constraints WHERE constraint_type IN ('P','R') ORDER BY table_name;",
-].join('\n'));
+  cek('enam tabel global terbentuk', `${hitung(`user_tables WHERE table_name IN (${tabelUrut.map((t) => `'${t.toUpperCase()}'`).join(', ')})`)} = 6`),
+  cek('enam kunci asing terpasang', `${hitung("user_constraints WHERE constraint_type = 'R'")} = 6`),
+]);
 
-// ------------------------------------------------- 03 fragmentasi horizontal
+// ============================================================ 05 data contoh
 
-const fragKota = KOTA.map((k, i) => ({
-  nama: `P_${k.toUpperCase()}`,
-  nilai: [k],
-  situs: DEFAULT_SITES[i].id,
-}));
-
-tulis('03_fragmentasi_horizontal.sql', [
-  judul('Langkah 3 - Fragmentasi horizontal primer',
-    'sigma_{kota = X}(PASIEN) diwujudkan sebagai PARTITION BY LIST.'),
-  '-- Aturan kebenaran yang dijamin oleh partisi LIST + partisi DEFAULT:',
-  '--   Kelengkapan  : partisi DEFAULT menampung nilai kota yang belum terdaftar',
-  '--   Rekonstruksi : SELECT * FROM PASIEN otomatis menggabungkan seluruh partisi',
-  '--   Kedisjoinan  : satu baris hanya bisa masuk ke satu partisi LIST',
-  '',
-  '-- Tabel pada 02_skema_global.sql dibuat ulang dalam bentuk terpartisi:',
-  'DROP TABLE PASIEN CASCADE CONSTRAINTS;',
-  '',
-  O.horizontalAsPartitions(db.pasien, 'kota', fragKota, {
-    tipe: TIPE,
-    pk: RS_KEYS.pasien.pk,
-    check: [{ nama: 'CK_PASIEN_JK', ekspresi: "JENIS_KELAMIN IN ('L','P')" }],
+tulis('05_data_contoh.sql', [
+  kepala({
+    judul: 'Langkah 5 - Data contoh',
+    sub: 'Dataset yang sama persis dengan Terminal SQL dan lab di situs.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    galat: ['ORA-02290', 'ORA-02291'],
   }),
+  ...tabelUrut.map((t) => `-- ${t} (${db[t].cardinality} baris)\n${O.insertRows(db[t])}\n`),
+  'COMMIT;',
+  '',
+  ...tabelUrut.map((t) => cek(`${t} berisi ${db[t].cardinality} baris`, `${hitung(t.toUpperCase())} = ${db[t].cardinality}`)),
+  '',
+  '-- Kendala ditegakkan Oracle - kedua perintah di bawah SENGAJA ditolak:',
+  "INSERT INTO PASIEN (ID_PASIEN, NAMA_PASIEN, JENIS_KELAMIN, KOTA) VALUES (90, 'Uji CHECK', 'X', 'Jakarta');",
+  "INSERT INTO PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, BIAYA) VALUES (90, 42, 1, 1);",
+  cek('baris yang melanggar kendala tidak tersimpan', `${hitung('PASIEN WHERE ID_PASIEN = 90')} + ${hitung('PASIEN_DOKTER WHERE ID = 90')} = 0`),
+]);
+
+// ================================================ 06 fragmentasi horizontal
+
+const fragKota = SITUS.map((s) => ({ nama: `P_${s.kode}`, nilai: [s.kota], tablespace: `TS_${s.kode}` }));
+tulis('06_fragmentasi_horizontal.sql', [
+  kepala({
+    judul: 'Langkah 6 - Fragmentasi horizontal primer',
+    sub: 'sigma_{kota = X}(PASIEN) diwujudkan sebagai PARTITION BY LIST, tanpa kehilangan data.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    galat: ['ORA-14402'],
+    catatan: [
+      'Aturan kebenaran:',
+      '  Kelengkapan  : partisi DEFAULT menampung kota yang belum terdaftar',
+      '  Rekonstruksi : SELECT * FROM PASIEN menggabungkan seluruh partisi',
+      '  Kedisjoinan  : satu baris hanya bisa berada di satu partisi LIST',
+    ],
+  }),
+  '-- Tabel yang sudah berisi data diubah menjadi terpartisi secara ONLINE (Oracle 12.2+):',
+  'ALTER TABLE PASIEN MODIFY',
+  'PARTITION BY LIST (KOTA) (',
+  fragKota.map((f) => `  PARTITION ${f.nama} VALUES ('${f.nilai[0]}') TABLESPACE ${f.tablespace}`).join(',\n') + ',',
+  '  PARTITION P_LAIN VALUES (DEFAULT)',
+  ') ONLINE UPDATE INDEXES;',
   '',
   O.partitionedIndexes('PASIEN', {
     lokal: [{ nama: 'IX_PASIEN_NAMA', kolom: ['nama_pasien'] }],
     global: [{ nama: 'IX_PASIEN_HP', kolom: ['no_hp'], partisi: 4 }],
   }),
   '',
-  '-- Berapa baris di tiap fragmen:',
-  'SELECT partition_name, num_rows FROM user_tab_partitions WHERE table_name = \'PASIEN\';',
+  ...fragKota.map((f, i) => cek(`fragmen ${f.nama} berisi ${barisKota(SITUS[i].kota).length} baris dan berada di ${f.tablespace}`,
+    `${hitung(`PASIEN PARTITION (${f.nama})`)} = ${barisKota(SITUS[i].kota).length} AND ${hitung(`user_tab_partitions WHERE table_name = 'PASIEN' AND partition_name = '${f.nama}' AND tablespace_name = '${f.tablespace}'`)} = 1`)),
+  cek('kelengkapan: jumlah semua fragmen = 12 baris', `${hitung('PASIEN')} = 12`),
   '',
-  '-- Setara dengan "AT SITE" pada Modul 6 - akses satu fragmen secara langsung:',
-  ...fragKota.map((f) => `SELECT COUNT(*) FROM PASIEN PARTITION (${f.nama});`),
-].join('\n'));
+  '-- Memindah baris ke fragmen lain butuh ROW MOVEMENT. Perintah pertama SENGAJA ditolak:',
+  "UPDATE PASIEN SET KOTA = 'Bandung' WHERE ID_PASIEN = 1;",
+  'ALTER TABLE PASIEN ENABLE ROW MOVEMENT;',
+  "UPDATE PASIEN SET KOTA = 'Bandung' WHERE ID_PASIEN = 1;",
+  cek('dengan ROW MOVEMENT baris berpindah ke fragmen Bandung', `${hitung("PASIEN PARTITION (P_BANDUNG) WHERE ID_PASIEN = 1")} = 1`),
+  'ROLLBACK;',
+  cek('ROLLBACK mengembalikan baris ke fragmen Jakarta', `${hitung("PASIEN PARTITION (P_JAKARTA) WHERE ID_PASIEN = 1")} = 1`),
+]);
 
-// --------------------------------------------------- 04 fragmentasi turunan
+// ================================================== 07 fragmentasi turunan
 
-tulis('04_fragmentasi_turunan.sql', [
-  judul('Langkah 4 - Fragmentasi horizontal turunan (derived)',
-    'PASIEN_DOKTER mengikuti fragmentasi PASIEN lewat PARTITION BY REFERENCE.'),
-  '-- Tanpa ini, setiap join PASIEN x PASIEN_DOKTER harus melintasi jaringan.',
-  '-- Dengan reference partitioning, baris anak SELALU berada di partisi yang sama',
-  '-- dengan induknya, sehingga join menjadi partition-wise join yang lokal.',
-  '',
-  'DROP TABLE PASIEN_DOKTER CASCADE CONSTRAINTS;',
-  '',
-  'CREATE TABLE PASIEN_DOKTER (',
-  '  ID                     NUMBER(8)  NOT NULL,',
-  '  ID_DOKTER              NUMBER(4)  NOT NULL,',
-  '  ID_PASIEN              NUMBER(8)  NOT NULL,',
+tulis('07_fragmentasi_turunan.sql', [
+  kepala({
+    judul: 'Langkah 7 - Fragmentasi horizontal turunan (derived)',
+    sub: 'PASIEN_DOKTER_FRAG mengikuti fragmen PASIEN lewat PARTITION BY REFERENCE.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    catatan: [
+      'Syarat: kolom kunci asing NOT NULL dan tabel induk sudah terpartisi (Langkah 6).',
+      'Induk sudah ENABLE ROW MOVEMENT, maka anak juga wajib ROW MOVEMENT (tanpanya Oracle menolak: ORA-14661).',
+    ],
+  }),
+  'CREATE TABLE PASIEN_DOKTER_FRAG (',
+  '  ID                     NUMBER(8)     NOT NULL,',
+  '  ID_DOKTER              NUMBER(4)     NOT NULL,',
+  '  ID_PASIEN              NUMBER(8)     NOT NULL,',
   '  WAKTU_PERIKSA          DATE,',
-  '  RESEP                  VARCHAR2(120),',
+  '  RESEP                  VARCHAR2(150),',
   '  BIAYA                  NUMBER(12,2),',
-  '  CONSTRAINT PK_PASIEN_DOKTER PRIMARY KEY (ID),',
-  '  CONSTRAINT FK_PD_PASIEN FOREIGN KEY (ID_PASIEN) REFERENCES PASIEN (ID_PASIEN),',
-  '  CONSTRAINT FK_PD_DOKTER FOREIGN KEY (ID_DOKTER) REFERENCES DOKTER (ID_DOKTER)',
+  '  CONSTRAINT PK_PASIEN_DOKTER_FRAG PRIMARY KEY (ID),',
+  '  CONSTRAINT FK_PDF_PASIEN FOREIGN KEY (ID_PASIEN) REFERENCES PASIEN (ID_PASIEN),',
+  '  CONSTRAINT FK_PDF_DOKTER FOREIGN KEY (ID_DOKTER) REFERENCES DOKTER (ID_DOKTER)',
   ')',
-  'PARTITION BY REFERENCE (FK_PD_PASIEN);',
+  'PARTITION BY REFERENCE (FK_PDF_PASIEN)',
+  'ENABLE ROW MOVEMENT;',
   '',
-  '-- Syarat reference partitioning: kolom foreign key WAJIB NOT NULL.',
-  '-- Partisi anak otomatis mewarisi nama partisi induknya:',
-  "SELECT partition_name FROM user_tab_partitions WHERE table_name = 'PASIEN_DOKTER';",
+  'INSERT INTO PASIEN_DOKTER_FRAG SELECT * FROM PASIEN_DOKTER;',
+  'COMMIT;',
   '',
-  '-- Bukti join menjadi lokal (cari baris PARTITION JOIN pada rencana):',
-  'EXPLAIN PLAN FOR',
+  cek('partisi anak mewarisi 4 partisi induk', `${hitung("user_tab_partitions WHERE table_name = 'PASIEN_DOKTER_FRAG'")} = 4`),
+  ...SITUS.map((s) => cek(`setiap pemeriksaan pasien ${s.kota} ikut berada di fragmen P_${s.kode}`,
+    `${hitung(`PASIEN_DOKTER_FRAG PARTITION (P_${s.kode})`)} = ${hitung(`PASIEN_DOKTER pd JOIN PASIEN p ON p.ID_PASIEN = pd.ID_PASIEN WHERE p.KOTA = '${s.kota}'`)}`)),
+  '',
+  '-- Rencana join: PARTITION LIST SINGLE pada kedua tabel menandakan join lokal satu fragmen.',
+  "EXPLAIN PLAN SET STATEMENT_ID = 'turunan' FOR",
   'SELECT p.NAMA_PASIEN, pd.RESEP',
-  '  FROM PASIEN p JOIN PASIEN_DOKTER pd ON p.ID_PASIEN = pd.ID_PASIEN',
+  '  FROM PASIEN p JOIN PASIEN_DOKTER_FRAG pd ON p.ID_PASIEN = pd.ID_PASIEN',
   " WHERE p.KOTA = 'Jakarta';",
-  "SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(NULL, NULL, 'BASIC +PARTITION'));",
-].join('\n'));
+  "SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(NULL, 'turunan', 'BASIC +PARTITION'));",
+  cek('rencana memangkas ke satu partisi', `${hitung("plan_table WHERE statement_id = 'turunan' AND operation LIKE 'PARTITION%' AND options = 'SINGLE'")} >= 1`),
+]);
 
-// -------------------------------------------------- 05 fragmentasi vertikal
+// ================================================== 08 fragmentasi vertikal
 
 const { STAFF } = dreamhome();
 const vert = O.verticalAsTables(STAFF, [
-  { nama: 'S1_STAFF', atribut: ['position', 'sex', 'dob', 'salary'], situs: 'S3' },
-  { nama: 'S2_STAFF', atribut: ['fname', 'lname', 'branchno'], situs: 'S1' },
+  { nama: 'S1_STAFF', atribut: ['position', 'sex', 'dob', 'salary'] },
+  { nama: 'S2_STAFF', atribut: ['fname', 'lname', 'branchno'] },
 ], 'staffno');
-
-tulis('05_fragmentasi_vertikal.sql', [
-  judul('Langkah 5 - Fragmentasi vertikal',
-    'Contoh S1/S2 pada Modul 6: data gaji dipisahkan dari data identitas.'),
-  '-- Alasan bisnis: kolom gaji hanya boleh dibaca bagian SDM, sedangkan nama',
-  '-- dan cabang dibaca semua orang. Memisahkannya secara vertikal membuat',
-  '-- hak akses bisa diberikan per tabel, bukan per kolom.',
-  '',
-  '-- Syarat lossless-join: SETIAP fragmen wajib memuat kunci (STAFFNO).',
-  '-- Tanpa itu, S1 JOIN S2 tidak akan mengembalikan relasi aslinya.',
-  '',
+tulis('08_fragmentasi_vertikal.sql', [
+  kepala({
+    judul: 'Langkah 8 - Fragmentasi vertikal',
+    sub: 'STAFF dari Modul 6: data gaji (S1) dipisahkan dari data identitas (S2).',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    catatan: ['Syarat lossless-join: SETIAP fragmen memuat kunci STAFFNO.'],
+  }),
   vert.sql,
   '',
-  '-- Uji rekonstruksi: jumlah baris VIEW harus sama dengan jumlah baris asli.',
-  'SELECT COUNT(*) AS baris_s1 FROM S1_STAFF;',
-  'SELECT COUNT(*) AS baris_s2 FROM S2_STAFF;',
-  'SELECT COUNT(*) AS baris_rekonstruksi FROM STAFF;',
+  O.insertRows(proyeksi(STAFF, 'S1_STAFF', ['staffno', 'position', 'sex', 'dob', 'salary'])),
+  O.insertRows(proyeksi(STAFF, 'S2_STAFF', ['staffno', 'fname', 'lname', 'branchno'])),
+  'COMMIT;',
   '',
-  '-- Reduksi fragmentasi vertikal: kueri di bawah hanya menyentuh S2_STAFF',
-  '-- karena tidak ada satu pun atribut S1_STAFF yang diminta.',
-  'EXPLAIN PLAN FOR SELECT FNAME, LNAME FROM STAFF;',
-  "SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(NULL, NULL, 'BASIC'));",
-].join('\n'));
-
-// -------------------------------------------------------- 06 database link
-
-tulis('06_database_link.sql', [
-  judul('Langkah 6 - Database link antar situs',
-    'Tanpa link, Oracle tidak punya jalan untuk menjalankan kueri terdistribusi.'),
-  ...DEFAULT_SITES.slice(1).map((s) => O.createDatabaseLink({
-    nama: `SITUS_${s.kota.toUpperCase()}`,
-    user: 'RS_APP',
-    tns: `//${s.kota.toLowerCase()}-db:1521/XEPDB1`,
-  })),
+  cek(`rekonstruksi S1 JOIN S2 mengembalikan ${STAFF.cardinality} pegawai`, `${hitung('STAFF')} = ${STAFF.cardinality}`),
+  cek('rekonstruksi memuat seluruh atribut asli', `${hitung(`user_tab_columns WHERE table_name = 'STAFF'`)} = ${STAFF_ATTRS.length}`),
   '',
-  O.locationTransparencySynonyms(DEFAULT_SITES.slice(1).map((s) => ({
-    alias: `PASIEN_${s.kota.toUpperCase()}`,
-    objek: 'PASIEN',
-    link: `SITUS_${s.kota.toUpperCase()}`,
-  }))),
+  "EXPLAIN PLAN SET STATEMENT_ID = 'vertikal' FOR SELECT FNAME, LNAME FROM S2_STAFF;",
+  "SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(NULL, 'vertikal', 'BASIC'));",
+]);
+
+// =================================================== 09 fragmen di situs remote
+
+for (const [huruf, s] of [['a', BDG], ['b', SBY]]) {
+  const idPasien = new Set(barisKota(s.kota));
+  const pas = proyeksi(db.pasien, 'PASIEN', db.pasien.attrs, (r) => idPasien.has(r[0]));
+  const daf = proyeksi(db.daftar, 'DAFTAR', db.daftar.attrs, (r) => idPasien.has(r[db.daftar.indexOf('id_pasien')]));
+  tulis(`09${huruf}_situs_${s.kota.toLowerCase()}.sql`, [
+    kepala({
+      judul: `Langkah 9${huruf} - Fragmen di situs ${s.nama}`,
+      sub: `PASIEN_${s.kode} = sigma_{kota = '${s.kota}'}(PASIEN); DAFTAR diturunkan dari fragmen itu.`,
+      situs: s.kota.toLowerCase(),
+      sebagai: 'rs_app',
+      galat: ['ORA-02290'],
+      catatan: ['Kunci asing DAFTAR.ID_ADMIN tidak dideklarasikan: induknya ada di basis data lain,', 'dan Oracle tidak mengizinkan kunci asing lintas basis data.'],
+    }),
+    O.createTable(pas, {
+      tipe: TIPE,
+      pk: ['id_pasien'],
+      check: [
+        { nama: 'CK_PASIEN_JK', ekspresi: "JENIS_KELAMIN IN ('L','P')" },
+        { nama: 'CK_PASIEN_KOTA', ekspresi: `KOTA = '${s.kota}'` },
+      ],
+    }),
+    O.createTable(daf, { tipe: TIPE, pk: ['id_daftar'], fk: [{ cols: ['id_pasien'], ref: 'PASIEN', refCols: ['id_pasien'], onDelete: 'CASCADE' }], notNull: ['id_pasien'] }),
+    '',
+    O.insertRows(pas),
+    O.insertRows(daf),
+    'COMMIT;',
+    '',
+    cek(`fragmen PASIEN ${s.nama} berisi ${pas.cardinality} baris`, `${hitung('PASIEN')} = ${pas.cardinality}`),
+    cek(`fragmen DAFTAR ${s.nama} berisi ${daf.cardinality} baris`, `${hitung('DAFTAR')} = ${daf.cardinality}`),
+    '',
+    '-- CHECK menjaga predikat fragmen: pasien kota lain SENGAJA ditolak.',
+    `INSERT INTO PASIEN (ID_PASIEN, NAMA_PASIEN, JENIS_KELAMIN, KOTA) VALUES (91, 'Salah situs', 'L', 'Jakarta');`,
+    cek('baris yang salah situs tidak tersimpan', `${hitung('PASIEN WHERE ID_PASIEN = 91')} = 0`),
+  ]);
+}
+
+// ===================================================== 10 database link
+
+tulis('10_database_link.sql', [
+  kepala({
+    judul: 'Langkah 10 - Database link, sinonim, dan view global',
+    sub: 'Transparansi lokasi: aplikasi di Jakarta membaca ketiga situs seperti satu tabel.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    catatan: ['&&tns_bandung dan &&tns_surabaya berisi alamat EZConnect situs, mis. //host:1521/BANDUNG.'],
+  }),
+  ...[BDG, SBY].map((s) => [
+    `CREATE DATABASE LINK SITUS_${s.kode}`,
+    `  CONNECT TO RS_APP IDENTIFIED BY "&&sandi_rs_app"`,
+    `  USING '&&tns_${s.kota.toLowerCase()}';`,
+    cek(`link SITUS_${s.kode} tersambung`, `${hitung(`PASIEN@SITUS_${s.kode}`)} = ${barisKota(s.kota).length}`),
+    '',
+  ].join('\n')),
+  '-- Fragmen disebut dengan nama tanpa lokasi (transparansi lokasi):',
+  "CREATE OR REPLACE VIEW PASIEN_JAKARTA AS SELECT * FROM PASIEN WHERE KOTA = 'Jakarta';",
+  O.locationTransparencySynonyms([BDG, SBY].map((s) => ({ alias: `PASIEN_${s.kode}`, objek: 'PASIEN', link: `SITUS_${s.kode}` }))),
   '',
   O.unionAllView('V_PASIEN_NASIONAL', [
-    { objek: 'PASIEN', predikat: "KOTA = 'Jakarta'" },
-    ...DEFAULT_SITES.slice(1).map((s) => ({
-      objek: 'PASIEN',
-      link: `SITUS_${s.kota.toUpperCase()}`,
-      predikat: `KOTA = '${s.kota}'`,
-    })),
+    { objek: 'PASIEN_JAKARTA' },
+    { objek: 'PASIEN', link: `SITUS_${BDG.kode}` },
+    { objek: 'PASIEN', link: `SITUS_${SBY.kode}` },
   ]),
   '',
-  '-- Periksa link yang ada dan sesi terdistribusi yang sedang terbuka:',
-  'SELECT db_link, username, host FROM user_db_links;',
-  'SELECT * FROM v$dblink;',
-].join('\n'));
-
-// ----------------------------------------------------------- 07 replikasi
-
-tulis('07_replikasi_materialized_view.sql', [
-  judul('Langkah 7 - Replikasi dengan materialized view',
-    'DOKTER dibaca semua situs tetapi jarang berubah - kandidat replikasi penuh.'),
-  '-- Keputusan ini bukan selera: lab Alokasi & Replikasi menghitung bahwa',
-  '-- mereplikasi DOKTER ke tiga situs menurunkan biaya total, sedangkan',
-  '-- mereplikasi PASIEN justru menaikkannya karena PASIEN sering di-update.',
+  cek('rekonstruksi dari tiga basis data = 12 pasien', `${hitung('V_PASIEN_NASIONAL')} = 12`),
+  cek('isi view global identik dengan tabel global (MINUS dua arah kosong)',
+    `${hitung('(SELECT * FROM V_PASIEN_NASIONAL MINUS SELECT * FROM PASIEN)')} + ${hitung('(SELECT * FROM PASIEN MINUS SELECT * FROM V_PASIEN_NASIONAL)')} = 0`),
+  cek('kedisjoinan: tidak ada ID pasien di dua situs', `${hitung('(SELECT ID_PASIEN FROM V_PASIEN_NASIONAL GROUP BY ID_PASIEN HAVING COUNT(*) > 1)')} = 0`),
   '',
-  O.materializedView({
-    nama: 'MV_DOKTER',
-    sumber: 'DOKTER',
-    link: 'SITUS_JAKARTA',
-    kunci: ['id_dokter'],
-    refresh: 'FAST',
-    jadwal: 'START WITH',
-    interval: 'SYSDATE + 15/1440',
-    tablespace: 'TS_S2',
+  'SELECT db_link, username, host FROM user_db_links ORDER BY db_link;',
+]);
+
+// ================================================= 11-12 replikasi (MV)
+
+tulis('11_replikasi_sumber.sql', [
+  kepala({
+    judul: 'Langkah 11 - Replikasi: MV log di situs sumber',
+    sub: 'DOKTER dibaca semua situs tetapi jarang berubah - kandidat replikasi.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    catatan: ['MV log WAJIB dibuat di basis data pemilik tabel, bukan lewat database link.'],
   }),
+  O.materializedViewLog('DOKTER'),
   '',
-  '-- Pilihan jadwal penyegaran dan konsekuensinya:',
-  '--   ON COMMIT   -> RPO 0, tetapi setiap COMMIT di sumber ikut menunggu (sinkron)',
-  '--   ON DEMAND   -> RPO sebesar jeda penyegaran, COMMIT tetap cepat (asinkron)',
-  '--   START WITH  -> penyegaran berkala; di atas dipakai 15 menit',
+  cek('MV log DOKTER tersedia', `${hitung("user_mview_logs WHERE master = 'DOKTER'")} = 1`),
+]);
+
+tulis('12_replikasi_replika.sql', [
+  kepala({
+    judul: 'Langkah 12 - Replikasi: materialized view di situs Bandung',
+    sub: 'Salinan DOKTER disegarkan FAST: hanya perubahan yang dikirim.',
+    situs: 'bandung',
+    sebagai: 'rs_app',
+  }),
+  `CREATE DATABASE LINK SITUS_${JKT.kode}`,
+  '  CONNECT TO RS_APP IDENTIFIED BY "&&sandi_rs_app"',
+  "  USING '&&tns_jakarta';",
+  '',
+  O.materializedView({ nama: 'MV_DOKTER', sumber: 'DOKTER', link: `SITUS_${JKT.kode}`, kunci: ['id_dokter'], refresh: 'FAST', jadwal: 'ON DEMAND' }),
+  '',
+  cek(`replika berisi ${db.dokter.cardinality} dokter`, `${hitung('MV_DOKTER')} = ${db.dokter.cardinality}`),
+  '',
+  '-- Perubahan di sumber belum terlihat di replika sampai disegarkan (RPO asinkron):',
+  `UPDATE DOKTER@SITUS_${JKT.kode} SET WAKTU_KERJA = 'Senin-Sabtu' WHERE ID_DOKTER = 3;`,
+  'COMMIT;',
+  cek('sebelum refresh, replika masih nilai lama', `${hitung("MV_DOKTER WHERE ID_DOKTER = 3 AND WAKTU_KERJA = 'Rabu-Jumat'")} = 1`),
+  "EXEC DBMS_MVIEW.REFRESH('MV_DOKTER', 'F');",
+  cek('setelah FAST refresh, replika mengikuti sumber', `${hitung("MV_DOKTER WHERE ID_DOKTER = 3 AND WAKTU_KERJA = 'Senin-Sabtu'")} = 1`),
+  cek('refresh terakhir berjenis FAST', `${hitung("user_mviews WHERE mview_name = 'MV_DOKTER' AND last_refresh_type = 'FAST'")} = 1`),
   '',
   O.refreshGroup('RG_REFERENSI', ['MV_DOKTER'], 'SYSDATE + 15/1440'),
+  cek('refresh group RG_REFERENSI terdaftar', `${hitung("user_refresh WHERE rname = 'RG_REFERENSI'")} = 1`),
   '',
-  '-- Pantau apakah replika tertinggal:',
-  'SELECT mview_name, last_refresh_type, last_refresh_date, staleness FROM user_mviews;',
-  "SELECT name, status, next_date FROM user_refresh;",
-].join('\n'));
+  '-- Kembalikan nilai sumber agar langkah berikutnya memakai data asli:',
+  `UPDATE DOKTER@SITUS_${JKT.kode} SET WAKTU_KERJA = 'Rabu-Jumat' WHERE ID_DOKTER = 3;`,
+  'COMMIT;',
+]);
 
-// ---------------------------------------------- 08 transaksi terdistribusi
+// ============================================= 13 transaksi terdistribusi
 
-tulis('08_transaksi_terdistribusi.sql', [
-  judul('Langkah 8 - Transaksi terdistribusi dan two-phase commit',
-    'Oracle menjalankan 2PC otomatis; yang perlu dipahami adalah kapan ia memblokir.'),
+tulis('13_transaksi_2pc.sql', [
+  kepala({
+    judul: 'Langkah 13 - Transaksi terdistribusi dan two-phase commit',
+    sub: 'Satu COMMIT atas dua basis data: Oracle menjalankan 2PC otomatis.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    galat: ['ORA-02290'],
+  }),
   O.distributedTransaction({
     situs: ['Jakarta', 'Bandung'],
     namaTransaksi: 'RUJUK_PASIEN_LINTAS_KOTA',
     operasi: [
-      { situs: 'Jakarta (lokal)', sql: "UPDATE PASIEN SET KOTA = 'Bandung' WHERE ID_PASIEN = 1" },
-      { situs: 'Bandung (jauh)', sql: "INSERT INTO DAFTAR@SITUS_BANDUNG (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) VALUES (99, 1, 3, SYSDATE)" },
+      { situs: 'Jakarta (lokal)', sql: "UPDATE PASIEN SET PENYAKIT = 'Asma - dirujuk' WHERE ID_PASIEN = 3" },
+      { situs: 'Bandung (remote)', sql: `INSERT INTO DAFTAR@SITUS_${BDG.kode} (ID_DAFTAR, ID_PASIEN, ID_ADMIN, TANGGAL_DAFTAR) VALUES (99, 3, 3, DATE '2025-09-20')` },
     ],
   }),
+  cek('kedua situs menyimpan perubahan', `${hitung(`DAFTAR@SITUS_${BDG.kode} WHERE ID_DAFTAR = 99`)} = 1 AND ${hitung("PASIEN WHERE ID_PASIEN = 3 AND PENYAKIT = 'Asma - dirujuk'")} = 1`),
   '',
-  '-- Urutan yang sebenarnya terjadi di balik satu COMMIT itu:',
-  '--   fase 1  koordinator mengirim PREPARE ke semua situs',
-  '--   fase 1  tiap situs menulis catatan READY lalu menjawab VOTE-COMMIT',
-  '--   fase 2  koordinator menulis keputusan lalu menyebarkan GLOBAL-COMMIT',
-  '--   fase 2  tiap situs commit dan mengirim ACK',
+  '-- Atomisitas global: perintah remote yang gagal membatalkan perubahan lokal juga.',
+  "UPDATE PASIEN SET PENYAKIT = 'Harus batal' WHERE ID_PASIEN = 1;",
+  `INSERT INTO PASIEN@SITUS_${BDG.kode} (ID_PASIEN, NAMA_PASIEN, JENIS_KELAMIN, KOTA) VALUES (92, 'Salah situs', 'L', 'Jakarta');`,
+  'ROLLBACK;',
+  cek('ROLLBACK membatalkan perubahan lokal', `${hitung("PASIEN WHERE ID_PASIEN = 1 AND PENYAKIT = 'Demam Berdarah'")} = 1`),
   '',
-  '-- Situs commit point ditentukan oleh COMMIT_POINT_STRENGTH tertinggi.',
-  '-- Pilih situs yang paling jarang mati sebagai commit point:',
-  "SELECT name, value FROM v$parameter WHERE name = 'commit_point_strength';",
-  '-- ALTER SYSTEM SET COMMIT_POINT_STRENGTH = 200 SCOPE = SPFILE;',
+  "SELECT name, value FROM v$parameter WHERE name IN ('commit_point_strength', 'distributed_lock_timeout');",
+]);
+
+// ============================================= 14 transaksi ragu-ragu (in-doubt)
+
+tulis('14a_matikan_pemulihan.sql', [
+  kepala({
+    judul: 'Langkah 14a - Matikan pemulihan otomatis (RECO) sementara',
+    sub: 'Agar transaksi ragu-ragu pada Langkah 14b tidak langsung diselesaikan proses RECO.',
+    situs: 'cdb',
+    sebagai: 'sys',
+  }),
+  'ALTER SYSTEM DISABLE DISTRIBUTED RECOVERY;',
+]);
+
+tulis('14b_transaksi_ragu_ragu.sql', [
+  kepala({
+    judul: 'Langkah 14b - Kegagalan 2PC, DBA_2PC_PENDING, dan COMMIT FORCE',
+    sub: 'Oracle mensimulasikan kegagalan lewat komentar ORA-2PC-CRASH-TEST-n.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    galat: ['ORA-02054', 'ORA-02059', 'ORA-01591'],
+    catatan: ['Butuh hak FORCE ANY TRANSACTION di SEMUA situs yang terlibat (Langkah 2).'],
+  }),
+  "UPDATE PASIEN SET NO_HP = '081299990003' WHERE ID_PASIEN = 3;",
+  `UPDATE PASIEN@SITUS_${BDG.kode} SET NO_HP = '081299990003' WHERE ID_PASIEN = 3;`,
+  '-- Titik kegagalan 7: situs Bandung sudah commit, situs pusat tertinggal di PREPARED.',
+  "COMMIT COMMENT 'ORA-2PC-CRASH-TEST-7';",
   '',
-  '-- Simulasi transaksi menggantung (jalankan di sesi terpisah, lalu matikan',
-  '-- jaringan ke situs jauh sebelum COMMIT selesai):',
-  'ALTER SESSION SET DISTRIBUTED_LOCK_TIMEOUT = 10;',
-].join('\n'));
+  '-- Catatan in-doubt ditulis ke DBA_2PC_PENDING secara ASINKRON (beberapa detik); tunggu dulu:',
+  'DECLARE',
+  '  n NUMBER;',
+  'BEGIN',
+  '  FOR i IN 1 .. 60 LOOP',
+  "    SELECT COUNT(*) INTO n FROM dba_2pc_pending WHERE state = 'prepared';",
+  '    EXIT WHEN n > 0;',
+  '    DBMS_SESSION.SLEEP(1);',
+  '  END LOOP;',
+  'END;',
+  '/',
+  '',
+  'COLUMN local_tran_id NEW_VALUE id_ragu',
+  "SELECT local_tran_id, global_tran_id, state, mixed FROM dba_2pc_pending WHERE state = 'prepared';",
+  cek('transaksi tercatat ragu-ragu (prepared) di DBA_2PC_PENDING', `${hitung("dba_2pc_pending WHERE state = 'prepared'")} = 1`),
+  '',
+  '-- Baris yang dikunci transaksi ragu-ragu tidak bisa dibaca - perintah ini SENGAJA gagal (ORA-01591):',
+  'SELECT NO_HP FROM PASIEN WHERE ID_PASIEN = 3;',
+  '',
+  '-- Sebelum memaksa keputusan, DBA memeriksa keputusan di situs lain:',
+  `SELECT state FROM dba_2pc_pending@SITUS_${BDG.kode};`,
+  cek('situs Bandung sudah COMMIT, jadi keputusan yang benar adalah COMMIT FORCE', `${hitung(`dba_2pc_pending@SITUS_${BDG.kode} WHERE state = 'committed'`)} = 1`),
+  '-- Kueri lewat database link di atas membuka transaksi; tanpa COMMIT ini Oracle menolak COMMIT FORCE (ORA-02043).',
+  'COMMIT;',
+  "COMMIT FORCE '&id_ragu';",
+  '',
+  cek('status berubah menjadi forced commit', `${hitung("dba_2pc_pending WHERE state = 'forced commit'")} = 1`),
+  cek('data pusat kini sama dengan Bandung', `${hitung("PASIEN WHERE ID_PASIEN = 3 AND NO_HP = '081299990003'")} = 1 AND ${hitung(`PASIEN@SITUS_${BDG.kode} WHERE ID_PASIEN = 3 AND NO_HP = '081299990003'`)} = 1`),
+  'COMMIT;',
+  '-- Catatan "forced commit" tetap tersimpan sampai DBA membersihkannya (Langkah 14d).',
+]);
 
-// -------------------------------------------- 09 lima tingkat transparansi
+tulis('14c_nyalakan_pemulihan.sql', [
+  kepala({
+    judul: 'Langkah 14c - Nyalakan kembali pemulihan otomatis (RECO)',
+    situs: 'cdb',
+    sebagai: 'sys',
+  }),
+  'ALTER SYSTEM ENABLE DISTRIBUTED RECOVERY;',
+]);
 
-const fragSpec = KOTA.map((k, i) => ({
-  nama: `PASIEN_${k.toUpperCase()}`,
-  tipe: 'horizontal',
-  atribut: db.pasien.attrs,
-  situs: DEFAULT_SITES[i].id,
-  predikat: `KOTA = '${k}'`,
-}));
-const qSpec = { relasiGlobal: 'PASIEN', pilih: ['NAMA_PASIEN', 'PENYAKIT'], kondisi: "JENIS_KELAMIN = 'P'", atributKondisi: 'jenis_kelamin' };
+tulis('14d_bersihkan_catatan_2pc.sql', [
+  kepala({
+    judul: 'Langkah 14d - DBA membersihkan catatan transaksi yang sudah diputuskan paksa',
+    sub: 'DBMS_TRANSACTION.PURGE_LOST_DB_ENTRY butuh hak SYS; entri forced commit/rollback tidak hilang sendiri.',
+    situs: 'jakarta',
+    sebagai: 'sys',
+  }),
+  "SELECT local_tran_id, state FROM dba_2pc_pending;",
+  'BEGIN',
+  "  FOR t IN (SELECT local_tran_id FROM dba_2pc_pending WHERE state IN ('forced commit', 'forced rollback')) LOOP",
+  '    DBMS_TRANSACTION.PURGE_LOST_DB_ENTRY(t.local_tran_id);',
+  '    COMMIT;',
+  '  END LOOP;',
+  'END;',
+  '/',
+  cek('tidak ada lagi catatan transaksi prepared atau forced di situs pusat', `${hitung("dba_2pc_pending WHERE state IN ('prepared', 'forced commit', 'forced rollback')")} = 0`),
+]);
 
-tulis('09_transparansi_lima_tingkat.sql', [
-  judul('Langkah 9 - Satu kueri, lima tingkat transparansi',
-    'Kueri yang sama ditulis ulang sesuai tangga transparansi pada Modul 6.'),
-  ...T.ladder(qSpec, fragSpec).map((lv) => [
-    `-- ${'-'.repeat(70)}`,
-    `-- TINGKAT ${lv.tingkat}: ${lv.nama}`,
-    `-- ${lv.keterangan}`,
-    `-- Fragmen disebut: ${lv.jumlahFragmenDisebut} | Situs disebut: ${lv.jumlahSitusDisebut} | Panjang SQL: ${lv.panjangSql} karakter`,
-    lv.catatan ? `-- ${lv.catatan}` : null,
-    lv.peringatan ? `-- PERINGATAN: ${lv.peringatan}` : null,
+// ============================================= 15 lima tingkat transparansi
+
+const kolomT = 'NAMA_PASIEN, PENYAKIT';
+const syaratT = "JENIS_KELAMIN = 'P'";
+const jumlahP = db.pasien.rows.filter((r) => r[db.pasien.indexOf('jenis_kelamin')] === 'P').length;
+const tingkat = [
+  ['1', 'Transparansi fragmentasi', 'Kueri ke relasi global; fragmen maupun situs tidak disebut.', `SELECT ${kolomT} FROM V_PASIEN_NASIONAL WHERE ${syaratT}`],
+  ['2', 'Transparansi lokasi', 'Fragmen disebut namanya, situsnya disembunyikan view dan sinonim.', ['JAKARTA', 'BANDUNG', 'SURABAYA'].map((k) => `SELECT ${kolomT} FROM PASIEN_${k} WHERE ${syaratT}`).join('\nUNION ALL\n')],
+  ['3', 'Transparansi pemetaan lokal', 'Fragmen DAN lokasinya disebut: partisi lokal dan tabel@database_link.', `SELECT ${kolomT} FROM PASIEN PARTITION (P_JAKARTA) WHERE ${syaratT}\nUNION ALL\nSELECT ${kolomT} FROM PASIEN@SITUS_${BDG.kode} WHERE ${syaratT}\nUNION ALL\nSELECT ${kolomT} FROM PASIEN@SITUS_${SBY.kode} WHERE ${syaratT}`],
+];
+tulis('15_transparansi_lima_tingkat.sql', [
+  kepala({
+    judul: 'Langkah 15 - Satu kueri pada tingkat-tingkat transparansi',
+    sub: 'Hasil setiap tingkat wajib sama; yang berbeda hanya seberapa banyak lokasi yang harus ditulis.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+    catatan: [
+      'Notasi modul "SELECT ... FROM PASIEN_JAKARTA AT SITE S1" BUKAN sintaks Oracle.',
+      'Padanannya di Oracle adalah tingkat 3 di bawah: nama_tabel@database_link.',
+    ],
+  }),
+  ...tingkat.map(([no, nama, ket, sql]) => [
+    `-- TINGKAT ${no}: ${nama}`,
+    `-- ${ket}`,
+    `${sql};`,
+    cek(`tingkat ${no} (${nama}) menghasilkan ${jumlahP} pasien perempuan`, `${hitung(`(${sql})`)} = ${jumlahP}`),
     '',
-    lv.sql,
-    '',
-  ].filter((x) => x !== null).join('\n')),
-  '-- Kesimpulan: makin rendah transparansinya, makin panjang SQL yang harus',
-  '-- ditulis aplikasi, dan makin banyak yang harus diubah saat data dipindahkan.',
-].join('\n'));
+  ].join('\n')),
+  '-- TINGKAT 4: Transparansi replikasi',
+  '-- Aplikasi membaca salinan terdekat lewat sinonim; ia tidak tahu salinan mana yang dipakai.',
+  `CREATE OR REPLACE SYNONYM DOKTER_TERDEKAT FOR MV_DOKTER@SITUS_${BDG.kode};`,
+  'SELECT NAMA_DOKTER, SPESIALIS FROM DOKTER_TERDEKAT;',
+  cek('replika dokter terbaca lewat sinonim', `${hitung('DOKTER_TERDEKAT')} = ${db.dokter.cardinality}`),
+  '',
+  '-- TINGKAT 5: Tanpa transparansi - aplikasi sendiri yang merutekan ke setiap situs',
+  '-- (tiga kueri terpisah, digabung oleh aplikasi):',
+  `SELECT ${kolomT} FROM PASIEN PARTITION (P_JAKARTA) WHERE ${syaratT};`,
+  `SELECT ${kolomT} FROM PASIEN@SITUS_${BDG.kode} WHERE ${syaratT};`,
+  `SELECT ${kolomT} FROM PASIEN@SITUS_${SBY.kode} WHERE ${syaratT};`,
+]);
 
-// ------------------------------------------------------------ 10 diagnosa
+// ============================================= 16 rencana eksekusi
 
-tulis('10_diagnosa_2pc_dan_deadlock.sql', [
-  judul('Langkah 10 - Diagnosa transaksi menggantung dan deadlock',
-    'Yang dilakukan DBA ketika 2PC benar-benar memblokir di produksi.'),
+tulis('16_rencana_eksekusi.sql', [
+  kepala({
+    judul: 'Langkah 16 - Membaca rencana eksekusi',
+    sub: 'Bukti partition pruning (reduksi lokalisasi) dan operasi REMOTE.',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+  }),
+  "EXEC DBMS_STATS.GATHER_SCHEMA_STATS('RS_APP', cascade => TRUE);",
+  '',
+  "EXPLAIN PLAN SET STATEMENT_ID = 'pruning' FOR SELECT * FROM PASIEN WHERE KOTA = 'Jakarta';",
+  "SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(NULL, 'pruning', 'BASIC +PARTITION'));",
+  cek('predikat kota memangkas akses ke SATU partisi', `${hitung("plan_table WHERE statement_id = 'pruning' AND operation = 'PARTITION LIST' AND options = 'SINGLE'")} = 1`),
+  '',
+  "EXPLAIN PLAN SET STATEMENT_ID = 'semua' FOR SELECT * FROM PASIEN;",
+  "SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(NULL, 'semua', 'BASIC +PARTITION'));",
+  cek('tanpa predikat, SELURUH partisi dibaca', `${hitung("plan_table WHERE statement_id = 'semua' AND operation = 'PARTITION LIST' AND options = 'ALL'")} = 1`),
+  '',
+  "EXPLAIN PLAN SET STATEMENT_ID = 'remote' FOR",
+  `SELECT p.NAMA_PASIEN, d.ID_DAFTAR FROM PASIEN p JOIN DAFTAR@SITUS_${BDG.kode} d ON p.ID_PASIEN = d.ID_PASIEN;`,
+  "SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(NULL, 'remote', 'BASIC +REMOTE'));",
+  cek('join lintas situs memuat operasi REMOTE', `${hitung("plan_table WHERE statement_id = 'remote' AND operation = 'REMOTE'")} >= 1`),
+  "SELECT other FROM plan_table WHERE statement_id = 'remote' AND operation = 'REMOTE';",
+  '-- Kolom OTHER di atas berisi SQL yang benar-benar dikirim ke situs Bandung.',
+]);
+
+// ============================================= 17 diagnosa
+
+tulis('17_diagnosa.sql', [
+  kepala({
+    judul: 'Langkah 17 - Diagnosa DBA: transaksi menggantung, kunci, dan deadlock',
+    situs: 'jakarta',
+    sebagai: 'rs_app',
+  }),
   O.twoPhaseDiagnostics(),
-  '',
-  '-- Arti kolom STATE pada dba_2pc_pending:',
-  "--   collecting  : koordinator masih mengumpulkan suara",
-  "--   prepared    : situs ini sudah READY dan MENUNGGU keputusan - inilah keadaan terblokir",
-  "--   committed   : sudah commit, tinggal menunggu pembersihan",
-  "--   forced commit / forced abort : keputusan dipaksa manual oleh DBA",
-  '',
-  '-- Kolom MIXED = yes berarti bencana: sebagian situs commit, sebagian rollback.',
-  '-- Itu terjadi bila COMMIT FORCE dipakai dengan keputusan yang salah.',
-  '',
-  '-- Deadlock terdistribusi: Oracle mendeteksi sendiri dan mengorbankan satu sesi',
-  '-- dengan ORA-00060. Yang perlu dibaca adalah trace file-nya:',
-  "SELECT value AS trace_file FROM v$diag_info WHERE name = 'Default Trace File';",
   '',
   '-- Siapa menunggu siapa (wait-for graph versi Oracle):',
   'SELECT s.sid, s.username, s.blocking_session, s.event, s.seconds_in_wait',
   '  FROM v$session s',
   ' WHERE s.blocking_session IS NOT NULL;',
   '',
-  '-- Batas waktu menunggu kunci terdistribusi:',
-  "SELECT name, value FROM v$parameter WHERE name = 'distributed_lock_timeout';",
-].join('\n'));
+  cek('tidak ada transaksi yang masih menggantung', `${hitung("dba_2pc_pending WHERE state = 'prepared'")} = 0`),
+  cek('seluruh objek RS_APP valid', `${hitung("user_objects WHERE status <> 'VALID'")} = 0`),
+]);
 
-// ------------------------------------------------------ 11 rencana eksekusi
+// ============================================================ README
 
-tulis('11_rencana_eksekusi.sql', [
-  judul('Langkah 11 - Membaca rencana eksekusi kueri terdistribusi',
-    'Bukti bahwa reduksi lokalisasi benar-benar terjadi di mesin, bukan di teori.'),
-  O.pruningProof('PASIEN', 'kota', 'Jakarta'),
-  '',
-  O.explainPlan("SELECT p.NAMA_PASIEN, d.NAMA_DOKTER FROM PASIEN p JOIN PASIEN_DOKTER pd ON p.ID_PASIEN = pd.ID_PASIEN JOIN DOKTER d ON pd.ID_DOKTER = d.ID_DOKTER WHERE p.KOTA = 'Jakarta'", { nama: 'join_lokal' }),
-  '',
-  '-- Kueri lintas situs - perhatikan baris REMOTE pada rencana:',
-  'EXPLAIN PLAN FOR',
-  'SELECT COUNT(*) FROM PASIEN@SITUS_BANDUNG;',
-  "SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(NULL, NULL, 'ALL +REMOTE'));",
-  '',
-  '-- Kolom OTHER pada rencana berisi SQL yang benar-benar dikirim ke situs jauh.',
-  '-- Di situlah terlihat apakah Oracle mengirim seluruh tabel atau hanya',
-  '-- hasil yang sudah tersaring - persis perbandingan strategi join pada lab.',
-  '',
-  '-- Statistik agar pengoptimal punya dasar angka:',
-  "EXEC DBMS_STATS.GATHER_SCHEMA_STATS('RS_APP', cascade => TRUE);",
-].join('\n'));
-
-// ------------------------------------------------------------ 12 data contoh
-
-tulis('12_data_contoh.sql', [
-  judul('Langkah 12 - Data contoh', 'Dataset yang sama persis dengan yang dipakai lab di situs.'),
-  'SET DEFINE OFF;',
-  '',
-  ...tabelUrut.map((t) => `-- ${t} (${db[t].cardinality} baris)\n${O.insertRows(db[t])}\n`),
-  'COMMIT;',
-  '',
-  '-- Verifikasi jumlah baris:',
-  ...tabelUrut.map((t) => `SELECT '${t}' AS tabel, COUNT(*) AS baris FROM ${t.toUpperCase()};`),
-].join('\n'));
-
-// ----------------------------------------------------------------- README
+const urutan = berkas.map((b) => {
+  const nama = b.replace(/\.sql$/, '');
+  return nama;
+});
 
 tulis('00_URUTAN_JALANKAN.md', [
   '# Skrip Oracle ORACLEDECK',
   '',
-  'Dihasilkan otomatis dari mesin yang sama dengan yang dipakai situs',
-  '(`node tools/gen_oracle.js`). Jangan disunting manual — perubahan akan hilang',
-  'pada pembuatan berikutnya. Ubah `tools/gen_oracle.js` atau `engine/oracle/emit.js`.',
+  'Dihasilkan otomatis dari mesin yang sama dengan situs (`node tools/gen_oracle.js`).',
+  'Jangan disunting manual; ubah `tools/gen_oracle.js` atau `engine/oracle/emit.js`.',
   '',
-  '## Lingkungan yang diuji',
+  '## Topologi',
   '',
-  'Skrip ditulis untuk **Oracle Database 21c XE** (juga berlaku untuk 19c dan 23ai Free).',
-  'Fitur yang dipakai: LIST/REFERENCE partitioning, database link, materialized view,',
-  'dan tampilan diagnosa `DBA_2PC_PENDING`.',
+  'Tiga situs = tiga basis data (pluggable database) yang terhubung database link:',
   '',
-  '> Skrip ini **belum pernah dijalankan** pada instans Oracle sungguhan dalam',
-  '> repositori ini — tidak ada Oracle di lingkungan pembuatannya. Yang diuji',
-  '> otomatis adalah *pembangkitnya*: bentuk DDL, nama objek, dan klausa partisi',
-  '> diperiksa 40+ uji di `tests/oracle-emit.test.js`. Jalankan sendiri di Oracle XE',
-  '> untuk membuktikan bagian yang tidak bisa diuji tanpa basis data.',
+  '| Situs | Basis data | Isi |',
+  '|---|---|---|',
+  '| Jakarta (pusat) | PDB bawaan (`FREEPDB1` di Oracle Free, `XEPDB1` di XE) | skema global, partisi per situs, view global, sumber replikasi |',
+  '| Bandung | PDB `BANDUNG` | fragmen PASIEN & DAFTAR kota Bandung, materialized view DOKTER |',
+  '| Surabaya | PDB `SURABAYA` | fragmen PASIEN & DAFTAR kota Surabaya |',
+  '',
+  '## Sudah diuji di Oracle sungguhan',
+  '',
+  'Seluruh skrip dijalankan otomatis oleh `node tools/uji_oracle.mjs` pada container',
+  '`gvenzl/oracle-free:23-slim`. Hasil lengkap, termasuk setiap pemeriksaan LULUS/GAGAL',
+  'dan log keluaran SQL*Plus, ada di [`HASIL_UJI.md`](HASIL_UJI.md) dan folder `bukti/`.',
   '',
   '## Urutan menjalankan',
   '',
-  '| # | Berkas | Isi |',
-  '|---|--------|-----|',
-  '| 1 | `01_tablespace_dan_user.sql` | Tablespace per situs + pengguna RS_APP |',
-  '| 2 | `02_skema_global.sql` | Enam tabel skema konseptual global |',
-  '| 3 | `03_fragmentasi_horizontal.sql` | PARTITION BY LIST per kota |',
-  '| 4 | `04_fragmentasi_turunan.sql` | PARTITION BY REFERENCE untuk tabel anak |',
-  '| 5 | `05_fragmentasi_vertikal.sql` | Pemisahan kolom + VIEW perekat |',
-  '| 6 | `06_database_link.sql` | Link antar situs, sinonim, view UNION ALL |',
-  '| 7 | `07_replikasi_materialized_view.sql` | Replikasi tabel referensi |',
-  '| 8 | `08_transaksi_terdistribusi.sql` | 2PC otomatis Oracle |',
-  '| 9 | `09_transparansi_lima_tingkat.sql` | Satu kueri, lima tingkat transparansi |',
-  '| 10 | `10_diagnosa_2pc_dan_deadlock.sql` | Transaksi menggantung & deadlock |',
-  '| 11 | `11_rencana_eksekusi.sql` | Bukti partition pruning & operasi REMOTE |',
-  '| 12 | `12_data_contoh.sql` | Data contoh yang identik dengan lab |',
+  'Baris `-- @jalankan situs=... sebagai=...` di awal tiap berkas menyebut di mana dan sebagai',
+  'siapa skrip dijalankan. Variabel substitusi SQL*Plus yang dipakai:',
   '',
-  '## Menjalankan cepat dengan Docker',
+  '| Variabel | Contoh | Keterangan |',
+  '|---|---|---|',
+  '| `&&sandi_rs_app` | (rahasia) | sandi RS_APP dan PDB_ADMIN — tidak pernah ditulis di berkas |',
+  '| `&&situs` | `BANDUNG` | nama situs saat Langkah 2 dijalankan |',
+  '| `&&dir_data` | `/opt/oracle/oradata` | folder berkas data |',
+  '| `&&tns_jakarta` | `//localhost:1521/FREEPDB1` | alamat situs pusat |',
+  '| `&&tns_bandung` | `//localhost:1521/BANDUNG` | alamat situs Bandung |',
+  '| `&&tns_surabaya` | `//localhost:1521/SURABAYA` | alamat situs Surabaya |',
+  '',
+  '| # | Berkas |',
+  '|---|---|',
+  ...urutan.map((n, i) => `| ${i + 1} | \`${n}.sql\` |`),
+  '',
+  '## Menjalankan otomatis',
   '',
   '```bash',
-  'docker run -d --name oracle-xe -p 1521:1521 -e ORACLE_PASSWORD=oracle \\',
-  '  gvenzl/oracle-free:23-slim',
-  'sqlplus sys/oracle@//localhost:1521/FREEPDB1 as sysdba @01_tablespace_dan_user.sql',
+  'node tools/uji_oracle.mjs',
   '```',
   '',
-  '## Kalau tidak ada Oracle',
-  '',
-  'Semua konsep yang sama bisa dijalankan langsung di peramban lewat situs',
-  'ORACLEDECK — mesin relasionalnya ditulis ulang dari nol dan hasilnya',
-  'diverifikasi silang terhadap SQLite (`python tools/verify_sqlite.py`).',
-].join('\n'));
+  'Runner membuat container bila belum ada, menyiapkan tiga situs dari nol, menjalankan setiap',
+  'skrip di situs yang benar, lalu menulis `HASIL_UJI.md`. Ia gagal bila ada pemeriksaan GAGAL,',
+  'galat yang tidak diharapkan, atau galat peragaan yang tidak muncul.',
+]);
 
-process.stdout.write(`\n${berkas.length} berkas ditulis ke oracle/\n`);
+process.stdout.write(`${berkas.length} berkas ditulis ke oracle/\n`);

@@ -2,9 +2,9 @@
 // Jawaban mahasiswa dijalankan, kunci dijalankan, lalu HASILNYA dibandingkan.
 // Yang dinilai isi hasil, bukan teks kueri: `sem <> 1` dan `NOT sem = 1` sama benar.
 
-import { execute, parse, query } from './sql.js?v=849b085103';
-import { executeScript, salinDb } from './dml.js?v=849b085103';
-import { RS_KEYS_CASCADE } from '../data/datasets.js?v=849b085103';
+import { execute, parse, query } from './sql.js?v=b04806ea2d';
+import { executeScript, salinDb } from './dml.js?v=b04806ea2d';
+import { RS_KEYS_CASCADE } from '../data/datasets.js?v=b04806ea2d';
 
 function normalkan(v) {
   if (v === null || v === undefined) return null;

@@ -12,6 +12,7 @@ import { CONTOH } from '../src/content/contoh-sql.js';
 import { BANK_SOAL } from '../src/content/soal.js';
 import * as TERM from '../engine/core/terminal.js';
 import { COBA_MATERI } from '../src/content/coba-materi.js';
+import { KASUS_GALAT } from '../src/content/kasus-galat-oracle.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(here, '..');
@@ -33,6 +34,8 @@ export const SITUS = {
 
 let VERSI_ASET = 'dev';
 let GLOSARIUM = [];
+let UJI_ORACLE = null;
+let VERIF_ORACLE = null;
 const statistikBlokSql = { dapatDijalankan: 0, hanyaOracle: 0 };
 
 /**
@@ -305,13 +308,13 @@ ${PRAKTIKUM.map((p) => `<tr><td class="num">${p.no}</td><td><strong>${p.judul}</
   </div>
   <div class="kartu">
     <h3>Bermuara ke Oracle</h3>
-    <p>Rancangan yang Anda susun di lab diterjemahkan menjadi DDL Oracle sungguhan: PARTITION BY LIST, PARTITION BY REFERENCE, database link, materialized view, dan diagnosa <code>DBA_2PC_PENDING</code>.</p>
+    <p>Tiga basis data Oracle sungguhan: PARTITION BY LIST dan REFERENCE, database link, materialized view, two-phase commit, sampai <code>COMMIT FORCE</code> pada transaksi ragu-ragu — dijalankan otomatis dan memeriksa hasilnya sendiri.</p>
   </div>
 </div>
 
-<div class="catatan">
-  <p><b>Batas yang jujur.</b> Skrip Oracle di repositori ini belum pernah dijalankan pada instans Oracle sungguhan — tidak ada Oracle di lingkungan pembuatannya. Yang diuji otomatis adalah pembangkitnya. Jalankan sendiri di Oracle XE untuk membuktikan bagian yang tidak bisa diuji tanpa basis data.</p>
-</div>
+${UJI_ORACLE ? `<div class="catatan baik">
+  <p><b>Terbukti di Oracle sungguhan.</b> ${UJI_ORACLE.skripLulus} dari ${UJI_ORACLE.skrip} skrip lulus dengan ${UJI_ORACLE.cekLulus} pemeriksaan mandiri pada ${esc(UJI_ORACLE.oracle.replace(/ - Develop.*$/, ''))}${VERIF_ORACLE ? `; ${VERIF_ORACLE.kueri.lulus + VERIF_ORACLE.dml.lulus} kueri &amp; DML menghasilkan isi identik dan ${VERIF_ORACLE.galat.lulus} kode galat terminal sama dengan Oracle` : ''}. <a href="oracle.html">Lihat bukti →</a></p>
+</div>` : ''}
 `;
   return halaman({ judul: SITUS.nama, deskripsi: SITUS.deskripsi, isi, aktif: 'beranda', kanonik: '' });
 }
@@ -433,58 +436,118 @@ function halamanLab(l, i) {
   });
 }
 
+const TOPOLOGI_SVG = `<svg class="topologi" viewBox="0 0 640 230" role="img" aria-labelledby="topologi-judul">
+  <title id="topologi-judul">Topologi uji: situs Jakarta terhubung ke Bandung dan Surabaya lewat database link</title>
+  <rect x="235" y="14" width="170" height="86" rx="10"/>
+  <text x="320" y="42" class="t-judul">JAKARTA (pusat)</text>
+  <text x="320" y="62">FREEPDB1</text>
+  <text x="320" y="80" class="t-kecil">skema global · partisi · view global</text>
+  <rect x="24" y="140" width="190" height="76" rx="10"/>
+  <text x="119" y="168" class="t-judul">BANDUNG</text>
+  <text x="119" y="188" class="t-kecil">fragmen PASIEN &amp; DAFTAR</text>
+  <text x="119" y="204" class="t-kecil">replika MV_DOKTER</text>
+  <rect x="426" y="140" width="190" height="76" rx="10"/>
+  <text x="521" y="168" class="t-judul">SURABAYA</text>
+  <text x="521" y="188" class="t-kecil">fragmen PASIEN &amp; DAFTAR</text>
+  <line x1="265" y1="100" x2="150" y2="140"/>
+  <line x1="375" y1="100" x2="490" y2="140"/>
+  <text x="170" y="116" class="t-link">SITUS_BANDUNG</text>
+  <text x="470" y="116" class="t-link">SITUS_SURABAYA</text>
+</svg>`;
+
 function halamanOracle(skrip) {
+  const uji = UJI_ORACLE;
+  const ver = VERIF_ORACLE;
+  const statusUji = new Map((uji?.hasil || []).map((h) => [h.berkas, h]));
+  const galat = (ver?.hasil || []).filter((h) => h.jenis === 'galat');
+  const kasus = new Map(KASUS_GALAT.map((k) => [k.id, k]));
+  const tautanLog = (log) => `${SITUS.repo}/blob/main/oracle/${log}`;
   const isi = `
 <p class="kicker">Oracle</p>
-<h1>Dari rancangan ke Oracle</h1>
-<p class="lede">Dua belas skrip yang menerjemahkan seluruh konsep kuliah menjadi objek Oracle sungguhan. Semuanya dihasilkan dari mesin yang sama dengan yang dipakai lab, sehingga tidak mungkin menyimpang dari rancangan yang ditampilkan.</p>
+<h1>Terbukti di Oracle sungguhan</h1>
+<p class="lede">${skrip.length} skrip yang menerjemahkan konsep kuliah menjadi objek Oracle — tiga basis data, database link, partisi, replikasi, two-phase commit, sampai transaksi ragu-ragu. Semuanya dibangkitkan dari mesin yang sama dengan lab, lalu <b>dijalankan otomatis pada Oracle sungguhan</b> dan memeriksa hasilnya sendiri.</p>
 
-<h2>Pemetaan konsep ke fitur Oracle</h2>
-<div class="tabel-bungkus"><table>
-<thead><tr><th>Konsep kuliah</th><th>Fitur Oracle</th><th>Catatan</th></tr></thead>
-<tbody>
-<tr><td>Fragmentasi horizontal primer</td><td class="mono">PARTITION BY LIST / RANGE / HASH</td><td>Partisi DEFAULT menjamin kelengkapan</td></tr>
-<tr><td>Fragmentasi horizontal turunan</td><td class="mono">PARTITION BY REFERENCE</td><td>Khas Oracle; baris anak selalu separtisi dengan induknya</td></tr>
-<tr><td>Fragmentasi vertikal</td><td class="mono">Tabel terpisah + VIEW perekat</td><td>Kunci wajib ada di setiap tabel agar lossless-join</td></tr>
-<tr><td>Alokasi fragmen ke situs</td><td class="mono">TABLESPACE per partisi</td><td>Satu tablespace per situs</td></tr>
-<tr><td>Replikasi</td><td class="mono">MATERIALIZED VIEW + MV LOG</td><td>ON COMMIT = sinkron, ON DEMAND = asinkron</td></tr>
-<tr><td>Transparansi lokasi</td><td class="mono">DATABASE LINK + SYNONYM</td><td>Pindah situs cukup ubah sinonim</td></tr>
-<tr><td>Program lokalisasi horizontal</td><td class="mono">VIEW ... UNION ALL</td><td>Oracle memangkas cabang lewat predicate pushdown</td></tr>
-<tr><td>Reduksi lokalisasi</td><td class="mono">Partition pruning (PSTART/PSTOP)</td><td>Terbaca langsung pada rencana eksekusi</td></tr>
-<tr><td>Komitmen dua fase</td><td class="mono">COMMIT otomatis lintas link</td><td>Tidak ada perintah khusus — cukup COMMIT</td></tr>
-<tr><td>Transaksi menggantung</td><td class="mono">DBA_2PC_PENDING</td><td>STATE = prepared berarti terblokir</td></tr>
-<tr><td>Deteksi deadlock</td><td class="mono">ORA-00060 + trace file</td><td>Oracle mendeteksi sendiri dan mengorbankan satu sesi</td></tr>
-<tr><td>Join terdistribusi</td><td class="mono">Operasi REMOTE pada rencana</td><td>Kolom OTHER berisi SQL yang benar-benar dikirim</td></tr>
-</tbody></table></div>
-
-<div class="catatan peringatan">
-  <p><b>Belum dijalankan pada Oracle sungguhan.</b> Repositori ini dibangun tanpa akses ke instans Oracle. Yang diuji otomatis adalah <i>pembangkit</i> skripnya — bentuk DDL, nama objek, dan klausa partisi diperiksa oleh 40+ uji di <code>tests/oracle-emit.test.js</code>. Sintaks yang hanya bisa dibuktikan oleh parser Oracle belum diverifikasi. Jalankan sendiri di Oracle XE atau <code>gvenzl/oracle-free</code> untuk membuktikannya.</p>
+${uji ? `<div class="statbar">
+  <div class="stat"><b>${uji.skripLulus}/${uji.skrip}</b><span>skrip lulus</span></div>
+  <div class="stat"><b>${uji.cekLulus}</b><span>pemeriksaan LULUS</span></div>
+  <div class="stat"><b>${uji.cekGagal}</b><span>GAGAL</span></div>
+  ${ver ? `<div class="stat"><b>${ver.kueri.lulus + ver.dml.lulus}/${ver.kueri.jumlah + ver.dml.jumlah}</b><span>kueri &amp; DML identik</span></div>
+  <div class="stat"><b>${ver.galat.lulus}/${ver.galat.jumlah}</b><span>kode galat sama</span></div>` : ''}
 </div>
+<p class="kecil">${esc(uji.oracle)} · image <code>${esc(uji.kontainer)}</code> · diuji ${esc(uji.tanggal)} · ${uji.durasiDetik} detik. Log SQL*Plus lengkap setiap skrip ada di folder <a href="${SITUS.repo}/tree/main/oracle/bukti" rel="noopener">oracle/bukti</a>.</p>` : '<div class="catatan peringatan"><p>Hasil uji Oracle belum dibangkitkan. Jalankan <code>node tools/uji_oracle.mjs</code>.</p></div>'}
 
-<h2>Dua belas skrip</h2>
-${skrip.map((s) => `
+<h2 id="topologi">Topologi uji</h2>
+<div class="diagram">${TOPOLOGI_SVG}</div>
+<p>Setiap situs adalah <i>pluggable database</i> terpisah dengan kamus data, pengguna, dan catatan transaksinya sendiri. Di produksi ketiganya berada di server berbeda; di sini ketiganya berbagi satu container agar bisa diulang di laptop — database link, 2PC, dan <code>DBA_2PC_PENDING</code> tetap sungguhan.</p>
+
+<h2 id="temuan">Yang hanya ketahuan setelah dijalankan di Oracle</h2>
+${U_TABEL(['Temuan', 'Gejala di Oracle', 'Perbaikan'], [
+    ['Reference partitioning butuh ROW MOVEMENT', '<code>ORA-14661</code> saat tabel anak dibuat, karena induknya sudah <code>ENABLE ROW MOVEMENT</code>', 'Tabel anak ikut <code>ENABLE ROW MOVEMENT</code>'],
+    ['Catatan in-doubt ditulis asinkron', 'Tepat setelah <code>ORA-02054</code>, <code>DBA_2PC_PENDING</code> masih kosong; baris baru muncul beberapa detik kemudian', 'Skrip menunggu dengan polling sebelum membaca ID transaksi'],
+    ['Kueri lewat link membuka transaksi', '<code>ORA-02043</code>: COMMIT FORCE ditolak karena SELECT ke <code>dba_2pc_pending@SITUS_BANDUNG</code> belum diakhiri', '<code>COMMIT</code> sebelum <code>COMMIT FORCE</code>'],
+    ['Membersihkan catatan 2PC butuh hak SYS', '<code>DBMS_TRANSACTION.PURGE_LOST_DB_ENTRY</code> gagal sebagai pemilik skema', 'Dipindah ke langkah 14d sebagai SYS'],
+    ['Oracle memeriksa kolom saat parse', 'Kolom salah pada tabel kosong tetap <code>ORA-00904</code>/<code>ORA-00918</code>/<code>ORA-00979</code>; mesin terminal lama meloloskannya', 'Validasi semantik statis di mesin SQL'],
+    ['SELECT atas baris terkunci in-doubt', '<code>ORA-01591</code> — pembaca pun ditolak, bukan melihat data lama', 'Terminal menolak baca/tulis tabel yang dikunci transaksi ragu-ragu'],
+    ['TRUNCATE, CHECK kolom, dan format tanggal', 'TRUNCATE induk lolos bila anak kosong; CHECK kolom yang menyebut kolom lain <code>ORA-02438</code>; <code>31/12/2025</code> → <code>ORA-01830</code>', 'Mesin terminal meniru ketiganya persis'],
+  ])}
+
+${ver ? `<h2 id="kode-galat">${ver.galat.jumlah} kode galat: Oracle vs Terminal SQL</h2>
+<p>Perintah yang sama dijalankan di Oracle dan di terminal ORACLEDECK. Tekan <b>Coba</b> untuk menjalankannya sendiri di terminal.</p>
+<div class="tabel-bungkus"><table>
+<thead><tr><th>Arti</th><th>Oracle</th><th>Terminal</th><th></th></tr></thead>
+<tbody>
+${galat.map((h) => {
+    const k = kasus.get(h.id);
+    const sql = k ? [...k.persiapan, k.perintah].map((x) => `${x};`).join('\n') : '';
+    return `<tr><td>${esc(h.arti)}${k ? `<br><code class="kecil">${esc(k.perintah)}</code>` : ''}</td><td class="mono">${esc(h.kodeOracle)}</td><td class="mono">${h.status === 'LULUS' ? '' : '≠ '}${esc(h.kodeMesin)}</td><td>${k ? `<button type="button" class="kecil hantu" data-terminal-sql="${esc(sql)}" data-terminal-db="kosong">Coba</button>` : ''}</td></tr>`;
+  }).join('\n')}
+</tbody></table></div>
+<p class="kecil">Hasil lengkap termasuk ${ver.kueri.jumlah} kueri, ${ver.dml.jumlah} skrip DML, dan ${ver.ekspor.jumlah} skrip <code>\\ekspor</code>: <a href="${SITUS.repo}/blob/main/oracle/VERIFIKASI_MESIN.md" rel="noopener">VERIFIKASI_MESIN.md</a>.</p>` : ''}
+
+<h2 id="pemetaan">Pemetaan konsep ke fitur Oracle</h2>
+${U_TABEL(['Konsep kuliah', 'Fitur Oracle', 'Skrip'], [
+    ['Tiga situs', 'Pluggable database + database link', '01, 02, 10'],
+    ['Fragmentasi horizontal primer', '<code>ALTER TABLE ... MODIFY PARTITION BY LIST ... ONLINE</code>', '06'],
+    ['Fragmentasi horizontal turunan', '<code>PARTITION BY REFERENCE</code>', '07'],
+    ['Fragmentasi vertikal', 'Tabel terpisah + VIEW perekat atas kunci', '08'],
+    ['Alokasi fragmen', 'Tablespace per situs; fragmen di PDB situsnya', '03, 09'],
+    ['Transparansi lokasi', 'SYNONYM + VIEW <code>UNION ALL</code>', '10, 15'],
+    ['Replikasi asinkron', 'MV log di sumber + <code>REFRESH FAST ON DEMAND</code> di replika', '11, 12'],
+    ['Two-phase commit', '<code>COMMIT</code> atas dua basis data', '13'],
+    ['Transaksi ragu-ragu', '<code>ORA-2PC-CRASH-TEST-7</code>, <code>DBA_2PC_PENDING</code>, <code>COMMIT FORCE</code>', '14a–14d'],
+    ['Reduksi lokalisasi', 'Partition pruning: <code>PARTITION LIST SINGLE</code>', '07, 16'],
+    ['Join terdistribusi', 'Operasi <code>REMOTE</code> pada rencana eksekusi', '16'],
+  ])}
+
+<h2 id="skrip">${skrip.length} skrip</h2>
+${skrip.map((f) => {
+    const h = statusUji.get(f.nama);
+    return `
 <details>
-  <summary>${esc(s.nama)} <span class="lencana netral">${s.baris} baris</span></summary>
-  <pre><code>${warnaSql(s.isi)}</code></pre>
-</details>`).join('\n')}
+  <summary>${esc(f.nama)} ${h ? `<span class="lencana ${h.status === 'LULUS' ? 'ok' : 'gagal'}">${h.status} · ${h.lulus.length} cek</span> <span class="lencana netral">${esc(h.situs.join(', '))} · ${esc(h.sebagai)}</span>` : `<span class="lencana netral">${f.baris} baris</span>`}</summary>
+  ${h && h.lulus.length ? `<ul class="kecil">${h.lulus.map((l) => `<li>LULUS: ${esc(l)}</li>`).join('')}</ul>` : ''}
+  ${h && h.galatDiharapkan.length ? `<p class="kecil">Galat peragaan yang memang harus muncul: ${h.galatDiharapkan.map((k) => `<code>${esc(k)}</code>`).join(' ')}</p>` : ''}
+  ${h ? `<p class="kecil">Log SQL*Plus: ${h.log.map((l) => `<a href="${tautanLog(l)}" rel="noopener">${esc(l.replace('bukti/', ''))}</a>`).join(' · ')}</p>` : ''}
+  <pre><code>${warnaSql(f.isi)}</code></pre>
+</details>`;
+  }).join('\n')}
 
-<h2>Menjalankan cepat</h2>
-<pre><code>${esc(`docker run -d --name oracle-free -p 1521:1521 -e ORACLE_PASSWORD=oracle \\
-  gvenzl/oracle-free:23-slim
-
-sqlplus sys/oracle@//localhost:1521/FREEPDB1 as sysdba
-SQL> @01_tablespace_dan_user.sql
-SQL> CONNECT RS_APP/sandi@//localhost:1521/FREEPDB1
-SQL> @02_skema_global.sql
-SQL> @12_data_contoh.sql`)}</code></pre>
+<h2 id="menjalankan">Menjalankan sendiri</h2>
+<p>Otomatis (butuh Docker; image <code>gvenzl/oracle-free:23-slim</code> ±2,8 GB):</p>
+<pre><code>${esc('node tools/uji_oracle.mjs          # siapkan 3 situs dari nol, jalankan semua skrip\nnode tools/verifikasi_oracle.mjs   # bandingkan mesin terminal dengan Oracle')}</code></pre>
+<p>Manual dengan SQL*Plus: baris <code>-- @jalankan situs=... sebagai=...</code> di awal setiap skrip menyebut basis data dan pengguna yang dipakai; sandi diminta lewat variabel <code>&amp;&amp;sandi_rs_app</code>. Urutan lengkap ada di <a href="${SITUS.repo}/blob/main/oracle/00_URUTAN_JALANKAN.md" rel="noopener">00_URUTAN_JALANKAN.md</a>.</p>
 `;
-  return halaman({ judul: 'Skrip Oracle', deskripsi: 'Dua belas skrip Oracle: partisi, database link, materialized view, dan diagnosa two-phase commit.', isi, aktif: 'oracle', kanonik: 'oracle.html' });
+  return halaman({ judul: 'Skrip Oracle', deskripsi: `${skrip.length} skrip Oracle yang diuji otomatis pada Oracle sungguhan: tiga situs, database link, partisi, replikasi, 2PC, dan transaksi ragu-ragu.`, isi, aktif: 'oracle', kanonik: 'oracle.html' });
+}
+
+function U_TABEL(kepala, baris) {
+  return `<div class="tabel-bungkus"><table><thead><tr>${kepala.map((k) => `<th>${k}</th>`).join('')}</tr></thead><tbody>${baris.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 
 function halamanKualitas(statistik) {
   const jumlahCoba = Object.values(COBA_MATERI).reduce((n, d) => n + d.length, 0);
   const baris = [
-    ['Kesesuaian fungsional', 'functional suitability', `${statistik.uji} uji otomatis atas mesin; ${statistik.kueriVerif} kueri dan skrip DML diverifikasi silang terhadap SQLite (hasil identik baris demi baris); ${CONTOH.length} contoh terminal dan ${jumlahCoba} kueri per topik diuji berjalan persis seperti yang dijanjikan, termasuk galat yang disengaja.`, 'tests/, tools/verify_sqlite.py, tests/terminal.test.js'],
+    ['Kesesuaian fungsional', 'functional suitability', `${statistik.uji} uji otomatis atas mesin; ${statistik.kueriVerif} kueri dan skrip DML diverifikasi silang terhadap SQLite${VERIF_ORACLE ? ` dan terhadap Oracle sungguhan (${VERIF_ORACLE.kueri.lulus + VERIF_ORACLE.dml.lulus}/${VERIF_ORACLE.kueri.jumlah + VERIF_ORACLE.dml.jumlah} identik, ${VERIF_ORACLE.galat.lulus}/${VERIF_ORACLE.galat.jumlah} kode galat sama)` : ''}${UJI_ORACLE ? `; ${UJI_ORACLE.skripLulus}/${UJI_ORACLE.skrip} skrip Oracle lulus ${UJI_ORACLE.cekLulus} pemeriksaan mandiri` : ''}; ${CONTOH.length} contoh terminal dan ${jumlahCoba} kueri per topik diuji berjalan persis seperti yang dijanjikan.`, 'tests/, tools/verify_sqlite.py, tools/uji_oracle.mjs, tools/verifikasi_oracle.mjs, oracle/HASIL_UJI.md'],
     ['Efisiensi kinerja', 'performance efficiency', 'Pratinjau terminal dan penilaian bank soal berjalan saat mengetik, dengan ketikan beruntun digabung menjadi satu evaluasi. Uji kinerja memastikan setiap contoh terminal selesai dalam anggaran waktu; pemeriksaan tombol Jalankan pada SQL buatan lab dikerjakan saat peramban senggang (requestIdleCallback).', 'tests/terminal.test.js (grup kinerja), src/labs/terminal-ui.js'],
     ['Kompatibilitas', 'compatibility', 'Situs statis tanpa server dan tanpa dependensi; modul ES standar. Skrip dari \\ekspor dan folder oracle/ ditulis dalam sintaks Oracle agar dapat dipindahkan ke instans sungguhan.', 'docs/, oracle/'],
     ['Kemampuan interaksi', 'interaction capability', 'Pencarian Ctrl+K, catatan istilah pada teks materi, pratinjau langsung, pelengkap otomatis, saran "maksud Anda", tema terang/gelap, tautan lewati-ke-isi, fokus keyboard terlihat, dan gerak dikurangi bila pengguna memintanya.', 'src/site.js, src/styles.css, tools/cek_situs.js (pemeriksaan aksesibilitas)'],
@@ -517,7 +580,7 @@ ${baris.map(([id, en, apa, bukti]) => `<tr><td><strong>${esc(id)}</strong><br><s
 </ul>
 
 <h2>Batas yang jujur</h2>
-<div class="catatan peringatan"><p>Skrip Oracle dan hasil <code>\\ekspor</code> belum dijalankan pada instans Oracle sungguhan. Rencana eksekusi terminal mengikuti evaluasi logis mesin ini, bukan pengoptimal biaya Oracle. Kode galat ORA-xxxxx dipilih agar sesuai makna galat Oracle, tetapi teks pesannya ditulis ulang dalam bahasa Indonesia.</p></div>
+<div class="catatan peringatan"><p>Skrip Oracle diuji pada Oracle AI Database 26ai Free di satu container dengan tiga PDB, bukan tiga server di jaringan sungguhan — latensi dan kegagalan jaringan tidak ikut teruji. Rencana eksekusi terminal mengikuti evaluasi logis mesin ini, bukan pengoptimal biaya Oracle. Teks pesan galat terminal ditulis ulang dalam bahasa Indonesia; yang dijamin sama dengan Oracle adalah kodenya, dan hanya untuk kasus yang terdaftar.</p></div>
 
 <p class="kecil">Rujukan: <a href="https://www.iso.org/standard/78176.html" rel="noopener">ISO/IEC 25010:2023</a> · <a href="https://quality.arc42.org/standards/iso-25010" rel="noopener">ringkasan model mutu arc42</a> · <a href="https://www.w3.org/TR/WCAG22/" rel="noopener">WCAG 2.2</a> · <a href="https://semver.org/lang/id/" rel="noopener">Semantic Versioning</a> · <a href="https://keepachangelog.com/id-ID/1.1.0/" rel="noopener">Keep a Changelog</a></p>
 `;
@@ -753,6 +816,9 @@ function main() {
   const statistik = bacaStatistik();
   VERSI_ASET = sidikAset([join(ROOT, 'engine'), SRC]);
   GLOSARIUM = JSON.parse(readFileSync(join(SRC, 'content', 'glosarium.json'), 'utf8'));
+  const bacaJson = (nama) => (existsSync(join(ROOT, 'oracle', nama)) ? JSON.parse(readFileSync(join(ROOT, 'oracle', nama), 'utf8')) : null);
+  UJI_ORACLE = bacaJson('hasil-uji.json');
+  VERIF_ORACLE = bacaJson('verifikasi-mesin.json');
 
   // aset
   cpSync(join(SRC, 'styles.css'), join(OUT, 'styles.css'));

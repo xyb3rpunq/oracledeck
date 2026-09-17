@@ -18,8 +18,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="styles.css?v=849b085103">
-<script src="tema.js?v=849b085103"></script>
+<link rel="stylesheet" href="styles.css?v=b04806ea2d">
+<script src="tema.js?v=b04806ea2d"></script>
 </head>
 <body>
 <a class="lewati" href="#isi">Lewati ke isi</a>
@@ -173,12 +173,22 @@ CREATE TABLE PASIEN (
 <div class="tabel-bungkus"><table><thead><tr><th>Bug</th><th>Gejala</th><th>Perbaikan</th></tr></thead><tbody><tr><td>Audit fragmentasi campuran dinilai datar</td><td>Contoh Modul 6 tampil &quot;Rekonstruksi GAGAL, 0 tupel&quot;, karena dihitung <code>S1 ⋈ S21 ⋈ S22 ⋈ S23</code></td><td>Penilaian bertingkat: anak horizontal disatukan dulu, baru tingkat vertikal dinilai</td></tr><tr><td>Variabel <code>mode</code> dibayangi di lab fragmentasi</td><td>Lab akan berhenti dengan ReferenceError</td><td>Diganti nama sebelum dirilis</td></tr><tr><td>Modul lama tertahan di cache peramban</td><td>Halaman baru berpasangan dengan mesin lama tanpa pesan galat</td><td>Setiap impor dan aset diberi <code>?v=&lt;sidik isi&gt;</code> saat build</td></tr><tr><td>Navigasi disembunyikan di bawah 860 px</td><td>Pengguna ponsel tidak bisa berpindah halaman</td><td>Baris navigasi yang dapat digeser</td></tr><tr><td>Anak grid CSS tidak boleh menyusut</td><td>Tabel lebar memaksa halaman ponsel melebar dua kali lipat</td><td><code>min-width: 0</code> pada anak grid</td></tr><tr><td>2PC dengan koordinator jatuh di &quot;fase 4&quot;</td><td>Tampil &quot;selesai&quot; tanpa penjelasan, padahal fase itu hanya ada di 3PC</td><td>Dijelaskan eksplisit pada analisis 2PC</td></tr><tr><td>Parser jadwal konkurensi</td><td>Token asing seperti <code>hello</code> diabaikan diam-diam, analisis memakai jadwal yang terbaca sebagian</td><td>Setiap token wajib sah, token asing ditolak</td></tr></tbody></table></div>
 <h3 id="3-1b-temuan-putaran-upgrade-2-0-0-dan-sudah-diperbaiki">3.1b Temuan putaran upgrade 2.0.0 — dan sudah diperbaiki</h3>
 <div class="tabel-bungkus"><table><thead><tr><th>Temuan</th><th>Gejala</th><th>Perbaikan</th></tr></thead><tbody><tr><td>Dekomposisi pada rantai UNION tiga cabang</td><td>Galat karena cabang kiri dianggap SELECT padahal masih UNION</td><td><code>cabangSelect</code> mengurai seluruh pohon WITH/UNION/INTERSECT/MINUS; setiap cabang dianalisis</td></tr><tr><td>Penilai soal membaca ORDER BY di cabang kanan UNION</td><td>Setelah parser mengangkat ORDER BY ke simpul himpunan, urutan tidak lagi dinilai</td><td><code>punyaOrderBy</code> membaca simpul himpunan dan badan WITH</td></tr><tr><td>Pesan GROUP BY menyesatkan</td><td><code>SELECT nim FROM mhs GROUP BY alamat_mhs</code> berkata &quot;kolom nim tidak ada&quot;</td><td>ORA-00979 / ORA-00937 dengan contoh yang benar</td></tr><tr><td><code>soal.js</code> mengimpor <code>../../engine</code></td><td>Benar di <code>src/</code>, tetapi di <code>docs/content/</code> menunjuk ke luar situs (404 di GitHub Pages)</td><td>Soal memakai penanda <code>integritas: 'cascade'</code>; penilai yang memetakan ke kunci</td></tr><tr><td>Tombol Enter di terminal saat diuji otomatis</td><td>Alat uji mengirim <code>Return</code> tanpa <code>key</code>; diverifikasi ulang dengan <code>Enter</code> sungguhan</td><td>Tidak ada bug; dicatat agar uji berikutnya memakai tombol yang benar</td></tr><tr><td>Pratinjau berbasis <code>requestAnimationFrame</code></td><td>Hasil pratinjau tertinggal satu ketikan bila panel peramban tidak menggambar frame</td><td>Penjadwal digabung per putaran event loop (<code>setTimeout 0</code>)</td></tr><tr><td>Catatan istilah pendek di dalam frasa panjang</td><td>&quot;fragmentasi&quot; ditandai di dalam &quot;fragmentasi horizontal&quot; kemunculan kedua</td><td>Frasa istilah yang lebih panjang mengunci seluruh kemunculannya</td></tr><tr><td>Urutan judul</td><td>Halaman audit, daftar materi, dan daftar lab meloncat dari <code>h1</code> ke <code>h3</code></td><td>Markdown <code>##</code> → <code>h2</code>; judul kartu daftar → <code>h2</code></td></tr><tr><td>Karakter kontrol mentah</td><td>Penulisan berkas mengubah <code>\u0001</code> menjadi byte kontrol di pewarna SQL terminal</td><td>Dikembalikan ke escape; skrip pemindai memastikan tidak ada byte kontrol di sumber</td></tr></tbody></table></div>
+<h3 id="3-1c-putaran-2-1-0-dijalankan-di-oracle-sungguhan">3.1c Putaran 2.1.0 — dijalankan di Oracle sungguhan</h3>
+<p>Seluruh skrip <code>oracle/</code> dijalankan pada Oracle AI Database 26ai Free Release 23.26.3.0.0 (container</p>
+<p><code>gvenzl/oracle-free:23-slim</code>, tiga PDB + database link): <strong>21/21 skrip lulus, 60 pemeriksaan mandiri LULUS</strong>. Mesin terminal</p>
+<p>dibandingkan dengan Oracle yang sama: <strong>kueri 53/53, DML 7/7, kode galat 39/39, ekspor 4/4</strong>. Bukti: <code>oracle/HASIL_UJI.md</code>,</p>
+<p><code>oracle/VERIFIKASI_MESIN.md</code>, log SQL*Plus di <code>oracle/bukti/</code>.</p>
+<p>Skrip versi 2.0.0 — yang hanya diuji pembangkitnya — ternyata <strong>tidak akan berjalan</strong> di Oracle:</p>
+<div class="tabel-bungkus"><table><thead><tr><th>Temuan</th><th>Bukti dari Oracle</th><th>Perbaikan</th></tr></thead><tbody><tr><td>Nama PDB <code>XEPDB1</code> tertulis mati</td><td>Oracle Free memakai <code>FREEPDB1</code></td><td>Situs dan layanan menjadi parameter runner</td></tr><tr><td>MV log dibuat lewat database link</td><td>DDL ke basis data remote ditolak</td><td>MV log di situs sumber (Langkah 11), MV di replika (Langkah 12)</td></tr><tr><td>UPDATE kolom kunci partisi</td><td>ORA-14402 tanpa <code>ENABLE ROW MOVEMENT</code></td><td>Diperagakan sebagai galat, lalu ROW MOVEMENT diaktifkan</td></tr><tr><td><code>AT SITE</code> dan link <code>SITES1_LINK</code></td><td>Bukan sintaks Oracle; link dan sinonim <code>PASIEN_JAKARTA</code> tidak pernah dibuat</td><td>Lima tingkat transparansi ditulis ulang dengan objek yang benar-benar ada</td></tr><tr><td>Data contoh dimuat di langkah terakhir</td><td>Langkah transaksi dan rencana eksekusi berjalan atas tabel kosong</td><td>Data dimuat di Langkah 5</td></tr><tr><td><code>PARTITION BY REFERENCE</code> setelah induk ROW MOVEMENT</td><td>ORA-14661</td><td>Anak ikut <code>ENABLE ROW MOVEMENT</code></td></tr><tr><td>Membaca <code>DBA_2PC_PENDING</code> tepat setelah ORA-02054</td><td>Masih kosong — catatan ditulis asinkron</td><td>Polling sampai catatan muncul</td></tr><tr><td><code>COMMIT FORCE</code> setelah kueri lewat link</td><td>ORA-02043</td><td><code>COMMIT</code> dulu</td></tr><tr><td><code>PURGE_LOST_DB_ENTRY</code> sebagai pemilik skema</td><td>ORA-00942 pada <code>SYS.PENDING_TRANS$</code></td><td>Dijalankan sebagai SYS (Langkah 14d)</td></tr></tbody></table></div>
+<p>Verifikasi silang juga menemukan <strong>mesin terminal</strong> menyimpang dari Oracle, dan sudah disamakan:</p>
+<p>kolom salah pada tabel kosong lolos tanpa galat (Oracle memeriksa saat parse), TRUNCATE induk</p>
+<p>selalu ditolak padahal Oracle 23ai mengizinkannya bila anak kosong, CHECK tingkat kolom yang</p>
+<p>menyebut kolom lain (ORA-02438), pengurai tanggal yang terlalu ketat, dan pembacaan tabel yang</p>
+<p>dikunci transaksi ragu-ragu (Oracle menolak dengan ORA-01591).</p>
 <h3 id="3-2-yang-tidak-diverifikasi-batas-yang-jujur">3.2 Yang TIDAK diverifikasi — batas yang jujur</h3>
-<p>1. <strong>Skrip Oracle belum pernah dijalankan pada instans Oracle sungguhan.</strong> Tidak ada Oracle di</p>
-<p>   lingkungan pembuatan repositori ini. Yang diuji adalah pembangkitnya: bentuk perintah, nama</p>
-<p>   objek, dan klausa partisi. Sintaks yang hanya bisa dibuktikan oleh parser Oracle —</p>
-<p>   khususnya <code>PARTITION BY REFERENCE</code>, <code>DBMS_REFRESH.MAKE</code>, dan pilihan klausa</p>
-<p>   <code>MATERIALIZED VIEW</code> — <strong>belum diverifikasi</strong>. Jalankan sendiri di Oracle XE untuk membuktikannya.</p>
+<p>1. <strong>Tiga situs diuji dalam satu container Oracle Free</strong>, bukan tiga server. Latensi, partisi</p>
+<p>   jaringan sungguhan, dan perbedaan versi antarsitus tidak ikut teruji. Kegagalan 2PC</p>
+<p>   disimulasikan dengan fasilitas resmi <code>ORA-2PC-CRASH-TEST-n</code>, bukan dengan mematikan server.</p>
 <p>2. <strong>Model biaya adalah model, bukan pengukuran.</strong> Angka biaya pada Lab Alokasi dan Lab Join</p>
 <p>   memakai fungsi biaya abstrak (biaya per pesan + biaya per byte). Ia menunjukkan <em>arah</em> dan</p>
 <p>   <em>titik impas</em> dengan benar, tetapi angkanya bukan milidetik pada jaringan sungguhan.</p>
@@ -188,9 +198,8 @@ CREATE TABLE PASIEN (
 <p>4. <strong>Terminal SQL bukan Oracle.</strong> SELECT lanjutan, DML, DDL, transaksi, dan kamus data sudah</p>
 <p>   didukung, tetapi belum ada window function, <code>MERGE</code>, <code>ALTER TABLE</code>, PL/SQL, sequence, dan</p>
 <p>   trigger. Rencana eksekusi mengikuti evaluasi logis, bukan pengoptimal biaya Oracle. Kode</p>
-<p>   ORA-xxxxx dipilih sesuai makna galat Oracle; teks pesannya ditulis ulang. Transaksi</p>
-<p>   ragu-ragu disederhanakan: pembaca melihat data sebelum transaksi, sedangkan DML ke situs yang</p>
-<p>   terkunci ditolak ORA-01591.</p>
+<p>   galat dijamin sama dengan Oracle hanya untuk kasus terdaftar; teks pesannya ditulis ulang.</p>
+<p>   Kunci transaksi ragu-ragu diterapkan per tabel, sedangkan Oracle menguncinya per baris.</p>
 <p>4a. <strong>Kontras warna dan pembaca layar belum diuji.</strong> Pemeriksa situs hanya memeriksa struktur</p>
 <p>   HTML statis (judul, landmark, label, alt). Isi yang digambar skrip lab dan kontras setiap</p>
 <p>   kombinasi tema belum diaudit dengan alat khusus maupun pembaca layar sungguhan.</p>
@@ -237,7 +246,9 @@ CREATE TABLE PASIEN (
 </ul>
 <p>  halaman Standar Kualitas yang memetakan ISO/IEC 25010:2023 ke bukti yang bisa diperiksa.</p>
 <h3 id="segera-untuk-nilai-mata-kuliah">Segera (untuk nilai mata kuliah)</h3>
-<p>1. <strong>Jalankan skrip <code>oracle/</code> dan hasil <code>\ekspor</code> terminal di Oracle Free lewat Docker</strong> dan simpan tangkapan layarnya.</p>
+<p>1. <strong>Sudah dieksekusi di 2.1.0:</strong> skrip <code>oracle/</code> dan <code>\ekspor</code> terminal dijalankan di Oracle Free lewat</p>
+<p>   Docker, lengkap dengan log bukti. Langkah berikutnya yang paling bernilai: ulangi uji 2PC pada</p>
+<p>   <strong>dua container terpisah</strong> lalu matikan salah satunya sungguhan setelah PREPARE.</p>
 <p>   Satu perintah: <code>docker run -d -p 1521:1521 -e ORACLE_PASSWORD=oracle gvenzl/oracle-free:23-slim</code>.</p>
 <p>   Ini mengubah satu-satunya bagian yang belum terverifikasi menjadi terverifikasi, dan</p>
 <p>   menghasilkan bukti yang jauh lebih kuat daripada laporan mana pun di folder mata kuliah.</p>
@@ -275,7 +286,7 @@ CREATE TABLE PASIEN (
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
-<script type="module" src="site.js?v=849b085103"></script>
+<script type="module" src="site.js?v=b04806ea2d"></script>
 
 </body>
 </html>

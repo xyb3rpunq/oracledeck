@@ -18,8 +18,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="styles.css?v=849b085103">
-<script src="tema.js?v=849b085103"></script>
+<link rel="stylesheet" href="styles.css?v=b04806ea2d">
+<script src="tema.js?v=b04806ea2d"></script>
 </head>
 <body>
 <a class="lewati" href="#isi">Lewati ke isi</a>
@@ -53,13 +53,13 @@
 <div class="tabel-bungkus"><table>
 <thead><tr><th style="width:20%">Karakteristik</th><th>Yang diterapkan</th><th style="width:26%">Bukti</th></tr></thead>
 <tbody>
-<tr><td><strong>Kesesuaian fungsional</strong><br><span class="kecil">functional suitability</span></td><td>677 uji otomatis atas mesin; 60 kueri dan skrip DML diverifikasi silang terhadap SQLite (hasil identik baris demi baris); 40 contoh terminal dan 31 kueri per topik diuji berjalan persis seperti yang dijanjikan, termasuk galat yang disengaja.</td><td class="mono kecil">tests/, tools/verify_sqlite.py, tests/terminal.test.js</td></tr>
+<tr><td><strong>Kesesuaian fungsional</strong><br><span class="kecil">functional suitability</span></td><td>688 uji otomatis atas mesin; 60 kueri dan skrip DML diverifikasi silang terhadap SQLite dan terhadap Oracle sungguhan (60/60 identik, 39/39 kode galat sama); 21/21 skrip Oracle lulus 60 pemeriksaan mandiri; 40 contoh terminal dan 31 kueri per topik diuji berjalan persis seperti yang dijanjikan.</td><td class="mono kecil">tests/, tools/verify_sqlite.py, tools/uji_oracle.mjs, tools/verifikasi_oracle.mjs, oracle/HASIL_UJI.md</td></tr>
 <tr><td><strong>Efisiensi kinerja</strong><br><span class="kecil">performance efficiency</span></td><td>Pratinjau terminal dan penilaian bank soal berjalan saat mengetik, dengan ketikan beruntun digabung menjadi satu evaluasi. Uji kinerja memastikan setiap contoh terminal selesai dalam anggaran waktu; pemeriksaan tombol Jalankan pada SQL buatan lab dikerjakan saat peramban senggang (requestIdleCallback).</td><td class="mono kecil">tests/terminal.test.js (grup kinerja), src/labs/terminal-ui.js</td></tr>
 <tr><td><strong>Kompatibilitas</strong><br><span class="kecil">compatibility</span></td><td>Situs statis tanpa server dan tanpa dependensi; modul ES standar. Skrip dari \ekspor dan folder oracle/ ditulis dalam sintaks Oracle agar dapat dipindahkan ke instans sungguhan.</td><td class="mono kecil">docs/, oracle/</td></tr>
 <tr><td><strong>Kemampuan interaksi</strong><br><span class="kecil">interaction capability</span></td><td>Pencarian Ctrl+K, catatan istilah pada teks materi, pratinjau langsung, pelengkap otomatis, saran &quot;maksud Anda&quot;, tema terang/gelap, tautan lewati-ke-isi, fokus keyboard terlihat, dan gerak dikurangi bila pengguna memintanya.</td><td class="mono kecil">src/site.js, src/styles.css, tools/cek_situs.js (pemeriksaan aksesibilitas)</td></tr>
 <tr><td><strong>Keandalan</strong><br><span class="kecil">reliability</span></td><td>Galat satu perintah tidak menghentikan perintah berikutnya; setiap lab dibungkus penangkap galat; situs bisa dibuka luring lewat service worker berversi.</td><td class="mono kecil">engine/core/terminal.js, src/labs/ui.js, docs/sw.js</td></tr>
 <tr><td><strong>Keamanan</strong><br><span class="kecil">security</span></td><td>Content-Security-Policy membatasi skrip ke asal situs sendiri; tidak ada skrip pihak ketiga, pelacak, cookie, atau formulir yang mengirim data; semua keluaran pengguna di-escape; pemeriksa situs menolak alamat surel dan nomor telepon yang bocor.</td><td class="mono kecil">tools/build.js (meta CSP), tools/cek_situs.js, SECURITY.md</td></tr>
-<tr><td><strong>Kemudahan pemeliharaan</strong><br><span class="kecil">maintainability</span></td><td>222 fungsi mesin ditulis sebagai modul kecil tanpa dependensi, diuji di Node dengan berkas yang sama yang dijalankan peramban. CI menolak keluaran docs/ dan oracle/ yang basi.</td><td class="mono kecil">.github/workflows/verifikasi.yml</td></tr>
+<tr><td><strong>Kemudahan pemeliharaan</strong><br><span class="kecil">maintainability</span></td><td>227 fungsi mesin ditulis sebagai modul kecil tanpa dependensi, diuji di Node dengan berkas yang sama yang dijalankan peramban. CI menolak keluaran docs/ dan oracle/ yang basi.</td><td class="mono kecil">.github/workflows/verifikasi.yml</td></tr>
 <tr><td><strong>Fleksibilitas</strong><br><span class="kecil">flexibility</span></td><td>Enam preset basis data, skema kosong untuk CREATE TABLE sendiri, perpindahan situs lokal, aturan kunci asing yang bisa diubah, dan ekspor ke Oracle.</td><td class="mono kecil">engine/core/terminal.js</td></tr>
 <tr><td><strong>Keselamatan</strong><br><span class="kecil">safety</span></td><td>Tidak ada operasi yang menyentuh sistem nyata: semua DML/DDL terjadi pada salinan data di memori peramban. Data kependudukan memakai NIK fiktif bersegmen 9999.</td><td class="mono kecil">engine/data/datasets.js</td></tr>
 </tbody></table></div>
@@ -75,7 +75,7 @@
 </ul>
 
 <h2>Batas yang jujur</h2>
-<div class="catatan peringatan"><p>Skrip Oracle dan hasil <code>\ekspor</code> belum dijalankan pada instans Oracle sungguhan. Rencana eksekusi terminal mengikuti evaluasi logis mesin ini, bukan pengoptimal biaya Oracle. Kode galat ORA-xxxxx dipilih agar sesuai makna galat Oracle, tetapi teks pesannya ditulis ulang dalam bahasa Indonesia.</p></div>
+<div class="catatan peringatan"><p>Skrip Oracle diuji pada Oracle AI Database 26ai Free di satu container dengan tiga PDB, bukan tiga server di jaringan sungguhan — latensi dan kegagalan jaringan tidak ikut teruji. Rencana eksekusi terminal mengikuti evaluasi logis mesin ini, bukan pengoptimal biaya Oracle. Teks pesan galat terminal ditulis ulang dalam bahasa Indonesia; yang dijamin sama dengan Oracle adalah kodenya, dan hanya untuk kasus yang terdaftar.</p></div>
 
 <p class="kecil">Rujukan: <a href="https://www.iso.org/standard/78176.html" rel="noopener">ISO/IEC 25010:2023</a> · <a href="https://quality.arc42.org/standards/iso-25010" rel="noopener">ringkasan model mutu arc42</a> · <a href="https://www.w3.org/TR/WCAG22/" rel="noopener">WCAG 2.2</a> · <a href="https://semver.org/lang/id/" rel="noopener">Semantic Versioning</a> · <a href="https://keepachangelog.com/id-ID/1.1.0/" rel="noopener">Keep a Changelog</a></p>
 
@@ -87,7 +87,7 @@
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
-<script type="module" src="site.js?v=849b085103"></script>
+<script type="module" src="site.js?v=b04806ea2d"></script>
 
 </body>
 </html>

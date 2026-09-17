@@ -231,13 +231,38 @@ dibuka dan diklik di peramban. Masing-masing kini punya uji regresi.
 | Urutan judul | Halaman audit, daftar materi, dan daftar lab meloncat dari `h1` ke `h3` | Markdown `##` → `h2`; judul kartu daftar → `h2` |
 | Karakter kontrol mentah | Penulisan berkas mengubah `\u0001` menjadi byte kontrol di pewarna SQL terminal | Dikembalikan ke escape; skrip pemindai memastikan tidak ada byte kontrol di sumber |
 
+### 3.1c Putaran 2.1.0 — dijalankan di Oracle sungguhan
+
+Seluruh skrip `oracle/` dijalankan pada Oracle AI Database 26ai Free Release 23.26.3.0.0 (container
+`gvenzl/oracle-free:23-slim`, tiga PDB + database link): **21/21 skrip lulus, 60 pemeriksaan mandiri LULUS**. Mesin terminal
+dibandingkan dengan Oracle yang sama: **kueri 53/53, DML 7/7, kode galat 39/39, ekspor 4/4**. Bukti: `oracle/HASIL_UJI.md`,
+`oracle/VERIFIKASI_MESIN.md`, log SQL*Plus di `oracle/bukti/`.
+
+Skrip versi 2.0.0 — yang hanya diuji pembangkitnya — ternyata **tidak akan berjalan** di Oracle:
+
+| Temuan | Bukti dari Oracle | Perbaikan |
+|---|---|---|
+| Nama PDB `XEPDB1` tertulis mati | Oracle Free memakai `FREEPDB1` | Situs dan layanan menjadi parameter runner |
+| MV log dibuat lewat database link | DDL ke basis data remote ditolak | MV log di situs sumber (Langkah 11), MV di replika (Langkah 12) |
+| UPDATE kolom kunci partisi | ORA-14402 tanpa `ENABLE ROW MOVEMENT` | Diperagakan sebagai galat, lalu ROW MOVEMENT diaktifkan |
+| `AT SITE` dan link `SITES1_LINK` | Bukan sintaks Oracle; link dan sinonim `PASIEN_JAKARTA` tidak pernah dibuat | Lima tingkat transparansi ditulis ulang dengan objek yang benar-benar ada |
+| Data contoh dimuat di langkah terakhir | Langkah transaksi dan rencana eksekusi berjalan atas tabel kosong | Data dimuat di Langkah 5 |
+| `PARTITION BY REFERENCE` setelah induk ROW MOVEMENT | ORA-14661 | Anak ikut `ENABLE ROW MOVEMENT` |
+| Membaca `DBA_2PC_PENDING` tepat setelah ORA-02054 | Masih kosong — catatan ditulis asinkron | Polling sampai catatan muncul |
+| `COMMIT FORCE` setelah kueri lewat link | ORA-02043 | `COMMIT` dulu |
+| `PURGE_LOST_DB_ENTRY` sebagai pemilik skema | ORA-00942 pada `SYS.PENDING_TRANS$` | Dijalankan sebagai SYS (Langkah 14d) |
+
+Verifikasi silang juga menemukan **mesin terminal** menyimpang dari Oracle, dan sudah disamakan:
+kolom salah pada tabel kosong lolos tanpa galat (Oracle memeriksa saat parse), TRUNCATE induk
+selalu ditolak padahal Oracle 23ai mengizinkannya bila anak kosong, CHECK tingkat kolom yang
+menyebut kolom lain (ORA-02438), pengurai tanggal yang terlalu ketat, dan pembacaan tabel yang
+dikunci transaksi ragu-ragu (Oracle menolak dengan ORA-01591).
+
 ### 3.2 Yang TIDAK diverifikasi — batas yang jujur
 
-1. **Skrip Oracle belum pernah dijalankan pada instans Oracle sungguhan.** Tidak ada Oracle di
-   lingkungan pembuatan repositori ini. Yang diuji adalah pembangkitnya: bentuk perintah, nama
-   objek, dan klausa partisi. Sintaks yang hanya bisa dibuktikan oleh parser Oracle —
-   khususnya `PARTITION BY REFERENCE`, `DBMS_REFRESH.MAKE`, dan pilihan klausa
-   `MATERIALIZED VIEW` — **belum diverifikasi**. Jalankan sendiri di Oracle XE untuk membuktikannya.
+1. **Tiga situs diuji dalam satu container Oracle Free**, bukan tiga server. Latensi, partisi
+   jaringan sungguhan, dan perbedaan versi antarsitus tidak ikut teruji. Kegagalan 2PC
+   disimulasikan dengan fasilitas resmi `ORA-2PC-CRASH-TEST-n`, bukan dengan mematikan server.
 
 2. **Model biaya adalah model, bukan pengukuran.** Angka biaya pada Lab Alokasi dan Lab Join
    memakai fungsi biaya abstrak (biaya per pesan + biaya per byte). Ia menunjukkan *arah* dan
@@ -250,9 +275,8 @@ dibuka dan diklik di peramban. Masing-masing kini punya uji regresi.
 4. **Terminal SQL bukan Oracle.** SELECT lanjutan, DML, DDL, transaksi, dan kamus data sudah
    didukung, tetapi belum ada window function, `MERGE`, `ALTER TABLE`, PL/SQL, sequence, dan
    trigger. Rencana eksekusi mengikuti evaluasi logis, bukan pengoptimal biaya Oracle. Kode
-   ORA-xxxxx dipilih sesuai makna galat Oracle; teks pesannya ditulis ulang. Transaksi
-   ragu-ragu disederhanakan: pembaca melihat data sebelum transaksi, sedangkan DML ke situs yang
-   terkunci ditolak ORA-01591.
+   galat dijamin sama dengan Oracle hanya untuk kasus terdaftar; teks pesannya ditulis ulang.
+   Kunci transaksi ragu-ragu diterapkan per tabel, sedangkan Oracle menguncinya per baris.
 
 4a. **Kontras warna dan pembaca layar belum diuji.** Pemeriksa situs hanya memeriksa struktur
    HTML statis (judul, landmark, label, alt). Isi yang digambar skrip lab dan kontras setiap
@@ -297,7 +321,9 @@ Diurutkan menurut dampak dibagi usaha.
 
 ### Segera (untuk nilai mata kuliah)
 
-1. **Jalankan skrip `oracle/` dan hasil `\ekspor` terminal di Oracle Free lewat Docker** dan simpan tangkapan layarnya.
+1. **Sudah dieksekusi di 2.1.0:** skrip `oracle/` dan `\ekspor` terminal dijalankan di Oracle Free lewat
+   Docker, lengkap dengan log bukti. Langkah berikutnya yang paling bernilai: ulangi uji 2PC pada
+   **dua container terpisah** lalu matikan salah satunya sungguhan setelah PREPARE.
    Satu perintah: `docker run -d -p 1521:1521 -e ORACLE_PASSWORD=oracle gvenzl/oracle-free:23-slim`.
    Ini mengubah satu-satunya bagian yang belum terverifikasi menjadi terverifikasi, dan
    menghasilkan bukti yang jauh lebih kuat daripada laporan mana pun di folder mata kuliah.

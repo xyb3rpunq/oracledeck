@@ -1,16 +1,14 @@
 -- ==========================================================================
--- Langkah 2 - Skema konseptual global (GCS)
--- Enam tabel Praktikum 2, ditulis ulang dengan tipe data Oracle yang benar.
+-- Langkah 4 - Skema konseptual global (GCS)
+-- Enam tabel Praktikum 2 dengan tipe data Oracle, PRIMARY KEY, FOREIGN KEY, dan CHECK.
 -- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.
 -- ==========================================================================
-
--- Jalankan sebagai RS_APP.
-
--- Catatan perbaikan terhadap skema praktikum asli:
---   * no_hp dibuat VARCHAR2, bukan NUMBER: nol di depan tidak boleh hilang.
---   * kolom kota ditambahkan sebagai kunci fragmentasi horizontal.
---   * biaya dan tanggal_daftar ditambahkan agar laporan bisa diuji.
---   * setiap tabel diberi PRIMARY KEY dan FOREIGN KEY eksplisit.
+-- @jalankan situs=jakarta sebagai=rs_app
+-- Sambungan: RS_APP ke PDB situs JAKARTA.
+-- Perbaikan terhadap skema praktikum asli:
+--   * no_hp VARCHAR2, bukan NUMBER: nol di depan tidak boleh hilang.
+--   * kolom kota sebagai kunci fragmentasi horizontal.
+--   * ON DELETE CASCADE sesuai lembar praktikum (Oracle tidak punya ON UPDATE CASCADE).
 
 CREATE TABLE PASIEN (
   ID_PASIEN              NUMBER(8) NOT NULL,
@@ -76,11 +74,10 @@ CREATE TABLE DAFTAR (
     REFERENCES ADMINISTRATOR (ID_ADMIN) ON DELETE CASCADE
 );
 
--- Indeks penunjang join yang paling sering dipakai laporan:
+-- Indeks penunjang join:
 CREATE INDEX IX_PD_PASIEN ON PASIEN_DOKTER (ID_PASIEN);
 CREATE INDEX IX_PD_DOKTER ON PASIEN_DOKTER (ID_DOKTER);
 CREATE INDEX IX_DAFTAR_PASIEN ON DAFTAR (ID_PASIEN);
 
--- Verifikasi:
-SELECT table_name, num_rows FROM user_tables ORDER BY table_name;
-SELECT constraint_name, constraint_type, table_name FROM user_constraints WHERE constraint_type IN ('P','R') ORDER BY table_name;
+SELECT CASE WHEN (SELECT COUNT(*) FROM user_tables WHERE table_name IN ('PASIEN', 'DOKTER', 'ADMINISTRATOR', 'PASIEN_DOKTER', 'DOKTER_ADMIN', 'DAFTAR')) = 6 THEN 'LULUS: enam tabel global terbentuk' ELSE 'GAGAL: enam tabel global terbentuk' END AS cek FROM dual;
+SELECT CASE WHEN (SELECT COUNT(*) FROM user_constraints WHERE constraint_type = 'R') = 6 THEN 'LULUS: enam kunci asing terpasang' ELSE 'GAGAL: enam kunci asing terpasang' END AS cek FROM dual;

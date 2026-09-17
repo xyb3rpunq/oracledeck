@@ -218,31 +218,40 @@ export function unionAllView(namaGlobal, bagian) {
 // ------------------------------------------------------------ replikasi (MV)
 
 /**
- * Replikasi Oracle = materialized view. REFRESH FAST butuh MV log di sumber.
+ * MV log: mencatat perubahan tabel sumber agar replika bisa disegarkan FAST.
+ * WAJIB dijalankan di basis data pemilik tabel — DDL lewat database link ditolak Oracle.
+ */
+export function materializedViewLog(sumber) {
+  return [
+    `-- MV log di situs sumber: mencatat perubahan agar refresh cepat (FAST) mungkin.`,
+    `CREATE MATERIALIZED VIEW LOG ON ${ident(sumber)}`,
+    `  WITH PRIMARY KEY, ROWID, SEQUENCE INCLUDING NEW VALUES;`,
+  ].join('\n');
+}
+
+/**
+ * Replikasi Oracle = materialized view. REFRESH FAST butuh MV log di sumber
+ * (lihat materializedViewLog, dijalankan di situs sumber).
  * ON COMMIT = sinkron (RPO 0, latensi naik); ON DEMAND = asinkron (RPO > 0).
+ * ON COMMIT dan ENABLE QUERY REWRITE hanya berlaku bila sumbernya lokal (tanpa link).
  */
 export function materializedView({ nama, sumber, link = null, kunci, refresh = 'FAST', jadwal = 'ON DEMAND', interval = 'SYSDATE + 1/24', predikat = null, tablespace = null }) {
   const baris = [
-    `-- MV log di situs sumber: mencatat perubahan agar refresh cepat (FAST) mungkin.`,
-    `CREATE MATERIALIZED VIEW LOG ON ${ident(sumber)}${link ? `@${ident(link)}` : ''}`,
-    `  WITH PRIMARY KEY, ROWID, SEQUENCE INCLUDING NEW VALUES;`,
-    ``,
+    link ? `-- Prasyarat di situs sumber (${ident(link)}): ${materializedViewLog(sumber).split('\n').slice(1).join(' ').replace(/\s+/g, ' ')}` : `-- Prasyarat: MV log pada ${ident(sumber)} (materializedViewLog).`,
     `-- Replika (salinan) di situs tujuan.`,
     `CREATE MATERIALIZED VIEW ${ident(nama)}`,
     tablespace ? `  TABLESPACE ${ident(tablespace)}` : null,
     `  BUILD IMMEDIATE`,
     `  REFRESH ${refresh} ${jadwal}${jadwal === 'START WITH' ? ` SYSDATE NEXT ${interval}` : ''}`,
     `  WITH PRIMARY KEY`,
-    `  ENABLE QUERY REWRITE`,
+    link ? null : `  ENABLE QUERY REWRITE`,
     `AS SELECT * FROM ${ident(sumber)}${link ? `@${ident(link)}` : ''}${predikat ? ` WHERE ${predikat}` : ''};`,
     ``,
     `-- Segarkan manual:`,
     `EXEC DBMS_MVIEW.REFRESH('${String(nama).toUpperCase()}', '${refresh === 'FAST' ? 'F' : 'C'}');`,
     ``,
-    `-- Periksa apakah FAST REFRESH memang bisa dipakai:`,
-    `EXEC DBMS_MVIEW.EXPLAIN_MVIEW('${String(nama).toUpperCase()}');`,
-    `SELECT capability_name, possible, msgtxt FROM mv_capabilities_table`,
-    ` WHERE capability_name LIKE 'REFRESH_FAST%';`,
+    `-- Pantau apakah replika tertinggal:`,
+    `SELECT mview_name, last_refresh_type, last_refresh_date, staleness FROM user_mviews;`,
   ].filter((x) => x !== null);
   void kunci;
   return baris.join('\n');

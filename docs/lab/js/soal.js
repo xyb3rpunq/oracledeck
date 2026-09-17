@@ -1,10 +1,10 @@
 // Lab 15 — Bank Soal Praktikum, dinilai otomatis dan langsung saat mengetik.
 // Soal kueri dinilai dari HASIL SELECT; soal DML dinilai dari KEADAAN TABEL setelah
 // perintah dijalankan pada salinan data (basis data asli tidak pernah berubah).
-import { bankSoalDb } from '../../engine/data/datasets.js?v=849b085103';
-import { gradeSoal } from '../../engine/core/grader.js?v=849b085103';
-import { BANK_SOAL, JUDUL_PRAKTIKUM } from '../../content/soal.js?v=849b085103';
-import * as U from './ui.js?v=849b085103';
+import { bankSoalDb } from '../../engine/data/datasets.js?v=b04806ea2d';
+import { gradeSoal } from '../../engine/core/grader.js?v=b04806ea2d';
+import { BANK_SOAL, JUDUL_PRAKTIKUM } from '../../content/soal.js?v=b04806ea2d';
+import * as U from './ui.js?v=b04806ea2d';
 
 const DB = bankSoalDb();
 const KUNCI_SIMPAN = 'oracledeck-bank-soal-v1';

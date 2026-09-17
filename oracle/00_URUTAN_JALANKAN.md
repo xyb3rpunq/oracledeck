@@ -1,48 +1,68 @@
 # Skrip Oracle ORACLEDECK
 
-Dihasilkan otomatis dari mesin yang sama dengan yang dipakai situs
-(`node tools/gen_oracle.js`). Jangan disunting manual — perubahan akan hilang
-pada pembuatan berikutnya. Ubah `tools/gen_oracle.js` atau `engine/oracle/emit.js`.
+Dihasilkan otomatis dari mesin yang sama dengan situs (`node tools/gen_oracle.js`).
+Jangan disunting manual; ubah `tools/gen_oracle.js` atau `engine/oracle/emit.js`.
 
-## Lingkungan yang diuji
+## Topologi
 
-Skrip ditulis untuk **Oracle Database 21c XE** (juga berlaku untuk 19c dan 23ai Free).
-Fitur yang dipakai: LIST/REFERENCE partitioning, database link, materialized view,
-dan tampilan diagnosa `DBA_2PC_PENDING`.
+Tiga situs = tiga basis data (pluggable database) yang terhubung database link:
 
-> Skrip ini **belum pernah dijalankan** pada instans Oracle sungguhan dalam
-> repositori ini — tidak ada Oracle di lingkungan pembuatannya. Yang diuji
-> otomatis adalah *pembangkitnya*: bentuk DDL, nama objek, dan klausa partisi
-> diperiksa 40+ uji di `tests/oracle-emit.test.js`. Jalankan sendiri di Oracle XE
-> untuk membuktikan bagian yang tidak bisa diuji tanpa basis data.
+| Situs | Basis data | Isi |
+|---|---|---|
+| Jakarta (pusat) | PDB bawaan (`FREEPDB1` di Oracle Free, `XEPDB1` di XE) | skema global, partisi per situs, view global, sumber replikasi |
+| Bandung | PDB `BANDUNG` | fragmen PASIEN & DAFTAR kota Bandung, materialized view DOKTER |
+| Surabaya | PDB `SURABAYA` | fragmen PASIEN & DAFTAR kota Surabaya |
+
+## Sudah diuji di Oracle sungguhan
+
+Seluruh skrip dijalankan otomatis oleh `node tools/uji_oracle.mjs` pada container
+`gvenzl/oracle-free:23-slim`. Hasil lengkap, termasuk setiap pemeriksaan LULUS/GAGAL
+dan log keluaran SQL*Plus, ada di [`HASIL_UJI.md`](HASIL_UJI.md) dan folder `bukti/`.
 
 ## Urutan menjalankan
 
-| # | Berkas | Isi |
-|---|--------|-----|
-| 1 | `01_tablespace_dan_user.sql` | Tablespace per situs + pengguna RS_APP |
-| 2 | `02_skema_global.sql` | Enam tabel skema konseptual global |
-| 3 | `03_fragmentasi_horizontal.sql` | PARTITION BY LIST per kota |
-| 4 | `04_fragmentasi_turunan.sql` | PARTITION BY REFERENCE untuk tabel anak |
-| 5 | `05_fragmentasi_vertikal.sql` | Pemisahan kolom + VIEW perekat |
-| 6 | `06_database_link.sql` | Link antar situs, sinonim, view UNION ALL |
-| 7 | `07_replikasi_materialized_view.sql` | Replikasi tabel referensi |
-| 8 | `08_transaksi_terdistribusi.sql` | 2PC otomatis Oracle |
-| 9 | `09_transparansi_lima_tingkat.sql` | Satu kueri, lima tingkat transparansi |
-| 10 | `10_diagnosa_2pc_dan_deadlock.sql` | Transaksi menggantung & deadlock |
-| 11 | `11_rencana_eksekusi.sql` | Bukti partition pruning & operasi REMOTE |
-| 12 | `12_data_contoh.sql` | Data contoh yang identik dengan lab |
+Baris `-- @jalankan situs=... sebagai=...` di awal tiap berkas menyebut di mana dan sebagai
+siapa skrip dijalankan. Variabel substitusi SQL*Plus yang dipakai:
 
-## Menjalankan cepat dengan Docker
+| Variabel | Contoh | Keterangan |
+|---|---|---|
+| `&&sandi_rs_app` | (rahasia) | sandi RS_APP dan PDB_ADMIN — tidak pernah ditulis di berkas |
+| `&&situs` | `BANDUNG` | nama situs saat Langkah 2 dijalankan |
+| `&&dir_data` | `/opt/oracle/oradata` | folder berkas data |
+| `&&tns_jakarta` | `//localhost:1521/FREEPDB1` | alamat situs pusat |
+| `&&tns_bandung` | `//localhost:1521/BANDUNG` | alamat situs Bandung |
+| `&&tns_surabaya` | `//localhost:1521/SURABAYA` | alamat situs Surabaya |
+
+| # | Berkas |
+|---|---|
+| 1 | `01_situs_pdb.sql` |
+| 2 | `02_pengguna_situs.sql` |
+| 3 | `03_tablespace_alokasi.sql` |
+| 4 | `04_skema_global.sql` |
+| 5 | `05_data_contoh.sql` |
+| 6 | `06_fragmentasi_horizontal.sql` |
+| 7 | `07_fragmentasi_turunan.sql` |
+| 8 | `08_fragmentasi_vertikal.sql` |
+| 9 | `09a_situs_bandung.sql` |
+| 10 | `09b_situs_surabaya.sql` |
+| 11 | `10_database_link.sql` |
+| 12 | `11_replikasi_sumber.sql` |
+| 13 | `12_replikasi_replika.sql` |
+| 14 | `13_transaksi_2pc.sql` |
+| 15 | `14a_matikan_pemulihan.sql` |
+| 16 | `14b_transaksi_ragu_ragu.sql` |
+| 17 | `14c_nyalakan_pemulihan.sql` |
+| 18 | `14d_bersihkan_catatan_2pc.sql` |
+| 19 | `15_transparansi_lima_tingkat.sql` |
+| 20 | `16_rencana_eksekusi.sql` |
+| 21 | `17_diagnosa.sql` |
+
+## Menjalankan otomatis
 
 ```bash
-docker run -d --name oracle-xe -p 1521:1521 -e ORACLE_PASSWORD=oracle \
-  gvenzl/oracle-free:23-slim
-sqlplus sys/oracle@//localhost:1521/FREEPDB1 as sysdba @01_tablespace_dan_user.sql
+node tools/uji_oracle.mjs
 ```
 
-## Kalau tidak ada Oracle
-
-Semua konsep yang sama bisa dijalankan langsung di peramban lewat situs
-ORACLEDECK — mesin relasionalnya ditulis ulang dari nol dan hasilnya
-diverifikasi silang terhadap SQLite (`python tools/verify_sqlite.py`).
+Runner membuat container bila belum ada, menyiapkan tiga situs dari nol, menjalankan setiap
+skrip di situs yang benar, lalu menulis `HASIL_UJI.md`. Ia gagal bila ada pemeriksaan GAGAL,
+galat yang tidak diharapkan, atau galat peragaan yang tidak muncul.

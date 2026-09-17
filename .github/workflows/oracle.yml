@@ -1,0 +1,52 @@
+name: oracle
+
+# Jalankan seluruh skrip oracle/ dan verifikasi mesin terhadap Oracle sungguhan.
+# Terpisah dari workflow utama karena butuh image Oracle Free (~2,8 GB) dan beberapa menit.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'engine/**'
+      - 'oracle/*.sql'
+      - 'src/content/kasus-galat-oracle.js'
+      - 'tools/gen_oracle.js'
+      - 'tools/oracle_docker.mjs'
+      - 'tools/uji_oracle.mjs'
+      - 'tools/verifikasi_oracle.mjs'
+      - '.github/workflows/oracle.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sandi acak untuk container sekali pakai
+        run: echo "ORACLE_PASSWORD=$(openssl rand -hex 16)" >> "$GITHUB_ENV"
+
+      - name: Jalankan semua skrip di Oracle Free (3 PDB + database link)
+        run: node tools/uji_oracle.mjs
+
+      - name: Verifikasi mesin ORACLEDECK terhadap Oracle
+        run: node tools/verifikasi_oracle.mjs
+
+      - name: Simpan bukti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bukti-oracle
+          path: |
+            oracle/HASIL_UJI.md
+            oracle/VERIFIKASI_MESIN.md
+            oracle/hasil-uji.json
+            oracle/verifikasi-mesin.json
+            oracle/bukti/

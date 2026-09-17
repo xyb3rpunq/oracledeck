@@ -196,12 +196,26 @@ uji('unionAllView menyusun program lokalisasi horizontal', () => {
 
 grup('oracle/emit — replikasi & transaksi');
 
-uji('materializedView membuat MV log dan MV', () => {
-  const sql = O.materializedView({ nama: 'MV_DOKTER', sumber: 'DOKTER', link: 'SITUS_JKT', kunci: ['id_dokter'], refresh: 'FAST', jadwal: 'ON COMMIT' });
-  memuat(sql, 'CREATE MATERIALIZED VIEW LOG ON DOKTER@SITUS_JKT');
-  memuat(sql, 'REFRESH FAST ON COMMIT');
+uji('materializedViewLog dibuat di situs sumber tanpa database link', () => {
+  const sql = O.materializedViewLog('DOKTER');
+  memuat(sql, 'CREATE MATERIALIZED VIEW LOG ON DOKTER\n');
+  tidakMemuat(sql, '@');
+});
+
+uji('materializedView remote tidak membuat MV log lewat link dan tanpa QUERY REWRITE', () => {
+  const sql = O.materializedView({ nama: 'MV_DOKTER', sumber: 'DOKTER', link: 'SITUS_JKT', kunci: ['id_dokter'], refresh: 'FAST', jadwal: 'ON DEMAND' });
+  tidakMemuat(sql, 'CREATE MATERIALIZED VIEW LOG ON DOKTER@');
+  memuat(sql, 'AS SELECT * FROM DOKTER@SITUS_JKT;');
+  memuat(sql, 'REFRESH FAST ON DEMAND');
   memuat(sql, 'DBMS_MVIEW.REFRESH');
-  memuat(sql, 'EXPLAIN_MVIEW');
+  tidakMemuat(sql, 'ENABLE QUERY REWRITE');
+  tidakMemuat(sql, 'EXPLAIN_MVIEW');
+});
+
+uji('materializedView lokal boleh ON COMMIT dan QUERY REWRITE', () => {
+  const sql = O.materializedView({ nama: 'MV_D', sumber: 'DOKTER', kunci: ['id_dokter'], jadwal: 'ON COMMIT' });
+  memuat(sql, 'REFRESH FAST ON COMMIT');
+  memuat(sql, 'ENABLE QUERY REWRITE');
 });
 
 uji('materializedView dengan jadwal berkala menyertakan NEXT', () => {

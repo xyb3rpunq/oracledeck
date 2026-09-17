@@ -1,8 +1,8 @@
 // Lab 09 — Join Terdistribusi: kirim utuh, semijoin, bloom join.
-import { Relation } from '../../engine/core/relation.js?v=849b085103';
-import { dreamhome, rumahsakit } from '../../engine/data/datasets.js?v=849b085103';
-import * as J from '../../engine/ddb/joinstrat.js?v=849b085103';
-import * as U from './ui.js?v=849b085103';
+import { Relation } from '../../engine/core/relation.js?v=b04806ea2d';
+import { dreamhome, rumahsakit } from '../../engine/data/datasets.js?v=b04806ea2d';
+import * as J from '../../engine/ddb/joinstrat.js?v=b04806ea2d';
+import * as U from './ui.js?v=b04806ea2d';
 
 const { STAFF, PROPERTY } = dreamhome();
 const { pasien, pasien_dokter } = rumahsakit();

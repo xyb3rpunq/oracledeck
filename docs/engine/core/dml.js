@@ -13,8 +13,8 @@
 // Pelanggaran membatalkan SELURUH perintah — tidak ada perubahan setengah jalan.
 // Kode galat mengikuti Oracle agar pesan di sini dapat dicari di dokumentasi resminya.
 
-import { Relation, canon } from './relation.js?v=849b085103';
-import { parseScript, evalNode, evalExpr, normalizeDb, truthy, SqlError, exprToString } from './sql.js?v=849b085103';
+import { Relation, canon } from './relation.js?v=b04806ea2d';
+import { parseScript, evalNode, evalExpr, normalizeDb, truthy, SqlError, exprToString, periksaEkspresiStatis } from './sql.js?v=b04806ea2d';
 
 const TIPE_ANGKA = new Set(['NUMBER', 'NUMERIC', 'DECIMAL', 'DEC', 'INTEGER', 'INT', 'SMALLINT', 'FLOAT', 'REAL', 'DOUBLE', 'BINARY_FLOAT', 'BINARY_DOUBLE']);
 const TIPE_TEKS = new Set(['VARCHAR2', 'VARCHAR', 'NVARCHAR2', 'CHAR', 'NCHAR', 'TEXT', 'CLOB', 'NCLOB', 'STRING']);
@@ -23,7 +23,7 @@ const TIPE_TANGGAL = new Set(['DATE', 'TIMESTAMP']);
 /** Temukan kunci asli pada peta db tanpa peduli huruf besar-kecil. */
 function kunciDb(db, nama) {
   const k = Object.keys(db).find((x) => x.toLowerCase() === String(nama).toLowerCase());
-  if (!k) throw new SqlError(`Tabel "${nama}" tidak ada. Tersedia: ${Object.keys(db).join(', ')}`);
+  if (!k) throw new SqlError(`ORA-00942: Tabel "${nama}" tidak ada. Tersedia: ${Object.keys(db).join(', ')}`);
   return k;
 }
 
@@ -59,6 +59,41 @@ function periksaPk(rel, def, rows) {
     }
     lihat.set(k, true);
   }
+}
+
+/**
+ * Urai teks tanggal seperti Oracle mengurai TO_DATE(teks, 'YYYY-MM-DD'):
+ * pemisah boleh karakter non-alfanumerik apa pun atau tidak ada, angka boleh tanpa nol di depan.
+ * Kode galat mengikuti hasil pengujian pada Oracle AI Database 26ai (23.26):
+ *   ORA-01841 tahun tidak sah · ORA-01843 bulan tidak sah · ORA-01847 hari di luar 1..31
+ *   ORA-01839 tanggal tidak ada di bulan itu · ORA-01840 input terlalu pendek
+ *   ORA-01830 masih ada sisa input setelah format selesai
+ * @returns {string} tanggal ternormalisasi YYYY-MM-DD
+ */
+export function uraiTanggalOracle(teks, lokasi = 'kolom DATE') {
+  const s = String(teks).replace(/^\s+/, '');
+  let pos = 0;
+  const galat = (kode, pesan) => new SqlError(`${kode}: ${pesan} — "${teks}" untuk ${lokasi} (format YYYY-MM-DD)`);
+  const digit = (maks) => { let d = ''; while (d.length < maks && /\d/.test(s[pos] || '')) d += s[pos++]; return d; };
+  const pemisah = () => { if (pos < s.length && !/[A-Za-z0-9]/.test(s[pos])) pos++; };
+  const habis = () => pos >= s.length;
+
+  if (habis()) throw galat('ORA-01840', 'input terlalu pendek untuk format tanggal');
+  const tahun = Number(digit(4) || 0);
+  if (!tahun) throw galat('ORA-01841', 'tahun harus di antara -4713 dan +9999, dan bukan 0');
+  pemisah();
+  if (habis()) throw galat('ORA-01840', 'input terlalu pendek untuk format tanggal');
+  const bulan = Number(digit(2) || 0);
+  if (bulan < 1 || bulan > 12) throw galat('ORA-01843', 'bulan tidak sah');
+  pemisah();
+  if (habis()) throw galat('ORA-01840', 'input terlalu pendek untuk format tanggal');
+  const hari = Number(digit(2) || 0);
+  if (hari < 1 || hari > 31) throw galat('ORA-01847', 'hari harus di antara 1 dan hari terakhir bulan');
+  const kabisat = (tahun % 4 === 0 && tahun % 100 !== 0) || tahun % 400 === 0;
+  const maksHari = [31, kabisat ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][bulan - 1];
+  if (hari > maksHari) throw galat('ORA-01839', `tanggal ${hari} tidak ada pada bulan ${bulan}`);
+  if (!habis()) throw galat('ORA-01830', 'format tanggal selesai sebelum seluruh input terbaca');
+  return `${String(tahun).padStart(4, '0')}-${String(bulan).padStart(2, '0')}-${String(hari).padStart(2, '0')}`;
 }
 
 /**
@@ -99,11 +134,7 @@ export function periksaKolom(rel, def, rows) {
         }
         out[k.i] = t;
       } else if (TIPE_TANGGAL.has(tipe)) {
-        const t = String(v);
-        if (!/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(t) || Number.isNaN(Date.parse(t.slice(0, 10)))) {
-          throw new SqlError(`ORA-01861: literal "${t}" tidak cocok dengan format tanggal YYYY-MM-DD pada ${rel.name}.${k.nama}`);
-        }
-        out[k.i] = t;
+        out[k.i] = uraiTanggalOracle(v, `${rel.name}.${k.nama}`);
       }
     }
     return out;
@@ -172,7 +203,7 @@ function jalankanInsert(ast, db, opts) {
   const nama = kunciDb(db, ast.table);
   const rel = db[nama];
   const kolom = ast.columns || rel.attrs;
-  for (const c of kolom) if (rel.indexOf(c) < 0) throw new SqlError(`INSERT: kolom "${c}" tidak ada di ${rel.name}`);
+  for (const c of kolom) if (rel.indexOf(c) < 0) throw new SqlError(`ORA-00904: INSERT: kolom "${c}" tidak ada di ${rel.name}`);
 
   let sumber;
   if (ast.rows) {
@@ -208,8 +239,12 @@ function jalankanInsert(ast, db, opts) {
 function jalankanUpdate(ast, db, opts) {
   const nama = kunciDb(db, ast.table);
   const rel = db[nama];
-  for (const s of ast.set) if (rel.indexOf(s.col) < 0) throw new SqlError(`UPDATE: kolom "${s.col}" tidak ada di ${rel.name}`);
+  for (const s of ast.set) if (rel.indexOf(s.col) < 0) throw new SqlError(`ORA-00904: UPDATE: kolom "${s.col}" tidak ada di ${rel.name}`);
   const ctx = { db: normalizeDb(db), steps: [], plan: null };
+  // nama kolom di SET/WHERE diperiksa walau tabelnya kosong, sama seperti Oracle
+  const cakupan = [rel.attrs.map((a) => `${ast.alias}.${a}`)];
+  ast.set.forEach((s) => periksaEkspresiStatis(s.expr, cakupan, ctx, opts));
+  if (ast.where) periksaEkspresiStatis(ast.where, cakupan, ctx, opts);
   const def = definisiKunci(opts.kunci, nama);
   const lama = [];
   const rows = rel.rows.map((row) => {
@@ -264,6 +299,7 @@ function jalankanDelete(ast, db, opts) {
   const nama = kunciDb(db, ast.table);
   const rel = db[nama];
   const ctx = { db: normalizeDb(db), steps: [], plan: null };
+  if (ast.where) periksaEkspresiStatis(ast.where, [rel.attrs.map((a) => `${ast.alias}.${a}`)], ctx, opts);
   const dihapus = [];
   const sisa = [];
   for (const row of rel.rows) {

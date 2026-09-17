@@ -1,7 +1,7 @@
 // Lab 14 — Generator DDL Oracle dari rancangan terdistribusi.
-import { rumahsakit, RS_KEYS, dreamhome, DEFAULT_SITES } from '../../engine/data/datasets.js?v=849b085103';
-import * as O from '../../engine/oracle/emit.js?v=849b085103';
-import * as U from './ui.js?v=849b085103';
+import { rumahsakit, RS_KEYS, dreamhome, DEFAULT_SITES } from '../../engine/data/datasets.js?v=b04806ea2d';
+import * as O from '../../engine/oracle/emit.js?v=b04806ea2d';
+import * as U from './ui.js?v=b04806ea2d';
 
 const db = rumahsakit();
 const { STAFF } = dreamhome();
@@ -216,7 +216,7 @@ ${U.tabel(['Konsep kuliah', 'Fitur Oracle', 'Lab terkait'], [
     ['Strategi join terdistribusi', 'Operasi REMOTE pada rencana', '<a href="join.html">Join</a>'],
   ])}
 
-${U.catatan('<b>Belum dijalankan pada Oracle sungguhan.</b> Repositori ini dibangun tanpa akses ke instans Oracle. Yang diuji otomatis adalah pembangkit DDL-nya — bentuk perintah, nama objek, dan klausa partisi diperiksa 40+ uji. Sintaks yang hanya bisa dibuktikan parser Oracle belum diverifikasi. Jalankan sendiri di Oracle XE atau <code>gvenzl/oracle-free</code>.', 'peringatan')}
+${U.catatan('<b>Seberapa teruji?</b> Pembangkit DDL yang sama menghasilkan skrip di halaman <a href="../oracle.html">Oracle</a>, dan skrip itu dijalankan otomatis pada Oracle sungguhan. DDL di lab ini mengikuti pilihan Anda, jadi setiap kombinasi pilihan tidak diuji satu per satu — salin ke Oracle Free untuk membuktikan kombinasi Anda.', 'info')}
 `;
 }
 

@@ -1,7 +1,7 @@
 // datasets.js — data contoh yang dipakai seluruh lab.
 // Semua dataset diambil persis dari materi kuliah CTI313 / praktikum SBDT.
 
-import { Relation } from '../core/relation.js?v=849b085103';
+import { Relation } from '../core/relation.js?v=b04806ea2d';
 
 // ---------------------------------------------------------------------------
 // 1) DreamHome (Connolly & Begg) — dipakai Modul 6 & Modul 7 untuk contoh

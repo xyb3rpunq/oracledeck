@@ -1,8 +1,8 @@
 // Lab 03 — Terminal SQL Live. Semua contoh kueri kuliah bisa dijalankan, diubah, atau
 // diganti dengan kueri sendiri; sesi berjalan penuh di peramban.
-import { pasangTerminal } from './terminal-ui.js?v=849b085103';
-import * as U from './ui.js?v=849b085103';
-import { CONTOH } from '../../content/contoh-sql.js?v=849b085103';
+import { pasangTerminal } from './terminal-ui.js?v=b04806ea2d';
+import * as U from './ui.js?v=b04806ea2d';
+import { CONTOH } from '../../content/contoh-sql.js?v=b04806ea2d';
 
 
 function render() {

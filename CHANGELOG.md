@@ -4,6 +4,39 @@ Semua perubahan penting dicatat di sini. Format mengikuti
 [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan penomoran versi mengikuti
 [Semantic Versioning](https://semver.org/lang/id/).
 
+## [2.1.0] — 2026-09-17
+
+### Ditambahkan
+- **Uji Oracle sungguhan**: `tools/uji_oracle.mjs` menyiapkan tiga situs (PDB JAKARTA/FREEPDB1,
+  BANDUNG, SURABAYA) di container `gvenzl/oracle-free:23-slim`, menjalankan setiap skrip di situs
+  dan sebagai pengguna yang tertulis di kepalanya, lalu menulis `oracle/HASIL_UJI.md`, JSON, dan
+  log SQL*Plus di `oracle/bukti/`. Hasil: 21/21 skrip lulus, 60 pemeriksaan mandiri LULUS.
+- **Verifikasi mesin terhadap Oracle**: `tools/verifikasi_oracle.mjs` — kueri 53/53, DML 7/7, kode galat 39/39, ekspor 4/4.
+- `src/content/kasus-galat-oracle.js`: 39 kasus galat yang wajib menghasilkan kode ORA sama di
+  terminal dan Oracle; tombol Coba untuk setiap kasus di halaman Oracle.
+- Workflow CI `oracle.yml` dan skrip npm `oracle:uji`, `oracle:verifikasi`.
+- Skrip Oracle baru: PDB per situs, fragmen di situs remote, replikasi MV dua situs, simulasi
+  kegagalan 2PC (`ORA-2PC-CRASH-TEST-7`) dengan `DBA_2PC_PENDING` dan `COMMIT FORCE`.
+
+### Diubah
+- Skrip Oracle ditulis ulang untuk topologi tiga basis data; setiap skrip memeriksa hasilnya
+  sendiri (`LULUS:`/`GAGAL:`) dan mendaftarkan galat peragaannya.
+- Validasi semantik statis di mesin SQL: kolom (ORA-00904), kolom ambigu (ORA-00918), fungsi tak
+  dikenal (ORA-00904), agregat di WHERE (ORA-00934), dan GROUP BY (ORA-00979/00937) diperiksa
+  sebelum eksekusi — galat kini muncul walau tabel kosong, seperti Oracle.
+- Terminal meniru perilaku Oracle yang terbukti: TRUNCATE induk hanya ditolak bila tabel anak
+  berisi baris, CHECK tingkat kolom yang menyebut kolom lain ditolak ORA-02438, tanggal diurai
+  seperti `TO_DATE(..., 'YYYY-MM-DD')` (ORA-01830/01839/01840/01841/01843/01847), dan tabel yang
+  dikunci transaksi ragu-ragu tidak bisa dibaca maupun diubah (ORA-01591).
+- `materializedView` tidak lagi membuat MV log lewat database link; `materializedViewLog` baru.
+
+### Diperbaiki
+- `PARTITION BY REFERENCE` gagal ORA-14661 karena tabel anak tanpa `ENABLE ROW MOVEMENT`.
+- Skrip in-doubt membaca `DBA_2PC_PENDING` sebelum Oracle menulis catatannya.
+- `COMMIT FORCE` ditolak ORA-02043 karena kueri lewat link belum diakhiri.
+- UPDATE kolom kunci partisi tanpa `ROW MOVEMENT` (ORA-14402) kini diperagakan dengan benar.
+- `AT SITE` pada skrip transparansi bukan sintaks Oracle; diganti padanan `tabel@link`.
+
 ## [2.0.0] — 2026-09-17
 
 ### Ditambahkan
@@ -56,5 +89,6 @@ Semua perubahan penting dicatat di sini. Format mengikuti
 - Rilis awal: 14 topik, 16 lab, 32 soal, 12 skrip Oracle, glosarium 102 istilah, audit,
   verifikasi SQLite 39 kueri, CI GitHub Actions.
 
+[2.1.0]: https://github.com/xyb3rpunq/oracledeck/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/xyb3rpunq/oracledeck/compare/c5d5602...v2.0.0
 [1.0.0]: https://github.com/xyb3rpunq/oracledeck/commit/0aeeff7

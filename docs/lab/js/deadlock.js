@@ -1,6 +1,6 @@
 // Lab 11 — Manajemen Deadlock.
-import * as D from '../../engine/ddb/deadlock.js?v=849b085103';
-import * as U from './ui.js?v=849b085103';
+import * as D from '../../engine/ddb/deadlock.js?v=b04806ea2d';
+import * as U from './ui.js?v=b04806ea2d';
 
 const SKENARIO = {
   lintas: {

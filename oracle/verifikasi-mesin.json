@@ -1,0 +1,868 @@
+{
+  "oracle": "Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free Version 23.26.3.0.0",
+  "tanggal": "2026-09-17",
+  "kueri": {
+    "lulus": 53,
+    "jumlah": 53
+  },
+  "dml": {
+    "lulus": 7,
+    "jumlah": 7
+  },
+  "galat": {
+    "lulus": 39,
+    "jumlah": 39
+  },
+  "ekspor": {
+    "lulus": 4,
+    "jumlah": 4
+  },
+  "hasil": [
+    {
+      "id": "p3-semua",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 5,
+      "alasan": null
+    },
+    {
+      "id": "p3-sem1",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 2,
+      "alasan": null
+    },
+    {
+      "id": "p3-bukan-sem1",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "p3-like",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 2,
+      "alasan": null
+    },
+    {
+      "id": "p3-like-and",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 1,
+      "alasan": null
+    },
+    {
+      "id": "p3-count",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 1,
+      "alasan": null
+    },
+    {
+      "id": "p3-minmaxavg",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 1,
+      "alasan": null
+    },
+    {
+      "id": "p3-sum",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 1,
+      "alasan": null
+    },
+    {
+      "id": "p3-between",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 5,
+      "alasan": null
+    },
+    {
+      "id": "p3-in",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "p3-not",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "p4-join-where",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "p4-tiga-tabel",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 7,
+      "alasan": null
+    },
+    {
+      "id": "p5-inner",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 7,
+      "alasan": null
+    },
+    {
+      "id": "p5-left",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 9,
+      "alasan": null
+    },
+    {
+      "id": "p5-left-null",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 2,
+      "alasan": null
+    },
+    {
+      "id": "p5-union",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 5,
+      "alasan": null
+    },
+    {
+      "id": "p5-union-all",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 12,
+      "alasan": null
+    },
+    {
+      "id": "agg-group",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "agg-having",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 2,
+      "alasan": null
+    },
+    {
+      "id": "agg-order",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "agg-distinct",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 1,
+      "alasan": null
+    },
+    {
+      "id": "rs-riwayat",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 14,
+      "alasan": null
+    },
+    {
+      "id": "rs-statistik",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 6,
+      "alasan": null
+    },
+    {
+      "id": "rs-kota",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "rs-sering",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 2,
+      "alasan": null
+    },
+    {
+      "id": "rs-subquery",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 4,
+      "alasan": null
+    },
+    {
+      "id": "rs-admin-daftar",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 4,
+      "alasan": null
+    },
+    {
+      "id": "dh-manager",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "dh-subquery",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "dh-fragmen-b3",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 4,
+      "alasan": null
+    },
+    {
+      "id": "dh-join-branch",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 10,
+      "alasan": null
+    },
+    {
+      "id": "dh-property",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 6,
+      "alasan": null
+    },
+    {
+      "id": "dh-salary-range",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 7,
+      "alasan": null
+    },
+    {
+      "id": "dh-avg-branch",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "fn-upper",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 12,
+      "alasan": null
+    },
+    {
+      "id": "fn-length",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 12,
+      "alasan": null
+    },
+    {
+      "id": "fn-arit",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 5,
+      "alasan": null
+    },
+    {
+      "id": "fn-round",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 1,
+      "alasan": null
+    },
+    {
+      "id": "lj-case",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 5,
+      "alasan": null
+    },
+    {
+      "id": "lj-case-sederhana",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 5,
+      "alasan": null
+    },
+    {
+      "id": "lj-case-agregat",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 1,
+      "alasan": null
+    },
+    {
+      "id": "lj-exists",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "lj-not-exists",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 2,
+      "alasan": null
+    },
+    {
+      "id": "lj-skalar-korelasi",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 5,
+      "alasan": null
+    },
+    {
+      "id": "lj-with",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "lj-with-dua",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 1,
+      "alasan": null
+    },
+    {
+      "id": "lj-intersect",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "lj-except",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 2,
+      "alasan": null
+    },
+    {
+      "id": "lj-union-order",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 10,
+      "alasan": null
+    },
+    {
+      "id": "lj-union-limit",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "lj-in-korelasi",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "lj-rs-exists",
+      "jenis": "kueri",
+      "status": "LULUS",
+      "baris": 2,
+      "alasan": null
+    },
+    {
+      "id": "dml-insert",
+      "jenis": "dml",
+      "status": "LULUS",
+      "baris": 7,
+      "alasan": null
+    },
+    {
+      "id": "dml-insert-select",
+      "jenis": "dml",
+      "status": "LULUS",
+      "baris": 7,
+      "alasan": null
+    },
+    {
+      "id": "dml-update",
+      "jenis": "dml",
+      "status": "LULUS",
+      "baris": 5,
+      "alasan": null
+    },
+    {
+      "id": "dml-update-subquery",
+      "jenis": "dml",
+      "status": "LULUS",
+      "baris": 7,
+      "alasan": null
+    },
+    {
+      "id": "dml-delete",
+      "jenis": "dml",
+      "status": "LULUS",
+      "baris": 4,
+      "alasan": null
+    },
+    {
+      "id": "dml-delete-exists",
+      "jenis": "dml",
+      "status": "LULUS",
+      "baris": 3,
+      "alasan": null
+    },
+    {
+      "id": "dml-rangkaian",
+      "jenis": "dml",
+      "status": "LULUS",
+      "baris": 9,
+      "alasan": null
+    },
+    {
+      "id": "pk-ganda",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00001",
+      "kodeOracle": "ORA-00001",
+      "kodeMesin": "ORA-00001",
+      "persiapanGagal": [],
+      "arti": "nilai PRIMARY KEY sudah dipakai"
+    },
+    {
+      "id": "unique-ganda",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00001",
+      "kodeOracle": "ORA-00001",
+      "kodeMesin": "ORA-00001",
+      "persiapanGagal": [],
+      "arti": "nilai UNIQUE sudah dipakai"
+    },
+    {
+      "id": "not-null",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01400",
+      "kodeOracle": "ORA-01400",
+      "kodeMesin": "ORA-01400",
+      "persiapanGagal": [],
+      "arti": "kolom NOT NULL tidak diisi"
+    },
+    {
+      "id": "terlalu-panjang",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-12899",
+      "kodeOracle": "ORA-12899",
+      "kodeMesin": "ORA-12899",
+      "persiapanGagal": [],
+      "arti": "teks melebihi panjang VARCHAR2"
+    },
+    {
+      "id": "presisi",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01438",
+      "kodeOracle": "ORA-01438",
+      "kodeMesin": "ORA-01438",
+      "persiapanGagal": [],
+      "arti": "angka melebihi presisi NUMBER(p,s)"
+    },
+    {
+      "id": "bukan-angka",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01722",
+      "kodeOracle": "ORA-01722",
+      "kodeMesin": "ORA-01722",
+      "persiapanGagal": [],
+      "arti": "teks dimasukkan ke kolom NUMBER"
+    },
+    {
+      "id": "check",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02290",
+      "kodeOracle": "ORA-02290",
+      "kodeMesin": "ORA-02290",
+      "persiapanGagal": [],
+      "arti": "kendala CHECK dilanggar"
+    },
+    {
+      "id": "fk-induk-hilang",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02291",
+      "kodeOracle": "ORA-02291",
+      "kodeMesin": "ORA-02291",
+      "persiapanGagal": [],
+      "arti": "nilai FOREIGN KEY tidak ada di tabel induk"
+    },
+    {
+      "id": "fk-anak-ada",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02292",
+      "kodeOracle": "ORA-02292",
+      "kodeMesin": "ORA-02292",
+      "persiapanGagal": [],
+      "arti": "baris induk masih dirujuk (tanpa CASCADE)"
+    },
+    {
+      "id": "tabel-tidak-ada",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00942",
+      "kodeOracle": "ORA-00942",
+      "kodeMesin": "ORA-00942",
+      "persiapanGagal": [],
+      "arti": "tabel atau view tidak ada"
+    },
+    {
+      "id": "kolom-tidak-ada",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00904",
+      "kodeOracle": "ORA-00904",
+      "kodeMesin": "ORA-00904",
+      "persiapanGagal": [],
+      "arti": "kolom tidak dikenal"
+    },
+    {
+      "id": "kolom-ambigu",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00918",
+      "kodeOracle": "ORA-00918",
+      "kodeMesin": "ORA-00918",
+      "persiapanGagal": [],
+      "arti": "nama kolom ada di dua tabel yang di-join"
+    },
+    {
+      "id": "nama-dipakai",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00955",
+      "kodeOracle": "ORA-00955",
+      "kodeMesin": "ORA-00955",
+      "persiapanGagal": [],
+      "arti": "nama objek sudah dipakai"
+    },
+    {
+      "id": "kolom-ganda",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00957",
+      "kodeOracle": "ORA-00957",
+      "kodeMesin": "ORA-00957",
+      "persiapanGagal": [],
+      "arti": "nama kolom ganda"
+    },
+    {
+      "id": "drop-induk",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02449",
+      "kodeOracle": "ORA-02449",
+      "kodeMesin": "ORA-02449",
+      "persiapanGagal": [],
+      "arti": "tabel induk masih dirujuk kunci asing"
+    },
+    {
+      "id": "truncate-induk",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02266",
+      "kodeOracle": "ORA-02266",
+      "kodeMesin": "ORA-02266",
+      "persiapanGagal": [],
+      "arti": "TRUNCATE tabel induk yang anaknya masih berisi baris"
+    },
+    {
+      "id": "group-by",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00979",
+      "kodeOracle": "ORA-00979",
+      "kodeMesin": "ORA-00979",
+      "persiapanGagal": [],
+      "arti": "kolom SELECT tidak ikut GROUP BY"
+    },
+    {
+      "id": "single-group",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00937",
+      "kodeOracle": "ORA-00937",
+      "kodeMesin": "ORA-00937",
+      "persiapanGagal": [],
+      "arti": "kolom biasa bercampur fungsi agregat tanpa GROUP BY"
+    },
+    {
+      "id": "agregat-di-where",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00934",
+      "kodeOracle": "ORA-00934",
+      "kodeMesin": "ORA-00934",
+      "persiapanGagal": [],
+      "arti": "fungsi agregat di WHERE (seharusnya HAVING)"
+    },
+    {
+      "id": "view-jumlah-kolom",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01730",
+      "kodeOracle": "ORA-01730",
+      "kodeMesin": "ORA-01730",
+      "persiapanGagal": [],
+      "arti": "daftar nama kolom view tidak sama dengan kolom kueri"
+    },
+    {
+      "id": "unique-index-ganda",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01452",
+      "kodeOracle": "ORA-01452",
+      "kodeMesin": "ORA-01452",
+      "persiapanGagal": [],
+      "arti": "UNIQUE INDEX pada data yang sudah ganda"
+    },
+    {
+      "id": "dml-view-union",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01732",
+      "kodeOracle": "ORA-01732",
+      "kodeMesin": "ORA-01732",
+      "persiapanGagal": [],
+      "arti": "DML pada view gabungan UNION ALL"
+    },
+    {
+      "id": "fk-bukan-kunci",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02270",
+      "kodeOracle": "ORA-02270",
+      "kodeMesin": "ORA-02270",
+      "persiapanGagal": [],
+      "arti": "kunci asing merujuk kolom yang bukan PRIMARY KEY/UNIQUE"
+    },
+    {
+      "id": "fk-induk-tanpa-pk",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02268",
+      "kodeOracle": "ORA-02268",
+      "kodeMesin": "ORA-02268",
+      "persiapanGagal": [],
+      "arti": "tabel induk tidak punya PRIMARY KEY"
+    },
+    {
+      "id": "fk-jumlah-kolom",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02256",
+      "kodeOracle": "ORA-02256",
+      "kodeMesin": "ORA-02256",
+      "persiapanGagal": [],
+      "arti": "jumlah kolom kunci asing tidak sama dengan kunci induk"
+    },
+    {
+      "id": "varchar2-tanpa-panjang",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00906",
+      "kodeOracle": "ORA-00906",
+      "kodeMesin": "ORA-00906",
+      "persiapanGagal": [],
+      "arti": "VARCHAR2 tanpa panjang"
+    },
+    {
+      "id": "check-kolom-menyebut-lain",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02438",
+      "kodeOracle": "ORA-02438",
+      "kodeMesin": "ORA-02438",
+      "persiapanGagal": [],
+      "arti": "CHECK tingkat kolom menyebut kolom lain"
+    },
+    {
+      "id": "check-tabel-kolom-asing",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00904",
+      "kodeOracle": "ORA-00904",
+      "kodeMesin": "ORA-00904",
+      "persiapanGagal": [],
+      "arti": "CHECK tingkat tabel menyebut kolom yang tidak ada"
+    },
+    {
+      "id": "savepoint-tidak-ada",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01086",
+      "kodeOracle": "ORA-01086",
+      "kodeMesin": "ORA-01086",
+      "persiapanGagal": [],
+      "arti": "ROLLBACK TO savepoint yang belum dibuat"
+    },
+    {
+      "id": "indeks-tidak-ada",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01418",
+      "kodeOracle": "ORA-01418",
+      "kodeMesin": "ORA-01418",
+      "persiapanGagal": [],
+      "arti": "DROP INDEX yang tidak ada"
+    },
+    {
+      "id": "commit-force-salah",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-02058",
+      "kodeOracle": "ORA-02058",
+      "kodeMesin": "ORA-02058",
+      "persiapanGagal": [],
+      "arti": "COMMIT FORCE untuk ID transaksi yang tidak ragu-ragu"
+    },
+    {
+      "id": "fungsi-tidak-ada",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-00904",
+      "kodeOracle": "ORA-00904",
+      "kodeMesin": "ORA-00904",
+      "persiapanGagal": [],
+      "arti": "fungsi tidak dikenal"
+    },
+    {
+      "id": "tanggal-sisa-input",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01830",
+      "kodeOracle": "ORA-01830",
+      "kodeMesin": "ORA-01830",
+      "persiapanGagal": [],
+      "arti": "tanggal gaya DD/MM/YYYY pada format YYYY-MM-DD: masih ada sisa input"
+    },
+    {
+      "id": "tanggal-bulan-salah",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01843",
+      "kodeOracle": "ORA-01843",
+      "kodeMesin": "ORA-01843",
+      "persiapanGagal": [],
+      "arti": "bulan 13"
+    },
+    {
+      "id": "tanggal-hari-salah",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01847",
+      "kodeOracle": "ORA-01847",
+      "kodeMesin": "ORA-01847",
+      "persiapanGagal": [],
+      "arti": "hari 32"
+    },
+    {
+      "id": "tanggal-tidak-ada",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01839",
+      "kodeOracle": "ORA-01839",
+      "kodeMesin": "ORA-01839",
+      "persiapanGagal": [],
+      "arti": "29 Februari pada tahun bukan kabisat"
+    },
+    {
+      "id": "tanggal-pendek",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01840",
+      "kodeOracle": "ORA-01840",
+      "kodeMesin": "ORA-01840",
+      "persiapanGagal": [],
+      "arti": "tanggal tanpa hari"
+    },
+    {
+      "id": "tanggal-bukan-angka",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-01841",
+      "kodeOracle": "ORA-01841",
+      "kodeMesin": "ORA-01841",
+      "persiapanGagal": [],
+      "arti": "teks yang bukan tanggal"
+    },
+    {
+      "id": "desc-tidak-ada",
+      "jenis": "galat",
+      "status": "LULUS",
+      "kodeDiharapkan": "ORA-04043",
+      "kodeOracle": "ORA-04043",
+      "kodeMesin": "ORA-04043",
+      "persiapanGagal": [],
+      "arti": "DESC objek yang tidak ada"
+    },
+    {
+      "id": "ekspor-rumahsakit",
+      "jenis": "ekspor",
+      "status": "LULUS",
+      "tabel": 6,
+      "view": 0,
+      "alasan": null,
+      "cuplikanGalat": []
+    },
+    {
+      "id": "ekspor-akademik",
+      "jenis": "ekspor",
+      "status": "LULUS",
+      "tabel": 3,
+      "view": 1,
+      "alasan": null,
+      "cuplikanGalat": []
+    },
+    {
+      "id": "ekspor-dreamhome",
+      "jenis": "ekspor",
+      "status": "LULUS",
+      "tabel": 3,
+      "view": 0,
+      "alasan": null,
+      "cuplikanGalat": []
+    },
+    {
+      "id": "ekspor-kependudukan",
+      "jenis": "ekspor",
+      "status": "LULUS",
+      "tabel": 5,
+      "view": 1,
+      "alasan": null,
+      "cuplikanGalat": []
+    }
+  ]
+}

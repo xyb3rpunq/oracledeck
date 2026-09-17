@@ -6,8 +6,8 @@
 // Alur: kueri global -> program lokalisasi (generic query) -> reduksi ->
 //       kueri terreduksi yang hanya menyentuh fragmen yang benar-benar relevan.
 
-import { Relation } from '../core/relation.js?v=849b085103';
-import * as A from '../core/algebra.js?v=849b085103';
+import { Relation } from '../core/relation.js?v=b04806ea2d';
+import * as A from '../core/algebra.js?v=b04806ea2d';
 
 // --------------------------------------------------------- predikat sederhana
 

@@ -7,12 +7,14 @@ Mesin relasionalnya ditulis dari nol, hasilnya diverifikasi silang terhadap SQLi
 rancangannya diterjemahkan menjadi DDL Oracle.
 
 [![verifikasi](https://github.com/xyb3rpunq/oracledeck/actions/workflows/verifikasi.yml/badge.svg)](https://github.com/xyb3rpunq/oracledeck/actions/workflows/verifikasi.yml)
+[![oracle](https://github.com/xyb3rpunq/oracledeck/actions/workflows/oracle.yml/badge.svg)](https://github.com/xyb3rpunq/oracledeck/actions/workflows/oracle.yml)
 
 | | |
 |---|---|
 | **Situs** | https://xyb3rpunq.github.io/oracledeck |
 | **Terminal SQL** | https://xyb3rpunq.github.io/oracledeck/lab/sql.html |
-| **Versi** | 2.0.0 — lihat [CHANGELOG.md](CHANGELOG.md) |
+| **Versi** | 2.1.0 — lihat [CHANGELOG.md](CHANGELOG.md) |
+| **Oracle sungguhan** | Oracle AI Database 26ai Free Release 23.26.3.0.0: 21/21 skrip lulus, 60 pemeriksaan mandiri LULUS — [HASIL_UJI.md](oracle/HASIL_UJI.md) |
 | **Lisensi** | MIT |
 
 Statis, nol dependensi runtime, tanpa server, tanpa pelacak, bisa dibuka luring. Seluruh
@@ -56,7 +58,7 @@ perhitungan berjalan di peramban pengunjung; tidak ada data yang dikirim ke mana
 | **Pencarian Ctrl+K** | Materi, subtopik, lab, istilah, contoh SQL, soal, dan skrip Oracle |
 | **Kemajuan belajar** | Halaman yang sudah dibuka ditandai; beranda menunjukkan langkah berikutnya |
 | **Tema terang/gelap, PWA luring** | Pilihan tema disimpan; service worker berversi untuk akses tanpa jaringan |
-| **12 skrip Oracle** | Tablespace per situs, `PARTITION BY LIST/REFERENCE`, database link, materialized view, diagnosa 2PC |
+| **21 skrip Oracle teruji** | Tiga PDB + database link, `PARTITION BY LIST/REFERENCE`, materialized view, 2PC, transaksi ragu-ragu + `COMMIT FORCE` — dijalankan otomatis di Oracle sungguhan |
 
 ## Terminal SQL Live
 
@@ -177,21 +179,50 @@ Lalu buka `http://localhost:8765`. Perintah terpisah:
 | `npm test` | Seluruh uji otomatis |
 | `npm run verify` | Verifikasi silang terhadap SQLite |
 | `npm run oracle` | Bangkitkan ulang `oracle/*.sql` |
+| `npm run oracle:uji` | Jalankan semua skrip di Oracle Free lewat Docker |
+| `npm run oracle:verifikasi` | Bandingkan mesin terminal dengan Oracle Free |
 | `npm run build` | Bangun situs ke `docs/` |
 | `npm run cek` | Periksa keluaran situs |
+
+## Terbukti di Oracle sungguhan
+
+Semua skrip `oracle/` dijalankan otomatis oleh `node tools/uji_oracle.mjs` pada container
+`gvenzl/oracle-free:23-slim` (Oracle AI Database 26ai Free Release 23.26.3.0.0) dengan tiga situs sebagai tiga
+pluggable database yang terhubung database link:
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Skrip Oracle (tiap skrip memeriksa hasilnya sendiri dengan baris LULUS/GAGAL) | 21/21 skrip lulus, 60 pemeriksaan mandiri LULUS |
+| Mesin terminal vs Oracle (`node tools/verifikasi_oracle.mjs`) | kueri 53/53, DML 7/7, kode galat 39/39, ekspor 4/4 |
+
+Menjalankannya di Oracle mengungkap hal yang tidak mungkin terlihat dari uji pembangkit saja:
+`PARTITION BY REFERENCE` butuh `ENABLE ROW MOVEMENT` bila induknya memakainya (ORA-14661),
+catatan `DBA_2PC_PENDING` ditulis asinkron, kueri lewat database link membuka transaksi yang
+harus diakhiri sebelum `COMMIT FORCE` (ORA-02043), dan Oracle memeriksa nama kolom saat parse
+sehingga galatnya muncul walau tabel kosong. Seluruhnya sudah diperbaiki; mesin terminal kini
+meniru perilaku yang terbukti. Log SQL*Plus lengkap ada di `oracle/bukti/`.
+
+```bash
+node tools/uji_oracle.mjs
+```
+
+```bash
+node tools/verifikasi_oracle.mjs
+```
 
 ## Verifikasi dan jaminan mutu
 
 | Langkah | Perintah | Yang dibuktikan |
 |---|---|---|
-| 1 | `node tests/run.js` | 677 uji: mesin SQL & DML, terminal, algoritma terdistribusi, penilai, pembantu build, aksesibilitas statis, anggaran kinerja |
+| 1 | `node tests/run.js` | 688 uji: mesin SQL & DML, terminal, algoritma terdistribusi, penilai, pembantu build, aksesibilitas statis, anggaran kinerja |
 | 2 | `python tools/verify_sqlite.py` | 53 kueri dan 7 skrip DML menghasilkan isi identik di mesin ini dan SQLite |
 | 3 | `node tools/gen_oracle.js` | Skrip Oracle dihasilkan ulang dari mesin yang sama |
 | 4 | `node tools/build.js` | Situs dibangun ulang secara deterministik |
 | 5 | `node tools/cek_situs.js` | Tautan, impor modul, sitemap, judul unik, CSP, satu `<h1>`, landmark, urutan judul, label, kebocoran surel/telepon |
 
 GitHub Actions menjalankan kelima langkah pada setiap push dan menolak `docs/` atau `oracle/`
-yang basi. Pemetaan ke sembilan karakteristik **ISO/IEC 25010:2023** dan target **WCAG 2.2 AA**
+yang basi. Workflow terpisah `oracle.yml` menjalankan seluruh skrip dan verifikasi mesin pada
+Oracle Free setiap kali mesin atau skrip Oracle berubah. Pemetaan ke sembilan karakteristik **ISO/IEC 25010:2023** dan target **WCAG 2.2 AA**
 beserta buktinya ada di halaman [Standar Kualitas](https://xyb3rpunq.github.io/oracledeck/kualitas.html).
 Proyek ini *mengacu* pada standar tersebut; ia tidak disertifikasi.
 
@@ -202,21 +233,22 @@ engine/            mesin: relasional, SQL, DML, terminal, algoritma terdistribus
 src/content/       materi 14 topik, contoh SQL, kueri per topik, bank soal, glosarium
 src/labs/          16 lab + antarmuka terminal
 src/site.js        tema, pencarian, laci terminal, catatan istilah, kemajuan, service worker
-tools/             build, generator Oracle, pemeriksa situs, verifikasi SQLite
+tools/             build, generator & runner Oracle, pemeriksa situs, verifikasi SQLite dan Oracle
 tests/             uji Node tanpa kerangka pihak ketiga
-oracle/            12 skrip Oracle hasil generator
+oracle/            21 skrip Oracle, HASIL_UJI.md, VERIFIKASI_MESIN.md, log bukti SQL*Plus
 docs/              situs hasil build (GitHub Pages)
 AUDIT.md           audit materi, proyek terdahulu, dan proyek ini sendiri
 ```
 
 ## Batas yang jujur
 
-- **Skrip `oracle/` dan hasil `\ekspor` belum dijalankan pada Oracle sungguhan.** Yang diuji
-  adalah pembangkitnya. Jalankan di Oracle Free (`gvenzl/oracle-free`) untuk membuktikannya.
+- **Tiga situs diuji di satu container**, bukan tiga server di jaringan sungguhan: latensi dan
+  kegagalan jaringan tidak ikut teruji. Kegagalan 2PC disimulasikan dengan fasilitas resmi Oracle
+  `ORA-2PC-CRASH-TEST-n`.
 - **Terminal bukan Oracle.** Belum ada window function, `MERGE`, `ALTER TABLE`, PL/SQL,
   sequence, dan trigger. Rencana eksekusi mengikuti evaluasi logis mesin ini, bukan
-  pengoptimal biaya Oracle. Pesan galat ditulis ulang dalam bahasa Indonesia; kodenya
-  mengikuti makna galat Oracle.
+  pengoptimal biaya Oracle. Pesan galat ditulis ulang dalam bahasa Indonesia; kode galat dijamin
+  sama dengan Oracle untuk kasus yang terdaftar di `src/content/kasus-galat-oracle.js`.
 - **Model biaya lab adalah model**, bukan pengukuran jaringan sungguhan.
 - **Data contoh adalah data karangan.** Tidak ada data pribadi nyata di repositori ini.
 

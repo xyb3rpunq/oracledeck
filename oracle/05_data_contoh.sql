@@ -1,10 +1,11 @@
 -- ==========================================================================
--- Langkah 12 - Data contoh
--- Dataset yang sama persis dengan yang dipakai lab di situs.
+-- Langkah 5 - Data contoh
+-- Dataset yang sama persis dengan Terminal SQL dan lab di situs.
 -- Dihasilkan oleh ORACLEDECK (node tools/gen_oracle.js) - jangan sunting manual.
 -- ==========================================================================
-
-SET DEFINE OFF;
+-- @jalankan situs=jakarta sebagai=rs_app
+-- @galat-diharapkan ORA-02290 ORA-02291
+-- Sambungan: RS_APP ke PDB situs JAKARTA.
 
 -- pasien (12 baris)
 INSERT ALL
@@ -88,10 +89,14 @@ SELECT * FROM dual;
 
 COMMIT;
 
--- Verifikasi jumlah baris:
-SELECT 'pasien' AS tabel, COUNT(*) AS baris FROM PASIEN;
-SELECT 'dokter' AS tabel, COUNT(*) AS baris FROM DOKTER;
-SELECT 'administrator' AS tabel, COUNT(*) AS baris FROM ADMINISTRATOR;
-SELECT 'pasien_dokter' AS tabel, COUNT(*) AS baris FROM PASIEN_DOKTER;
-SELECT 'dokter_admin' AS tabel, COUNT(*) AS baris FROM DOKTER_ADMIN;
-SELECT 'daftar' AS tabel, COUNT(*) AS baris FROM DAFTAR;
+SELECT CASE WHEN (SELECT COUNT(*) FROM PASIEN) = 12 THEN 'LULUS: pasien berisi 12 baris' ELSE 'GAGAL: pasien berisi 12 baris' END AS cek FROM dual;
+SELECT CASE WHEN (SELECT COUNT(*) FROM DOKTER) = 6 THEN 'LULUS: dokter berisi 6 baris' ELSE 'GAGAL: dokter berisi 6 baris' END AS cek FROM dual;
+SELECT CASE WHEN (SELECT COUNT(*) FROM ADMINISTRATOR) = 4 THEN 'LULUS: administrator berisi 4 baris' ELSE 'GAGAL: administrator berisi 4 baris' END AS cek FROM dual;
+SELECT CASE WHEN (SELECT COUNT(*) FROM PASIEN_DOKTER) = 14 THEN 'LULUS: pasien_dokter berisi 14 baris' ELSE 'GAGAL: pasien_dokter berisi 14 baris' END AS cek FROM dual;
+SELECT CASE WHEN (SELECT COUNT(*) FROM DOKTER_ADMIN) = 8 THEN 'LULUS: dokter_admin berisi 8 baris' ELSE 'GAGAL: dokter_admin berisi 8 baris' END AS cek FROM dual;
+SELECT CASE WHEN (SELECT COUNT(*) FROM DAFTAR) = 12 THEN 'LULUS: daftar berisi 12 baris' ELSE 'GAGAL: daftar berisi 12 baris' END AS cek FROM dual;
+
+-- Kendala ditegakkan Oracle - kedua perintah di bawah SENGAJA ditolak:
+INSERT INTO PASIEN (ID_PASIEN, NAMA_PASIEN, JENIS_KELAMIN, KOTA) VALUES (90, 'Uji CHECK', 'X', 'Jakarta');
+INSERT INTO PASIEN_DOKTER (ID, ID_DOKTER, ID_PASIEN, BIAYA) VALUES (90, 42, 1, 1);
+SELECT CASE WHEN (SELECT COUNT(*) FROM PASIEN WHERE ID_PASIEN = 90) + (SELECT COUNT(*) FROM PASIEN_DOKTER WHERE ID = 90) = 0 THEN 'LULUS: baris yang melanggar kendala tidak tersimpan' ELSE 'GAGAL: baris yang melanggar kendala tidak tersimpan' END AS cek FROM dual;

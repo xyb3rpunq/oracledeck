@@ -42,4 +42,4 @@ Sertakan: langkah reproduksi, halaman atau berkas yang terdampak, dan dampak yan
 - Tanpa dependensi pihak ketiga saat runtime maupun build.
 - Pemeriksa situs menolak alamat surel dan nomor telepon yang bocor ke keluaran.
 - Data kependudukan memakai NIK fiktif bersegmen 9999; data pasien adalah karangan.
-- Skrip Oracle tidak memuat sandi tertulis: sandi diminta saat dijalankan lewat variabel substitusi SQL\*Plus (`&sandi_rs_app`, `&sandi_situs`).
+- Skrip Oracle tidak memuat sandi tertulis: sandi diminta saat dijalankan lewat variabel substitusi SQL\*Plus (`&&sandi_rs_app`). Runner uji membangkitkan sandi acak per jalannya dan menyamarkannya di log bukti.

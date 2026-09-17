@@ -2,7 +2,7 @@
 // Rujukan: Özsu & Valduriez, Principles of Distributed Database Systems;
 //          Connolly & Begg, Database Systems 6th ed.
 
-import { Relation, canon } from './relation.js?v=849b085103';
+import { Relation, canon } from './relation.js?v=b04806ea2d';
 
 /** σ_predikat(R) — SELECT / restriksi */
 export function select(R, pred, label = '') {

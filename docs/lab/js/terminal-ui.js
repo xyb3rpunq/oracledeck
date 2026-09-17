@@ -5,8 +5,8 @@
 // Prinsip: setiap ketikan langsung memicu pratinjau baca-saja (ketikan beruntun digabung),
 // perintah pengubah data baru dijalankan saat Enter/Ctrl+Enter.
 
-import * as T from '../../engine/core/terminal.js?v=849b085103';
-import { planToText as T_planText } from '../../engine/core/sql.js?v=849b085103';
+import * as T from '../../engine/core/terminal.js?v=b04806ea2d';
+import { planToText as T_planText } from '../../engine/core/sql.js?v=b04806ea2d';
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 

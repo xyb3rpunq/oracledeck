@@ -6,6 +6,7 @@ import { grup, uji, sama, benar, salah, melempar, memuat, tidakMemuat } from './
 import * as T from '../engine/core/terminal.js';
 import { parse, parseScript, query, SqlError } from '../engine/core/sql.js';
 import { CONTOH } from '../src/content/contoh-sql.js';
+import { KASUS_GALAT } from '../src/content/kasus-galat-oracle.js';
 
 const jalan = (sesi, sql) => T.jalankan(sesi, sql).blok;
 const satu = (sesi, sql) => {
@@ -167,10 +168,12 @@ uji('CHECK dengan NULL tidak dianggap pelanggaran', () => {
   sama(satu(s, 'INSERT INTO t (a) VALUES (NULL)').jenis, 'ok');
 });
 
-uji('kolom DATE menolak format selain YYYY-MM-DD', () => {
+uji('kolom DATE diurai seperti TO_DATE Oracle: longgar pada pemisah, tegas pada sisa input', () => {
   const s = T.buatSesi('kosong');
   jalan(s, 'CREATE TABLE t (tgl DATE)');
-  galat(s, "INSERT INTO t VALUES ('01/09/2025')", 'ORA-01861');
+  galat(s, "INSERT INTO t VALUES ('01/09/2025')", 'ORA-01830');
+  sama(satu(s, "INSERT INTO t VALUES ('2025/9/1')").jenis, 'ok');
+  sama(satu(s, 'SELECT tgl FROM t').relation.rows, [['2025-09-01']]);
   sama(satu(s, "INSERT INTO t VALUES (DATE '2025-09-01')").jenis, 'ok');
 });
 
@@ -190,7 +193,8 @@ uji('validasi DDL: nama dipakai, kolom ganda, VARCHAR2 tanpa panjang, rujukan ke
   galat(s, 'CREATE TABLE t (a NUMBER REFERENCES pasien(nama_pasien))', 'ORA-02270');
   galat(s, 'CREATE TABLE t (a NUMBER REFERENCES hantu)', 'ORA-00942');
   galat(s, 'CREATE TABLE t (a NUMBER, PRIMARY KEY (b))', 'ORA-00904');
-  galat(s, 'CREATE TABLE t (a NUMBER CHECK (b > 1))', 'ORA-00904');
+  galat(s, 'CREATE TABLE t (a NUMBER CHECK (b > 1))', 'ORA-02438');
+  galat(s, 'CREATE TABLE t (a NUMBER, CHECK (b > 1))', 'ORA-00904');
 });
 
 uji('DDL melakukan COMMIT implisit: ROLLBACK sesudahnya tidak membatalkan DML sebelumnya', () => {
@@ -207,6 +211,24 @@ uji('DROP TABLE yang masih dirujuk ditolak, CASCADE CONSTRAINTS melepas kunci as
   sama(b.pesan, 'Tabel dihapus.');
   sama(s.kunci.nilai.fk.length, 1);
   galat(s, 'SELECT * FROM mhs', 'tidak ada');
+});
+
+uji('TRUNCATE induk boleh bila semua tabel anak kosong (perilaku Oracle 23ai)', () => {
+  const s = T.buatSesi('akademik');
+  jalan(s, 'DELETE FROM nilai; COMMIT');
+  sama(satu(s, 'TRUNCATE TABLE mhs').jenis, 'ok');
+  sama(hitung(s, 'SELECT COUNT(*) FROM mhs'), 0);
+});
+
+uji('uraiTanggalOracle menerima bentuk longgar dan menolak dengan kode Oracle', async () => {
+  const { uraiTanggalOracle } = await import('../engine/core/dml.js');
+  sama(uraiTanggalOracle('20250901'), '2025-09-01');
+  sama(uraiTanggalOracle(' 2025-9-1'), '2025-09-01');
+  sama(uraiTanggalOracle('99-01-01'), '0099-01-01');
+  sama(uraiTanggalOracle('2024-02-29'), '2024-02-29');
+  for (const [t, kode] of [['2025--09-01', 'ORA-01843'], ['2025-00-10', 'ORA-01843'], ['2025-01-00', 'ORA-01847'], ['2025-09-01 08:00:00', 'ORA-01830'], ['0-01-01', 'ORA-01841'], ['', 'ORA-01840']]) {
+    melempar(() => uraiTanggalOracle(t), kode);
+  }
 });
 
 uji('TRUNCATE ditolak bila tabel dirujuk, dan tidak bisa di-ROLLBACK', () => {
@@ -364,8 +386,13 @@ uji('\\gagal koordinator: transaksi ragu-ragu, ORA-01591, lalu COMMIT FORCE', ()
   const pending = satu(s, 'SELECT local_tran_id, state FROM dba_2pc_pending');
   sama(pending.relation.cardinality, 1);
   const id = pending.relation.rows[0][0];
-  sama(hitung(s, 'SELECT COUNT(*) FROM daftar'), 12);
+  galat(s, 'SELECT COUNT(*) FROM daftar', 'ORA-01591');
   galat(s, 'DELETE FROM daftar@bandung WHERE id_daftar = 6', 'ORA-01591');
+  sama(T.pratinjau(s, 'SELECT * FROM daftar@jakarta').jenis, 'galat');
+  // tabel yang tidak ikut transaksi tetap bisa dibaca dan diubah
+  sama(hitung(s, 'SELECT COUNT(*) FROM pasien'), 12);
+  sama(satu(s, "UPDATE pasien@bandung SET penyakit = 'Asma' WHERE id_pasien = 3").jenis, 'ok');
+  jalan(s, 'ROLLBACK');
   galat(s, "COMMIT FORCE 'salah'", 'ORA-02058');
   sama(satu(s, `COMMIT FORCE '${id}'`).pesan, 'Commit paksa selesai.');
   sama(hitung(s, 'SELECT COUNT(*) FROM daftar'), 10);
@@ -521,4 +548,58 @@ uji('judul contoh unik dan setiap kelompok punya minimal dua contoh', () => {
   const per = {};
   CONTOH.forEach((c) => { per[c.kel] = (per[c.kel] || 0) + 1; });
   Object.entries(per).forEach(([k, n]) => benar(n >= 2, k));
+});
+
+grup('terminal — kode galat sama dengan Oracle sungguhan');
+
+uji('setiap kasus galat bersama menghasilkan kode ORA yang sama dengan Oracle', () => {
+  benar(KASUS_GALAT.length >= 30);
+  for (const k of KASUS_GALAT) {
+    const s = T.buatSesi('kosong');
+    const siap = T.jalankan(s, k.persiapan.map((x) => `${x};`).join('\n')).blok.filter((b) => b.jenis === 'galat');
+    sama(siap.length, 0, `${k.id}: persiapan gagal ${siap.map((b) => b.pesan).join(' | ')}`);
+    const b = T.jalankan(s, k.perintah).blok.pop();
+    sama(b.jenis, 'galat', `${k.id}: seharusnya galat ${k.kode}`);
+    memuat(b.pesan, k.kode, k.id);
+  }
+});
+
+uji('id kasus galat unik dan kodenya berformat ORA-xxxxx', () => {
+  sama(new Set(KASUS_GALAT.map((k) => k.id)).size, KASUS_GALAT.length);
+  KASUS_GALAT.forEach((k) => benar(/^ORA-\d{5}$/.test(k.kode), k.id));
+});
+
+grup('sql — validasi semantik statis (seperti parse Oracle)');
+
+const kosong = () => { const s = T.buatSesi('kosong'); T.jalankan(s, 'CREATE TABLE a (id NUMBER(4), nama VARCHAR2(10)); CREATE TABLE b (id NUMBER(4), a_id NUMBER(4))'); return s; };
+
+uji('kolom salah pada tabel KOSONG tetap ditolak ORA-00904', () => {
+  galat(kosong(), 'SELECT hantu FROM a', 'ORA-00904');
+  galat(kosong(), 'SELECT id FROM a WHERE hantu = 1', 'ORA-00904');
+  galat(kosong(), 'SELECT id FROM a ORDER BY hantu', 'ORA-00904');
+  galat(kosong(), 'UPDATE a SET nama = hantu', 'ORA-00904');
+  galat(kosong(), 'DELETE FROM a WHERE hantu = 1', 'ORA-00904');
+});
+
+uji('kolom ambigu pada tabel kosong ditolak ORA-00918, yang berkualifikasi diterima', () => {
+  galat(kosong(), 'SELECT id FROM a JOIN b ON a.id = b.a_id', 'ORA-00918');
+  sama(satu(kosong(), 'SELECT a.id FROM a JOIN b ON a.id = b.a_id').jenis, 'hasil');
+});
+
+uji('subquery berkorelasi boleh merujuk kolom kueri luar walau tabel kosong', () => {
+  sama(satu(kosong(), 'SELECT a.nama FROM a WHERE EXISTS (SELECT 1 FROM b WHERE b.a_id = a.id)').jenis, 'hasil');
+  galat(kosong(), 'SELECT a.nama FROM a WHERE EXISTS (SELECT 1 FROM b WHERE b.hantu = a.id)', 'ORA-00904');
+});
+
+uji('ORDER BY boleh memakai alias SELECT; GROUP BY dicek walau tanpa baris', () => {
+  sama(satu(kosong(), 'SELECT nama AS n, COUNT(*) AS jml FROM a GROUP BY nama ORDER BY jml DESC, n').jenis, 'hasil');
+  galat(kosong(), 'SELECT id, nama FROM a GROUP BY id', 'ORA-00979');
+  galat(kosong(), 'SELECT * FROM a GROUP BY id', 'ORA-00979');
+  galat(kosong(), 'SELECT nama, COUNT(*) FROM a', 'ORA-00937');
+  galat(kosong(), 'SELECT id FROM a WHERE COUNT(*) > 0', 'ORA-00934');
+});
+
+uji('fungsi tak dikenal dan alias bintang yang salah ditolak sebelum eksekusi', () => {
+  galat(kosong(), 'SELECT median(id) FROM a', 'ORA-00904');
+  galat(kosong(), 'SELECT x.* FROM a', 'ORA-00904');
 });

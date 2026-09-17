@@ -18,8 +18,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="styles.css?v=849b085103">
-<script src="tema.js?v=849b085103"></script>
+<link rel="stylesheet" href="styles.css?v=b04806ea2d">
+<script src="tema.js?v=b04806ea2d"></script>
 </head>
 <body>
 <a class="lewati" href="#isi">Lewati ke isi</a>
@@ -51,17 +51,17 @@
   <p class="lede">Empat belas topik CTI313, enam belas laboratorium interaktif, dan bank soal praktikum yang dinilai otomatis. Mesin relasionalnya ditulis dari nol, hasilnya diverifikasi silang terhadap SQLite, dan rancangannya diterjemahkan menjadi DDL Oracle sungguhan.</p>
   <div class="pita">
     <span>nol dependensi runtime</span>
-    <span>677 uji otomatis</span>
+    <span>688 uji otomatis</span>
     <span>diverifikasi silang terhadap SQLite</span>
-    <span>12 skrip Oracle</span>
+    <span>21 skrip Oracle</span>
     <span>statis — tanpa server, tanpa pelacak</span>
   </div>
   <div class="statbar">
     <div class="stat"><b>14</b><span>topik kuliah</span></div>
     <div class="stat"><b>16</b><span>laboratorium</span></div>
-    <div class="stat"><b>677</b><span>uji lulus</span></div>
+    <div class="stat"><b>688</b><span>uji lulus</span></div>
     <div class="stat"><b>60</b><span>kueri terverifikasi</span></div>
-    <div class="stat"><b>222</b><span>fungsi mesin</span></div>
+    <div class="stat"><b>227</b><span>fungsi mesin</span></div>
   </div>
   <div class="kemajuan" data-kemajuan="materi-1,materi-2,materi-3,materi-4,materi-5,materi-6,materi-7,materi-8,materi-9,materi-10,materi-11,materi-12,materi-13,materi-14,lab-erd,lab-normalisasi,lab-sql,lab-fragmentasi,lab-alokasi,lab-dekomposisi,lab-lokalisasi,lab-transparansi,lab-join,lab-konkurensi,lab-deadlock,lab-duafase,lab-ketersediaan,lab-oracle,lab-soal,lab-kependudukan">
     <p><b>Kemajuan belajar Anda</b> · <span data-kemajuan-teks>belum ada halaman yang dibuka</span></p>
@@ -273,12 +273,12 @@
   </div>
   <div class="kartu">
     <h3>Bermuara ke Oracle</h3>
-    <p>Rancangan yang Anda susun di lab diterjemahkan menjadi DDL Oracle sungguhan: PARTITION BY LIST, PARTITION BY REFERENCE, database link, materialized view, dan diagnosa <code>DBA_2PC_PENDING</code>.</p>
+    <p>Tiga basis data Oracle sungguhan: PARTITION BY LIST dan REFERENCE, database link, materialized view, two-phase commit, sampai <code>COMMIT FORCE</code> pada transaksi ragu-ragu — dijalankan otomatis dan memeriksa hasilnya sendiri.</p>
   </div>
 </div>
 
-<div class="catatan">
-  <p><b>Batas yang jujur.</b> Skrip Oracle di repositori ini belum pernah dijalankan pada instans Oracle sungguhan — tidak ada Oracle di lingkungan pembuatannya. Yang diuji otomatis adalah pembangkitnya. Jalankan sendiri di Oracle XE untuk membuktikan bagian yang tidak bisa diuji tanpa basis data.</p>
+<div class="catatan baik">
+  <p><b>Terbukti di Oracle sungguhan.</b> 21 dari 21 skrip lulus dengan 60 pemeriksaan mandiri pada Oracle AI Database 26ai Free Release 23.26.3.0.0; 60 kueri &amp; DML menghasilkan isi identik dan 39 kode galat terminal sama dengan Oracle. <a href="oracle.html">Lihat bukti →</a></p>
 </div>
 
 </div></main>
@@ -289,7 +289,7 @@
   <div>Daniel Hutajulu (20210801207) · <a href="https://github.com/xyb3rpunq/oracledeck" rel="noopener">kode sumber</a></div>
   <div class="kecil">Tidak berafiliasi dengan Oracle Corporation. Nama Oracle dipakai hanya sebagai rujukan teknis.</div>
 </div></footer>
-<script type="module" src="site.js?v=849b085103"></script>
+<script type="module" src="site.js?v=b04806ea2d"></script>
 
 </body>
 </html>

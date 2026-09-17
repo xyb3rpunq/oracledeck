@@ -292,7 +292,7 @@ class Parser {
           if (this.isKw('NULL')) { this.next(); continue; }
           if (this.isWord('UNIQUE')) { this.next(); unikList.push({ nama: namaK, cols: [nama] }); continue; }
           if (this.isWord('DEFAULT')) { this.next(); def.default = this.parseAdd(); continue; }
-          if (this.isWord('CHECK')) { this.next(); cek.push(bacaCek(namaK)); continue; }
+          if (this.isWord('CHECK')) { this.next(); cek.push({ ...bacaCek(namaK), kolom: nama }); continue; }
           if (this.isWord('REFERENCES')) {
             this.next();
             const ref = this.expectIdent('tabel induk');
@@ -807,7 +807,7 @@ function bukanGroupBy(dikelompokkan, sumber, fn, adaGroupBy = true) {
   try {
     return fn();
   } catch (e) {
-    const m = dikelompokkan && /^Kolom "([^"]+)" tidak ada/.exec(e.message);
+    const m = dikelompokkan && /Kolom "([^"]+)" tidak ada/.exec(e.message);
     if (m) {
       const nama = m[1].toLowerCase();
       const ada = sumber.attrs.some((a) => a.toLowerCase() === nama || a.toLowerCase().endsWith(`.${nama}`));
@@ -818,8 +818,145 @@ function bukanGroupBy(dikelompokkan, sumber, fn, adaGroupBy = true) {
   }
 }
 
+// ------------------------------------------------------ validasi semantik statis
+// Oracle memeriksa nama kolom, ambiguitas, fungsi, dan aturan GROUP BY saat PARSE,
+// sehingga galatnya muncul walau tabel tidak berisi satu baris pun. Mesin ini
+// mengevaluasi baris demi baris; tanpa pemeriksaan ini galat tersebut lolos diam-diam
+// pada tabel kosong (ditemukan saat verifikasi silang terhadap Oracle sungguhan).
+
+const sudahDiperiksa = new WeakMap();
+
+const pesanGroupBy = (nama, adaGroupBy) => (adaGroupBy
+  ? `ORA-00979: ${nama} bukan ekspresi GROUP BY — setiap kolom di SELECT/HAVING wajib ikut GROUP BY atau dibungkus fungsi agregat (COUNT, SUM, AVG, MIN, MAX)`
+  : `ORA-00937: ${nama} dipakai bersama fungsi agregat tanpa GROUP BY — bukan fungsi kelompok tunggal; tambahkan GROUP BY ${nama} atau bungkus kolom itu dengan fungsi agregat`);
+
+function cocokkanKolom(e, attrs) {
+  if (e.table) {
+    const want = `${e.table}.${e.name}`.toLowerCase();
+    return attrs.filter((a) => a.toLowerCase() === want);
+  }
+  const nama = String(e.name).toLowerCase();
+  return attrs.filter((a) => a.split('.').pop().toLowerCase() === nama);
+}
+
+function atributSumber(ref, ctx, opts) {
+  let attrs;
+  if (ref.sub) attrs = evalNode(ref.sub, { ...ctx, plan: null }, opts).attrs;
+  else {
+    const r = ctx.db[String(ref.table).toLowerCase()];
+    if (r) attrs = r.attrs;
+    else if (String(ref.table).toLowerCase() === 'dual') attrs = ['dummy'];
+    else throw new SqlError(`ORA-00942: Tabel "${ref.table}" tidak ada. Tersedia: ${Object.keys(ctx.db).join(', ')}`);
+  }
+  const alias = ref.alias || ref.table || 'sub';
+  return attrs.map((a) => `${alias}.${a.split('.').pop()}`);
+}
+
+const ANAK_EKSPRESI = ['l', 'r', 'e', 'lo', 'hi', 'pat', 'arg', 'subjek', 'lain'];
+function anakEkspresi(e) {
+  const out = ANAK_EKSPRESI.filter((k) => e[k]).map((k) => e[k]);
+  if (e.args) out.push(...e.args);
+  if (e.list) out.push(...e.list);
+  if (e.cabang) e.cabang.forEach((c) => out.push(c.kapan, c.maka));
+  return out;
+}
+
+function larangAgregat(e, tempat) {
+  if (!e || typeof e !== 'object' || e.k === 'scalarsub' || e.k === 'exists') return;
+  if (e.k === 'agg') throw new SqlError(`ORA-00934: fungsi agregat ${e.fn} tidak boleh dipakai di ${tempat} — saring hasil agregasi dengan HAVING`);
+  if (e.k === 'in' && e.sub) { larangAgregat(e.e, tempat); return; }
+  anakEkspresi(e).forEach((a) => larangAgregat(a, tempat));
+}
+
+/**
+ * Periksa satu ekspresi terhadap cakupan nama kolom — cakupan[0] kueri sendiri,
+ * sisanya kueri luar dari yang terdekat (subquery berkorelasi).
+ */
+export function periksaEkspresiStatis(e, cakupan, ctx, opts = {}, aliasPilih = null) {
+  if (!e || typeof e !== 'object') return;
+  switch (e.k) {
+    case 'col': {
+      if (!e.table && aliasPilih && aliasPilih.has(String(e.name).toLowerCase())) return;
+      for (const attrs of cakupan) {
+        const m = cocokkanKolom(e, attrs);
+        if (m.length > 1 && !e.table) throw new SqlError(`ORA-00918: Kolom "${e.name}" ambigu (ada di ${m.join(', ')}). Pakai nama berkualifikasi.`);
+        if (m.length) return;
+      }
+      const want = e.table ? `${e.table}.${e.name}` : e.name;
+      throw new SqlError(`ORA-00904: Kolom "${want}" tidak ada. Tersedia: ${(cakupan[0] || []).filter((k) => !k.startsWith('__')).join(', ')}`);
+    }
+    case 'star':
+      if (e.table && !(cakupan[0] || []).some((a) => a.toLowerCase().startsWith(`${String(e.table).toLowerCase()}.`))) {
+        throw new SqlError(`ORA-00904: "${e.table}.*" — alias ${e.table} tidak ada pada FROM`);
+      }
+      return;
+    case 'func':
+      if (!SCALAR[e.name]) throw new SqlError(`ORA-00904: Fungsi "${e.name}" tidak didukung. Tersedia: ${Object.keys(SCALAR).join(', ')}`);
+      e.args.forEach((a) => periksaEkspresiStatis(a, cakupan, ctx, opts, aliasPilih));
+      return;
+    case 'in':
+      periksaEkspresiStatis(e.e, cakupan, ctx, opts, aliasPilih);
+      if (e.list) e.list.forEach((x) => periksaEkspresiStatis(x, cakupan, ctx, opts, aliasPilih));
+      else periksaKueriStatis(e.sub, ctx, opts, cakupan);
+      return;
+    case 'exists': case 'scalarsub':
+      periksaKueriStatis(e.sub, ctx, opts, cakupan);
+      return;
+    default:
+      anakEkspresi(e).forEach((a) => periksaEkspresiStatis(a, cakupan, ctx, opts, aliasPilih));
+  }
+}
+
+function periksaGroupByStatis(q, attrs, aliasPilih) {
+  const adaGroupBy = q.groupBy.length > 0;
+  if (!adaGroupBy && collectAggs(q).length === 0) return;
+  const teksGrup = new Set(q.groupBy.map((g) => exprToString(g).toLowerCase()));
+  const attrGrup = new Set(q.groupBy.filter((g) => g.k === 'col').flatMap((g) => cocokkanKolom(g, attrs)));
+  const cek = (e, bolehAlias) => {
+    if (!e || typeof e !== 'object' || e.k === 'agg' || e.k === 'scalarsub' || e.k === 'exists') return;
+    if (teksGrup.has(exprToString(e).toLowerCase())) return;
+    if (e.k === 'col') {
+      if (bolehAlias && !e.table && aliasPilih.has(String(e.name).toLowerCase())) return;
+      const m = cocokkanKolom(e, attrs);
+      if (!m.length || m.some((a) => attrGrup.has(a))) return; // kolom kueri luar tetap konstan per grup
+      throw new SqlError(pesanGroupBy(e.table ? `${e.table}.${e.name}` : e.name, adaGroupBy));
+    }
+    if (e.k === 'star') throw new SqlError(pesanGroupBy('*', adaGroupBy));
+    if (e.k === 'in' && e.sub) { cek(e.e, bolehAlias); return; }
+    anakEkspresi(e).forEach((a) => cek(a, bolehAlias));
+  };
+  q.items.forEach((it) => cek(it.expr, false));
+  if (q.having) cek(q.having, false);
+  q.orderBy.forEach((o) => cek(o.expr, true));
+}
+
+/** Validasi semantik satu kueri (dan subquery-nya) sebelum dieksekusi. */
+export function periksaKueriStatis(node, ctx, opts = {}, luar = []) {
+  if (!node || typeof node !== 'object') return;
+  if (node.type === 'union' || node.type === 'setop') {
+    periksaKueriStatis(node.left, ctx, opts, luar);
+    periksaKueriStatis(node.right, ctx, opts, luar);
+    return;
+  }
+  if (node.type !== 'select') return; // WITH diperiksa saat badannya dievaluasi bersama CTE-nya
+  if (sudahDiperiksa.get(node) === ctx.db) return;
+  const refs = [...node.from, ...node.joins.map((j) => j.ref)];
+  const attrs = refs.length ? refs.flatMap((r) => atributSumber(r, ctx, opts)) : ['dummy'];
+  const cakupan = [attrs, ...luar];
+  const aliasPilih = new Set(node.items.filter((it) => it.as).map((it) => String(it.as).toLowerCase()));
+  node.items.forEach((it) => periksaEkspresiStatis(it.expr, cakupan, ctx, opts));
+  node.joins.forEach((j) => { if (j.on) { larangAgregat(j.on, 'ON'); periksaEkspresiStatis(j.on, cakupan, ctx, opts); } });
+  if (node.where) { larangAgregat(node.where, 'WHERE'); periksaEkspresiStatis(node.where, cakupan, ctx, opts); }
+  node.groupBy.forEach((g) => { larangAgregat(g, 'GROUP BY'); periksaEkspresiStatis(g, cakupan, ctx, opts); });
+  if (node.having) periksaEkspresiStatis(node.having, cakupan, ctx, opts);
+  node.orderBy.forEach((o) => periksaEkspresiStatis(o.expr, cakupan, ctx, opts, aliasPilih));
+  periksaGroupByStatis(node, attrs, aliasPilih);
+  sudahDiperiksa.set(node, ctx.db);
+}
+
 function evalSelect(q, ctx, opts) {
   const plan = { op: 'SELECT', children: [] };
+  periksaKueriStatis(q, ctx, opts, (ctx.luar || []).map((r) => Object.keys(r)));
 
   // 1. FROM + JOIN -> satu relasi kerja dengan atribut berkualifikasi alias.kolom
   let work = buildFrom(q, ctx, opts, plan);
@@ -919,7 +1056,7 @@ function loadRef(ref, ctx, opts) {
     if (r) base = r;
     // DUAL: tabel satu baris bawaan Oracle, dipakai untuk SELECT ekspresi tanpa tabel
     else if (String(ref.table).toLowerCase() === 'dual') base = new Relation('DUAL', ['dummy'], [['X']]);
-    else throw new SqlError(`Tabel "${ref.table}" tidak ada. Tersedia: ${Object.keys(ctx.db).join(', ')}`);
+    else throw new SqlError(`ORA-00942: Tabel "${ref.table}" tidak ada. Tersedia: ${Object.keys(ctx.db).join(', ')}`);
   }
   const alias = ref.alias || ref.table || 'sub';
   return new Relation(alias, base.attrs.map((a) => `${alias}.${a.split('.').pop()}`), base.rows);
@@ -1064,7 +1201,7 @@ function resolveAttr(R, e) {
   if (e.k !== 'col') throw new SqlError(`GROUP BY hanya menerima nama kolom, bukan "${exprToString(e)}"`);
   const want = e.table ? `${e.table}.${e.name}` : e.name;
   const i = R.indexOf(want);
-  if (i < 0) throw new SqlError(`Kolom "${want}" tidak ada. Tersedia: ${R.attrs.join(', ')}`);
+  if (i < 0) throw new SqlError(`ORA-00904: Kolom "${want}" tidak ada. Tersedia: ${R.attrs.join(', ')}`);
   return R.attrs[i];
 }
 
@@ -1161,7 +1298,7 @@ function cariKolom(e, row) {
   if (!e.table) {
     const matches = keys.filter((k) => k.split('.').pop().toLowerCase() === e.name.toLowerCase());
     if (matches.length === 1) return { ada: true, nilai: row[matches[0]] };
-    if (matches.length > 1) throw new SqlError(`Kolom "${e.name}" ambigu (ada di ${matches.join(', ')}). Pakai nama berkualifikasi.`);
+    if (matches.length > 1) throw new SqlError(`ORA-00918: Kolom "${e.name}" ambigu (ada di ${matches.join(', ')}). Pakai nama berkualifikasi.`);
   }
   return { ada: false };
 }
@@ -1178,7 +1315,7 @@ function lookupColBerkorelasi(e, row, ctx) {
     if (r.ada) return r.nilai;
   }
   const want = e.table ? `${e.table}.${e.name}` : e.name;
-  throw new SqlError(`Kolom "${want}" tidak ada. Tersedia: ${Object.keys(row).filter((k) => !k.startsWith('__')).join(', ')}`);
+  throw new SqlError(`ORA-00904: Kolom "${want}" tidak ada. Tersedia: ${Object.keys(row).filter((k) => !k.startsWith('__')).join(', ')}`);
 }
 
 function evalBin(e, row, ctx, opts, aggAliases) {
@@ -1263,7 +1400,7 @@ const SCALAR = {
 
 function callFunc(e, row, ctx, opts, aggAliases) {
   const f = SCALAR[e.name];
-  if (!f) throw new SqlError(`Fungsi "${e.name}" tidak didukung. Tersedia: ${Object.keys(SCALAR).join(', ')}`);
+  if (!f) throw new SqlError(`ORA-00904: Fungsi "${e.name}" tidak didukung. Tersedia: ${Object.keys(SCALAR).join(', ')}`);
   return f(...e.args.map((a) => evalExpr(a, row, ctx, opts, aggAliases)));
 }
 
